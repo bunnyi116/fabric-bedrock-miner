@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import yan.lx.bedrockminer.task.TaskManager;
 
-@Mixin(MinecraftClient.class)
+@Mixin(value = MinecraftClient.class, priority = 999)
 public class MixinMinecraftClient {
     @Shadow
     @Nullable
@@ -29,7 +29,6 @@ public class MixinMinecraftClient {
     @Shadow
     @Nullable
     public HitResult crosshairTarget;
-
 
     @Inject(method = "doItemUse", at = @At(value = "HEAD"))
     private void doItemUse(CallbackInfo ci) {

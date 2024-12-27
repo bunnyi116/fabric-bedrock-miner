@@ -2,7 +2,6 @@ package yan.lx.bedrockminer.utils;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.ItemPlacementContext;
@@ -15,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static net.minecraft.block.Block.sideCoversSmallSquare;
+import static yan.lx.bedrockminer.BedrockMiner.player;
+import static yan.lx.bedrockminer.BedrockMiner.world;
 
 public class CheckingEnvironmentUtils {
 
@@ -61,11 +62,11 @@ public class CheckingEnvironmentUtils {
         // 获取硬度, 打掉0硬度值的方块
         var blockState1 = world.getBlockState(pos1);
         if (!blockState1.isAir() && blockState1.getBlock().getHardness() < 45f) {
-            BlockBreakerUtils.simpleBreakBlock(pos1);
+            BlockBreakerUtils.updateBlockBreakingProgress(pos1);
         }
         var blockState2 = world.getBlockState(pos1);
         if (!blockState2.isAir() && blockState2.getBlock().getHardness() < 45f) {
-            BlockBreakerUtils.simpleBreakBlock(pos2);
+            BlockBreakerUtils.updateBlockBreakingProgress(pos2);
         }
         // 实体碰撞箱
         boolean b = true;
@@ -99,30 +100,25 @@ public class CheckingEnvironmentUtils {
     }
 
     public static boolean canPlace(BlockPos blockPos, Block block, Direction direction) {
-        var player = MinecraftClient.getInstance().player;
-        var world = MinecraftClient.getInstance().world;
-        if (player != null && world != null) {
-            // 放置检测
-            var item = block.asItem();
-            var context = new ItemPlacementContext(player, Hand.MAIN_HAND, item.getDefaultStack(), new BlockHitResult(blockPos.toCenterPos(), direction, blockPos, false));
-            // 实体碰撞箱
-            boolean b = true;
-            var state = block.getDefaultState();
-            var shape = state.getCollisionShape(world, blockPos);
-            if (!shape.isEmpty()) {
-                for (var entity : world.getEntities()) {
-                    // 过滤掉落物实体
-                    if (entity instanceof ItemEntity) {
-                        continue;
-                    }
-                    // 检查实体是否在目标位置内
-                    if (entity.collidesWithStateAtPos(blockPos, state)) {
-                        b = false;
-                    }
+        // 放置检测
+        var item = block.asItem();
+        var context = new ItemPlacementContext(player, Hand.MAIN_HAND, item.getDefaultStack(), new BlockHitResult(blockPos.toCenterPos(), direction, blockPos, false));
+        // 实体碰撞箱
+        boolean b = true;
+        var state = block.getDefaultState();
+        var shape = state.getCollisionShape(world, blockPos);
+        if (!shape.isEmpty()) {
+            for (var entity : world.getEntities()) {
+                // 过滤掉落物实体
+                if (entity instanceof ItemEntity) {
+                    continue;
+                }
+                // 检查实体是否在目标位置内
+                if (entity.collidesWithStateAtPos(blockPos, state)) {
+                    b = false;
                 }
             }
-            return context.canPlace() && b;
         }
-        return false;
+        return context.canPlace() && b;
     }
 }

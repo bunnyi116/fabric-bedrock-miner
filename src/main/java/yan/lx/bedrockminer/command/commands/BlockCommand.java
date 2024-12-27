@@ -1,4 +1,4 @@
-package yan.lx.bedrockminer.command;
+package yan.lx.bedrockminer.command.commands;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -8,8 +8,9 @@ import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.registry.Registries;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import yan.lx.bedrockminer.BedrockMinerLang;
-import yan.lx.bedrockminer.command.argument.BlockNameArgument;
+import yan.lx.bedrockminer.LanguageText;
+import yan.lx.bedrockminer.command.CommandBase;
+import yan.lx.bedrockminer.command.argument.BlockArgument;
 import yan.lx.bedrockminer.config.Config;
 import yan.lx.bedrockminer.utils.BlockUtils;
 import yan.lx.bedrockminer.utils.MessageUtils;
@@ -17,33 +18,33 @@ import yan.lx.bedrockminer.utils.MessageUtils;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
-public class BlockNameCommand extends BaseCommand {
+public class BlockCommand extends CommandBase {
     @Override
     public String getName() {
-        return "blockName";
+        return "block";
     }
 
     @Override
     public void build(LiteralArgumentBuilder<FabricClientCommandSource> builder, CommandRegistryAccess registryAccess) {
         builder.then(literal("whitelist")
                         .then(literal("add")
-                                .then(argument("block", new BlockNameArgument().setFilter(this::filterWhitelist))
+                                .then(argument("block", new BlockArgument(this::filterWhitelist))
                                         .executes(context -> add(context, true))
                                 )
                         )
                         .then(literal("remove")
-                                .then(argument("block", new BlockNameArgument().setFilter(this::showWhitelist))
+                                .then(argument("block", new BlockArgument(this::showWhitelist))
                                         .executes(context -> remove(context, true))
                                 )
                         ))
                 .then(literal("blacklist")
                         .then(literal("add")
-                                .then(argument("block", new BlockNameArgument().setFilter(this::filterBlacklist))
+                                .then(argument("block", new BlockArgument(this::filterBlacklist))
                                         .executes(context -> add(context, false))
                                 )
                         )
                         .then(literal("remove")
-                                .then(argument("block", new BlockNameArgument().setFilter(this::showBlacklist))
+                                .then(argument("block", new BlockArgument(this::showBlacklist))
                                         .executes(context -> remove(context, false))
                                 )
                         )
@@ -51,33 +52,33 @@ public class BlockNameCommand extends BaseCommand {
     }
 
     private int add(CommandContext<FabricClientCommandSource> context, boolean whitelist) {
-        var block = BlockNameArgument.getBlock(context, "block");
+        var block = BlockArgument.getBlock(context, "block");
         var config = Config.INSTANCE;
         var id = BlockUtils.getId(block);
         if (whitelist && !config.blockWhitelist.contains(id)) {
             config.blockWhitelist.add(id);
             Config.save();
-            sendChat(BedrockMinerLang.COMMAND_BLOCK_WHITELIST_ADD, block);
+            sendChat(LanguageText.COMMAND_BLOCK_WHITELIST_ADD, block);
         } else if (!config.blockBlacklist.contains(id)) {
             config.blockBlacklist.add(id);
             Config.save();
-            sendChat(BedrockMinerLang.COMMAND_BLOCK_BLACKLIST_ADD, block);
+            sendChat(LanguageText.COMMAND_BLOCK_BLACKLIST_ADD, block);
         }
         return 0;
     }
 
     private int remove(CommandContext<FabricClientCommandSource> context, boolean whitelist) {
-        var block = BlockNameArgument.getBlock(context, "block");
+        var block = BlockArgument.getBlock(context, "block");
         var config = Config.INSTANCE;
         var id = BlockUtils.getId(block);
         if (whitelist && config.blockWhitelist.contains(id)) {
             config.blockWhitelist.remove(id);
             Config.save();
-            sendChat(BedrockMinerLang.COMMAND_BLOCK_WHITELIST_REMOVE, block);
+            sendChat(LanguageText.COMMAND_BLOCK_WHITELIST_REMOVE, block);
         } else if (config.blockBlacklist.contains(id)) {
             config.blockBlacklist.remove(id);
             Config.save();
-            sendChat(BedrockMinerLang.COMMAND_BLOCK_BLACKLIST_REMOVE, block);
+            sendChat(LanguageText.COMMAND_BLOCK_BLACKLIST_REMOVE, block);
         }
         return 0;
     }

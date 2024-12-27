@@ -18,7 +18,7 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "yan.lx.bedrockminer.BedrockMinerMod"
+      "yan.lx.bedrockminer.BedrockMiner"
     ]
   },
   "mixins": [

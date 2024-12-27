@@ -1,15 +1,16 @@
-package yan.lx.bedrockminer.command;
+package yan.lx.bedrockminer.command.commands;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.command.CommandRegistryAccess;
-import yan.lx.bedrockminer.BedrockMinerLang;
+import yan.lx.bedrockminer.LanguageText;
+import yan.lx.bedrockminer.command.CommandBase;
 import yan.lx.bedrockminer.config.Config;
 import yan.lx.bedrockminer.utils.MessageUtils;
 
-import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.*;
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
-public class DebugCommand extends BaseCommand {
+public class DebugCommand extends CommandBase {
 
     @Override
     public String getName() {
@@ -24,9 +25,9 @@ public class DebugCommand extends BaseCommand {
 
     private int toggleSwitch(boolean b) {
         if (b) {
-            MessageUtils.addMessage(BedrockMinerLang.DEBUG_ON);
+            MessageUtils.addMessage(LanguageText.DEBUG_ON);
         } else {
-            MessageUtils.addMessage(BedrockMinerLang.DEBUG_OFF);
+            MessageUtils.addMessage(LanguageText.DEBUG_OFF);
         }
         Config.INSTANCE.debug = b;
         Config.save();

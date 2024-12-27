@@ -1,6 +1,5 @@
 package yan.lx.bedrockminer.task;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.world.ClientWorld;

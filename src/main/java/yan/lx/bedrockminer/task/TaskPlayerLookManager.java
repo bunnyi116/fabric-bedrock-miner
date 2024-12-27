@@ -7,7 +7,10 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.Nullable;
 
-public class TaskModifyLookHandle {
+import static yan.lx.bedrockminer.BedrockMiner.networkHandler;
+import static yan.lx.bedrockminer.BedrockMiner.player;
+
+public class TaskPlayerLookManager {
     private static boolean modifyYaw = false;
     private static boolean modifyPitch = false;
     private static float yaw = 0F;
@@ -16,31 +19,28 @@ public class TaskModifyLookHandle {
     private static @Nullable TaskHandler taskHandler = null;
 
     public static float onModifyLookYaw(float yaw) {
-        return modifyYaw ? TaskModifyLookHandle.yaw : yaw;
+        return modifyYaw ? TaskPlayerLookManager.yaw : yaw;
     }
 
     public static float onModifyLookPitch(float pitch) {
-        return modifyPitch ? TaskModifyLookHandle.pitch : pitch;
+        return modifyPitch ? TaskPlayerLookManager.pitch : pitch;
     }
 
     private static PlayerMoveC2SPacket getLookAndOnGroundPacket(ClientPlayerEntity player) {
-        var yaw = modifyYaw ? TaskModifyLookHandle.yaw : player.getYaw();
-        var pitch = modifyPitch ? TaskModifyLookHandle.pitch : player.getPitch();
-        return new PlayerMoveC2SPacket.LookAndOnGround(yaw, pitch, player.isOnGround());
+        var yaw = modifyYaw ? TaskPlayerLookManager.yaw : player.getYaw();
+        var pitch = modifyPitch ? TaskPlayerLookManager.pitch : player.getPitch();
+        return new PlayerMoveC2SPacket.LookAndOnGround(yaw, pitch, player.isOnGround(), true);
     }
 
     public static void set(float yaw, float pitch) {
-        TaskModifyLookHandle.modifyYaw = true;
-        TaskModifyLookHandle.yaw = yaw;
-        TaskModifyLookHandle.modifyPitch = true;
-        TaskModifyLookHandle.pitch = pitch;
+        TaskPlayerLookManager.modifyYaw = true;
+        TaskPlayerLookManager.yaw = yaw;
+        TaskPlayerLookManager.modifyPitch = true;
+        TaskPlayerLookManager.pitch = pitch;
     }
 
     public static void set(Direction facing, TaskHandler handler) {
         taskHandler = handler;
-        MinecraftClient client = MinecraftClient.getInstance();
-        ClientPlayerEntity player = client.player;
-        ClientPlayNetworkHandler networkHandler = client.getNetworkHandler();
         float yaw = switch (facing) {
             case SOUTH -> 180F;
             case EAST -> 90F;
@@ -77,7 +77,7 @@ public class TaskModifyLookHandle {
 
     public static void onTick() {
         // 自动重置视角
-        if (isModify()){
+        if (isModify()) {
             if (ticks++ > 20) {
                 ticks = 0;
                 reset();

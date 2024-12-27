@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.7-SNAPSHOT'
+	id 'fabric-loom' version '1.9-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -44,10 +44,6 @@ processResources {
 		])
 	}
 }
-// 从1.12（17w13a）开始，运行Minecraft的最低要求是Java 8。
-// 从1.17（21w19a）开始，运行Minecraft的最低要求是Java 16。
-// 从1.18（1.18-pre2）开始，运行Minecraft的最低要求是Java 17。
-// 从1.20.5（24w14a）开始，运行Minecraft的最低要求是Java 21，且操作系统要求为64位。
 
 def targetJavaVersion = project.java_version as Integer
 tasks.withType(JavaCompile).configureEach {

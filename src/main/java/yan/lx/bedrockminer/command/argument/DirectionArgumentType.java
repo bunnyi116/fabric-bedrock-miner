@@ -10,12 +10,12 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.Direction;
-import yan.lx.bedrockminer.BedrockMinerLang;
+import yan.lx.bedrockminer.LanguageText;
 
 import java.util.concurrent.CompletableFuture;
 
 public class DirectionArgumentType implements ArgumentType<Direction> {
-    private static final DynamicCommandExceptionType INVALID_STRING_EXCEPTION = new DynamicCommandExceptionType(input -> Text.literal(BedrockMinerLang.EXCEPTION_INVALID_STRING.getString().replace("%input%", input.toString())));
+    private static final DynamicCommandExceptionType INVALID_STRING_EXCEPTION = new DynamicCommandExceptionType(input -> Text.literal(LanguageText.EXCEPTION_INVALID_STRING.getString().replace("%input%", input.toString())));
 
     public static Direction getDirection(CommandContext<FabricClientCommandSource> context, String name) {
         return context.getArgument(name, Direction.class);

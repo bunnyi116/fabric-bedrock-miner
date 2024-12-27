@@ -2,7 +2,7 @@ package yan.lx.bedrockminer;
 
 import net.minecraft.text.Text;
 
-public class BedrockMinerLang {
+public class LanguageText {
     public static final Text TOGGLE_ON = Text.translatable("bedrockminer.toggle.on");
     public static final Text TOGGLE_OFF = Text.translatable("bedrockminer.toggle.off");
 

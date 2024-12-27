@@ -1,4 +1,4 @@
-package yan.lx.bedrockminer.command;
+package yan.lx.bedrockminer.command.commands;
 
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -9,7 +9,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.Direction;
-import yan.lx.bedrockminer.BedrockMinerLang;
+import yan.lx.bedrockminer.LanguageText;
+import yan.lx.bedrockminer.command.CommandBase;
 import yan.lx.bedrockminer.command.argument.BlockPosArgumentType;
 import yan.lx.bedrockminer.config.Config;
 import yan.lx.bedrockminer.task.TaskManager;
@@ -21,7 +22,7 @@ import java.util.List;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
-public class TaskCommand extends BaseCommand {
+public class TaskCommand extends CommandBase {
 
     @Override
     public String getName() {
@@ -96,7 +97,7 @@ public class TaskCommand extends BaseCommand {
             config.taskLimit = limit;
             Config.save();
         }
-        var msg = BedrockMinerLang.COMMAND_TASK_LIMIT.getString().replace("%limit%", String.valueOf(limit));
+        var msg = LanguageText.COMMAND_TASK_LIMIT.getString().replace("%limit%", String.valueOf(limit));
         MessageUtils.addMessage(Text.translatable(msg));
         return 0;
     }

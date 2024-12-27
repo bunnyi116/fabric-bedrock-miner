@@ -2,8 +2,6 @@ package yan.lx.bedrockminer.task;
 
 import net.minecraft.util.math.Direction;
 
-import java.util.List;
-
 public class TaskSeekSchemeInfo {
     public final Direction direction;
     public final TaskSeekBlockInfo piston;

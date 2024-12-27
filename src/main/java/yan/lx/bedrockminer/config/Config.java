@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.Blocks;
-import yan.lx.bedrockminer.BedrockMinerMod;
+import yan.lx.bedrockminer.Debug;
 import yan.lx.bedrockminer.utils.BlockUtils;
 
 import java.io.*;
@@ -50,20 +50,20 @@ public class Config {
         Gson gson = new Gson();
         try (Reader reader = new FileReader(file)) {
             config = gson.fromJson(reader, Config.class);
-            BedrockMinerMod.LOGGER.info("已成功加载配置文件");
+            Debug.alwaysWrite("已成功加载配置文件");
         } catch (Exception e) {
             if (file.exists()) {
                 if (file.delete()) {
-                    BedrockMinerMod.LOGGER.info("无法加载配置,已成功删除配置文件");
+                    Debug.alwaysWrite("无法加载配置,已成功删除配置文件");
                 } else {
-                    BedrockMinerMod.LOGGER.info("无法加载配置,删除配置文件失败");
+                    Debug.alwaysWrite("无法加载配置,删除配置文件失败");
                 }
             } else {
-                BedrockMinerMod.LOGGER.info("找不到配置文件");
+                Debug.alwaysWrite("找不到配置文件");
             }
         }
         if (config == null) {
-            BedrockMinerMod.LOGGER.info("使用默认配置");
+            Debug.alwaysWrite("使用默认配置");
             config = new Config();
             save();
         }
@@ -75,7 +75,7 @@ public class Config {
         try (FileWriter writer = new FileWriter(file)) {
             gson.toJson(INSTANCE, writer);
         } catch (IOException e) {
-            BedrockMinerMod.LOGGER.info("无法保存配置文件");
+            Debug.alwaysWrite("无法保存配置文件");
             e.printStackTrace();
         }
     }
