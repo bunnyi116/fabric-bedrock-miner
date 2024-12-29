@@ -15,21 +15,22 @@ import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import yan.lx.bedrockminer.LanguageText;
 import yan.lx.bedrockminer.utils.BlockUtils;
+import yan.lx.bedrockminer.utils.StringReaderUtils;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class BlockArgument implements ArgumentType<Block> {
     private static final DynamicCommandExceptionType INVALID_STRING_EXCEPTION = new DynamicCommandExceptionType(input
-            -> Text.literal(LanguageText.EXCEPTION_INVALID_STRING.getString().replace("%input%", input.toString())));
+            -> Text.literal(LanguageText.COMMAND_EXCEPTION_INVALID_STRING.getString().replace("#input#", input.toString())));
+
     private static final Collection<String> EXAMPLES = Arrays.asList("Stone", "Bedrock", "石头", "基岩");
 
-    private @Nullable Predicate<Identifier> filter;
+    private @Nullable Predicate<Block> filter;
 
-    public BlockArgument(@Nullable Predicate<Identifier> filter) {
+    public BlockArgument(@Nullable Predicate<Block> filter) {
         this.filter = filter;
     }
 
@@ -42,48 +43,37 @@ public class BlockArgument implements ArgumentType<Block> {
     }
 
     public Block parse(StringReader reader) throws CommandSyntaxException {
-        var i = reader.getCursor();
-        while (reader.canRead()) {
-            reader.skip();
+        var input = StringReaderUtils.readUnquotedString(reader);
+        var blockResult = (Block) null;
+        for (var block : Registries.BLOCK) {
+            if (block.getName().getString().equals(input)) {
+                blockResult = block;
+                break;
+            }
         }
-        // 获取用户输入的字符串内容
-        var string = reader.getString().substring(i, reader.getCursor());
-        // 检查方块注册表中是否存在该名称
-        var optionalBlock = Registries.BLOCK.stream().filter(block -> block.getName().getString().equals(string)).findFirst();
-        if (optionalBlock.isEmpty()) {
-            reader.setCursor(i);
-            throw INVALID_STRING_EXCEPTION.create(string);
+        if (blockResult != null && filter != null && filter.test(blockResult)) {
+            blockResult = null;
         }
-        // 已获取到方块信息
-        var block = optionalBlock.get();
-        // 检查过滤器
-        if (filter != null && !filter.test(BlockUtils.getIdentifier(block))) {
-            reader.setCursor(i);
-            throw INVALID_STRING_EXCEPTION.create(string);
+        if (blockResult == null) {
+            throw INVALID_STRING_EXCEPTION.create(input);
         }
-        return block;
+        return blockResult;
     }
 
 
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        StringReader reader = new StringReader(builder.getInput());
+        var reader = new StringReader(builder.getInput());
         reader.setCursor(builder.getStart());
-        // 读取标识符
-        var i = reader.getCursor();
-        while (reader.canRead()) {
-            reader.skip();
-        }
-        // 获取用户输入的字符串内容
-        var string = reader.getString().substring(i, reader.getCursor());
-        // 检查方块注册表中是否存在该名称
-        Registries.BLOCK.forEach(block -> {
-            if (block.getName().getString().contains(string)) {
-                if (filter != null && filter.test(BlockUtils.getIdentifier(block))) {
-                    // 添加建议列表
-                    builder.suggest(block.getName().getString());
+        var input = StringReaderUtils.readUnquotedString(reader);
+        for (var block : Registries.BLOCK) {
+            var blockName = block.getName().getString();
+            if (blockName.contains(input)) {
+                if (filter != null && filter.test(block)) {
+                    continue;
                 }
+                builder.suggest(blockName);
             }
-        });
+        }
         return builder.buildFuture();
     }
 
@@ -91,7 +81,7 @@ public class BlockArgument implements ArgumentType<Block> {
         return EXAMPLES;
     }
 
-    public BlockArgument setFilter(Predicate<Identifier> filter) {
+    public BlockArgument setFilter(Predicate<Block> filter) {
         this.filter = filter;
         return this;
     }

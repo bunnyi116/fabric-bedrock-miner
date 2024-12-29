@@ -3,9 +3,10 @@ package yan.lx.bedrockminer;
 import net.minecraft.text.Text;
 
 public class LanguageText {
+    // 模组开关
     public static final Text TOGGLE_ON = Text.translatable("bedrockminer.toggle.on");
     public static final Text TOGGLE_OFF = Text.translatable("bedrockminer.toggle.off");
-
+    // 调试开关
     public static final Text DEBUG_ON = Text.translatable("bedrockminer.debug.on");
     public static final Text DEBUG_OFF = Text.translatable("bedrockminer.debug.off");
 
@@ -33,6 +34,10 @@ public class LanguageText {
     public static final Text COMMAND_DISABLE_OFF = Text.translatable("bedrockminer.command.disable.off");
 
     public static final Text COMMAND_TASK_MODE_SET = Text.translatable("bedrockminer.command.task.mode.set");
-    public static final Text EXCEPTION_INVALID_STRING = Text.translatable("bedrockminer.command.exception.invalidString");
+    public static final Text COMMAND_EXCEPTION_INVALID_STRING = Text.translatable("bedrockminer.command.exception.invalidString");
     public static final Text HANDLE_SEEK = Text.translatable("bedrockminer.handle.seek");
+
+    public static final Text FLOOR_BLACK_LIST_ADD = Text.translatable("bedrockminer.command.floor_black_list.add");
+    public static final Text FLOOR_BLACK_LIST_REMOVE = Text.translatable("bedrockminer.command.floor_black_list.remove");
+    public static final Text FLOOR_BLACK_LIST_WARN = Text.translatable("bedrockminer.command.floor_black_list.warn");
 }

@@ -5,7 +5,7 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import yan.lx.bedrockminer.BedrockMiner;
 import yan.lx.bedrockminer.Test;
-import yan.lx.bedrockminer.command.commands.BlockCommand;
+import yan.lx.bedrockminer.command.commands.BehaviorCommand;
 import yan.lx.bedrockminer.command.commands.DebugCommand;
 import yan.lx.bedrockminer.command.commands.DisableCommand;
 import yan.lx.bedrockminer.command.commands.TaskCommand;
@@ -21,7 +21,7 @@ public class CommandManager {
 
     static {
         commands = new ArrayList<>();
-        commands.add(new BlockCommand());
+        commands.add(new BehaviorCommand());
         commands.add(new DebugCommand());
         commands.add(new TaskCommand());
         commands.add(new DisableCommand());

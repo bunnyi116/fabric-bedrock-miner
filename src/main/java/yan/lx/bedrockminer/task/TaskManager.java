@@ -6,6 +6,7 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.Items;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
+import yan.lx.bedrockminer.Debug;
 import yan.lx.bedrockminer.LanguageText;
 import yan.lx.bedrockminer.config.Config;
 import yan.lx.bedrockminer.utils.BlockUtils;
@@ -17,6 +18,8 @@ import java.util.List;
 
 import static yan.lx.bedrockminer.BedrockMiner.gameMode;
 import static yan.lx.bedrockminer.BedrockMiner.world;
+import static yan.lx.bedrockminer.LanguageText.*;
+import static yan.lx.bedrockminer.utils.BlockUtils.getBlockName;
 import static yan.lx.bedrockminer.utils.InteractionUtils.getClosestFace;
 import static yan.lx.bedrockminer.utils.InteractionUtils.isBlockWithinReach;
 
@@ -38,13 +41,13 @@ public class TaskManager {
             var client = MinecraftClient.getInstance();
             // 检查玩家是否为创造
             if (client.interactionManager != null && client.interactionManager.getCurrentGameMode().isCreative()) {
-                MessageUtils.addMessage(LanguageText.FAIL_MISSING_SURVIVAL);
+                MessageUtils.addMessage(FAIL_MISSING_SURVIVAL);
                 return;
             }
             setWorking(true);
             // 检查是否在服务器
             if (!client.isInSingleplayer()) {
-                MessageUtils.addMessage(LanguageText.WARN_MULTIPLAYER);
+                MessageUtils.addMessage(WARN_MULTIPLAYER);
             }
         }
     }
@@ -58,15 +61,24 @@ public class TaskManager {
 
         // 仅生存执行
         if (gameMode.isSurvivalLike()) {
-            if (checkIsAllowBlock(block)) {
-                for (var targetBlock : handleTasks) {
-                    // 检查重复任务
-                    if (targetBlock.pos.getManhattanDistance(pos) == 0) {
-                        return;
-                    }
-                }
-                handleTasks.add(new TaskHandler(world, world.getBlockState(pos).getBlock(), pos));
+            if (!checkIsAllowBlock(block)) {
+                return;
             }
+            var task = new TaskHandler(world, world.getBlockState(pos).getBlock(), pos);
+            var config = Config.INSTANCE;
+            if (config.floorsBlacklist != null && !config.floorsBlacklist.isEmpty()) {
+                if (config.floorsBlacklist.contains(pos.getY())) {
+                    var msg = FLOOR_BLACK_LIST_WARN.getString().replace("(#floor#)", String.valueOf(pos.getY()));
+                    MessageUtils.setOverlayMessage(Text.literal(msg));
+                    return;
+                }
+            }
+            for (var targetBlock : handleTasks) {
+                if (targetBlock.pos.equals(pos)) {
+                    return;
+                }
+            }
+            handleTasks.add(task);
         }
     }
 
@@ -75,7 +87,7 @@ public class TaskManager {
             TaskPlayerLookManager.reset();
         }
         handleTasks.clear();
-        MessageUtils.addMessage(LanguageText.COMMAND_TASK_CLEAR);
+        MessageUtils.addMessage(COMMAND_TASK_CLEAR);
     }
 
     public static void tick() {
@@ -121,20 +133,20 @@ public class TaskManager {
         // 方块黑名单检查(服务器)
         if (!minecraftClient.isInSingleplayer()) {
             for (var defaultBlockBlack : config.blockBlacklistServer) {
-                if (BlockUtils.getId(block).equals(defaultBlockBlack)) {
+                if (BlockUtils.getBlockId(block).equals(defaultBlockBlack)) {
                     return false;
                 }
             }
         }
         // 方块黑名单检查(用户自定义)
         for (var blockBlack : config.blockBlacklist) {
-            if (BlockUtils.getId(block).equals(blockBlack)) {
+            if (BlockUtils.getBlockId(block).equals(blockBlack)) {
                 return false;
             }
         }
         // 方块白名单检查(用户自定义)
         for (var blockBlack : config.blockWhitelist) {
-            if (BlockUtils.getId(block).equals(blockBlack)) {
+            if (BlockUtils.getBlockId(block).equals(blockBlack)) {
                 return true;
             }
         }
@@ -145,19 +157,19 @@ public class TaskManager {
         var client = MinecraftClient.getInstance();
         var msg = (Text) null;
         if (client.interactionManager != null && !client.interactionManager.getCurrentGameMode().isSurvivalLike()) {
-            msg = LanguageText.FAIL_MISSING_SURVIVAL;
+            msg = FAIL_MISSING_SURVIVAL;
         }
         if (InventoryManagerUtils.getInventoryItemCount(Items.PISTON) < 2) {
-            msg = LanguageText.FAIL_MISSING_PISTON;
+            msg = FAIL_MISSING_PISTON;
         }
         if (InventoryManagerUtils.getInventoryItemCount(Items.REDSTONE_TORCH) < 1) {
-            msg = LanguageText.FAIL_MISSING_REDSTONETORCH;
+            msg = FAIL_MISSING_REDSTONETORCH;
         }
         if (InventoryManagerUtils.getInventoryItemCount(Items.SLIME_BLOCK) < 1) {
-            msg = LanguageText.FAIL_MISSING_SLIME;
+            msg = FAIL_MISSING_SLIME;
         }
         if (!InventoryManagerUtils.canInstantlyMinePiston()) {
-            msg = LanguageText.FAIL_MISSING_INSTANTMINE;
+            msg = FAIL_MISSING_INSTANTMINE;
         }
         if (msg != null) {
             MessageUtils.setOverlayMessage(msg);
@@ -172,9 +184,9 @@ public class TaskManager {
 
     public static void setWorking(boolean working) {
         if (working) {
-            MessageUtils.addMessage(LanguageText.TOGGLE_ON);
+            MessageUtils.addMessage(TOGGLE_ON);
         } else {
-            MessageUtils.addMessage(LanguageText.TOGGLE_OFF);
+            MessageUtils.addMessage(TOGGLE_OFF);
         }
         TaskManager.working = working;
     }

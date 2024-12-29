@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
 public class DirectionListArgumentType implements ArgumentType<Direction[]> {
-    private static final DynamicCommandExceptionType INVALID_STRING_EXCEPTION = new DynamicCommandExceptionType(input -> Text.literal(LanguageText.EXCEPTION_INVALID_STRING.getString().replace("%input%", input.toString())));
+    private static final DynamicCommandExceptionType INVALID_STRING_EXCEPTION = new DynamicCommandExceptionType(input -> Text.literal(LanguageText.COMMAND_EXCEPTION_INVALID_STRING.getString().replace("%input%", input.toString())));
 
     public static Direction getDirection(CommandContext<FabricClientCommandSource> context, String name) {
         return context.getArgument(name, Direction.class);
