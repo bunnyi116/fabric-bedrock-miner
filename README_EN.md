@@ -29,12 +29,12 @@ This project fork modified from [LXYan2333/Fabric-Bedrock-Miner](https://github.
 ### Command description
 - `/bedrockMiner` on/off
 - `/bedrockMiner disable` disable the mod (the mod will not continue to process after it is turned on)
-- `/bedrockMiner block whitelist add <block>` add whitelist block list
-- `/bedrockMiner block whitelist remove <block>` remove whitelist block list
-- `/bedrockMiner block blacklist add <block>` add blacklist block list
-- `/bedrockMiner block blacklist remove <block>` remove blacklist block list
-- `/bedrockMiner block blockName add <blockName>` add blacklist block list
-- `/bedrockMiner block blockName remove <blockName>` remove blacklist block list
+- `/bedrockMiner behavior floor add <floor>` add a floor to the blacklist.
+- `/bedrockMiner behavior floor remove <floor>` remove a floor from the blacklist.
+- `/bedrockMiner behavior block whitelist add <block>` add whitelist block list
+- `/bedrockMiner behavior block whitelist remove <block>` remove whitelist block list
+- `/bedrockMiner behavior block blacklist add <block>` add blacklist block list
+- `/bedrockMiner behavior block blacklist remove <block>` remove blacklist block list
 - `/bedrockMiner task add <x, y, z>` add a task
 - `/bedrockMiner task clear` clear the task
 - `/bedrockMiner debug true` enables debug mode

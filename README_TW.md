@@ -30,12 +30,12 @@
 ## 使用者端指令說明
 - `/bedrockMiner` 開啟/關閉
 - `/bedrockMiner disable` 停用模組（開啟後模組將不會繼續處理）
-- `/bedrockMiner block whitelist add <block>` 增加白名單方塊
-- `/bedrockMiner block whitelist remove <block>` 移除白名單方塊
-- `/bedrockMiner block blacklist add <block>` 增加黑名單方塊
-- `/bedrockMiner block blacklist remove <block>` 移除黑名單方塊
-- `/bedrockMiner blockName blacklist add <blockName>` 增加黑名單方塊列表
-- `/bedrockMiner blockName blacklist remove <blockName>` 移除黑名單方塊列表
+- `/bedrockMiner behavior floor add <floor>` 添加層數至黑名單
+- `/bedrockMiner behavior floor remove <floor>` 移除層數從黑名單
+- `/bedrockMiner behavior block whitelist add <block>` 增加白名單方塊
+- `/bedrockMiner behavior block whitelist remove <block>` 移除白名單方塊
+- `/bedrockMiner behavior block blacklist add <block>` 增加黑名單方塊
+- `/bedrockMiner behavior block blacklist remove <block>` 移除黑名單方塊
 - `/bedrockMiner task add <x, y, z>` 新增任務
 - `/bedrockMiner task clear` 清空任務
 - `/bedrockMiner debug true` 開啟除錯模式

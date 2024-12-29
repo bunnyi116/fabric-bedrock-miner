@@ -30,12 +30,12 @@
 ## 客户端指命说明
 - `/bedrockMiner` 开启/关闭
 - `/bedrockMiner disable` 禁用模组（开启后模组将不会继续处理）
-- `/bedrockMiner block whitelist add <block>` 添加白名单方块列表
-- `/bedrockMiner block whitelist remove <block>` 移除白名单方块列表
-- `/bedrockMiner block blacklist add <block>` 添加黑名单方块列表
-- `/bedrockMiner block blacklist remove <block>` 移除黑名单方块列表
-- `/bedrockMiner blockName blacklist add <blockName>` 添加黑名单方块列表
-- `/bedrockMiner blockName blacklist remove <blockName>` 移除黑名单方块列表
+- `/bedrockMiner behavior floor add <floor>` 添加层数黑名单列表
+- `/bedrockMiner behavior floor remove <floor>` 移除层数黑名单列表
+- `/bedrockMiner behavior block whitelist add <block>` 添加白名单方块列表
+- `/bedrockMiner behavior block whitelist remove <block>` 移除白名单方块列表
+- `/bedrockMiner behavior block blacklist add <block>` 添加黑名单方块列表
+- `/bedrockMiner behavior block blacklist remove <block>` 移除黑名单方块列表
 - `/bedrockMiner task add <x, y, z>` 添加任务
 - `/bedrockMiner task clear` 清理任务
 - `/bedrockMiner debug true` 开启调试模式
