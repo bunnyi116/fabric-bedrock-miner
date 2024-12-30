@@ -140,7 +140,8 @@ public class TaskHandler {
         }
         BlockPlacerUtils.placement(slimeBlock.pos, slimeBlock.facing, Items.SLIME_BLOCK);
         addRecycled(slimeBlock.pos);
-        setWait(TaskState.WAIT_GAME_UPDATE, 1);
+        this.state = TaskState.WAIT_GAME_UPDATE;
+        // setWait(TaskState.WAIT_GAME_UPDATE, 1);
         resetModifyLook();
     }
 
@@ -226,6 +227,7 @@ public class TaskHandler {
             MessageUtils.setOverlayMessage(Text.literal(LanguageText.HANDLE_SEEK.getString().replace("%BlockPos%", pos.toShortString())));
         } else {
             state = TaskState.WAIT_GAME_UPDATE;
+            this.tickInternal();    // 查找算法,不需要独占TICK执行
         }
     }
 
@@ -280,6 +282,7 @@ public class TaskHandler {
             MessageUtils.setOverlayMessage(Text.literal(LanguageText.HANDLE_SEEK.getString().replace("%BlockPos%", pos.toShortString())));
         } else {
             state = TaskState.WAIT_GAME_UPDATE;
+            this.tickInternal();    // 查找算法,不需要独占TICK执行
         }
     }
 
@@ -346,6 +349,7 @@ public class TaskHandler {
             MessageUtils.setOverlayMessage(Text.literal(LanguageText.HANDLE_SEEK.getString().replace("%BlockPos%", pos.toShortString())));
         } else {
             state = TaskState.WAIT_GAME_UPDATE;
+            this.tickInternal();    // 查找算法,不需要独占TICK执行
         }
     }
 
@@ -370,14 +374,17 @@ public class TaskHandler {
             return;
         }
         state = TaskState.COMPLETE;
+        this.tickInternal();    // 查找算法,不需要独占TICK执行
     }
 
     private void fail() {
         state = TaskState.RECYCLED_ITEMS;
+        this.tickInternal();    // 查找算法,不需要独占TICK执行
     }
 
     private void timeout() {
         state = TaskState.FAIL;
+        this.tickInternal();    // 查找算法,不需要独占TICK执行
     }
 
     private void execute() {
@@ -413,7 +420,7 @@ public class TaskHandler {
             }
             executed = true;
         }
-        setWait(TaskState.WAIT_GAME_UPDATE, 4);
+        setWait(TaskState.WAIT_GAME_UPDATE, 3);
     }
 
     private void waitCustom() {
@@ -436,11 +443,11 @@ public class TaskHandler {
         if (!world.getBlockState(pos).isOf(block)) {
             state = TaskState.RECYCLED_ITEMS;
             debugUpdateStates("目标不存在");
+            this.tickInternal();
             return;
         }
         if (!this.executed) {
             debugUpdateStates("任务未执行过");
-
             // 获取放置位置
             if (this.piston == null) {
                 this.debugUpdateStates("活塞未获取,准备查找合适的位置");
