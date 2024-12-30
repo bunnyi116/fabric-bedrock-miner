@@ -138,12 +138,6 @@ public class TaskManager {
                 }
             }
         }
-        // 方块黑名单检查(用户自定义)
-        for (var blockBlack : config.blockBlacklist) {
-            if (BlockUtils.getBlockId(block).equals(blockBlack)) {
-                return false;
-            }
-        }
         // 方块白名单检查(用户自定义)
         for (var blockBlack : config.blockWhitelist) {
             if (BlockUtils.getBlockId(block).equals(blockBlack)) {
