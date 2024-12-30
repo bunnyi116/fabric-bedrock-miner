@@ -49,11 +49,10 @@ public class TaskHandler {
         this.world = world;
         this.block = block;
         this.pos = pos;
-        this.state = TaskState.INITIALIZE;
         this.taskSchemes = TaskSeekSchemeTools.findAllPossible(pos, world);
         this.recycledQueue = Queues.newConcurrentLinkedQueue();
         this.retryCount = 0;
-        this.retryCountMax = 1;
+        this.retryCountMax = 2;
         this.init();
         this.debug("[构造函数] 结束\r\n");
     }
@@ -155,7 +154,7 @@ public class TaskHandler {
         }
         BlockPlacerUtils.placement(redstoneTorch.pos, redstoneTorch.facing, Items.REDSTONE_TORCH);
         addRecycled(redstoneTorch.pos);
-        setWait(TaskState.WAIT_GAME_UPDATE, 3);
+        setWait(TaskState.WAIT_GAME_UPDATE, 1);
         resetModifyLook();
     }
 
@@ -399,20 +398,20 @@ public class TaskHandler {
             // 切换到工具
             if (world.getBlockState(piston.pos).calcBlockBreakingDelta(player, world, piston.pos) < 1F) {
                 InventoryManagerUtils.autoSwitch(world.getBlockState(piston.pos));
-                setWait(TaskState.EXECUTE, 3);
+                setWait(TaskState.EXECUTE, 1);
                 return;
             }
             // 打掉附近红石火把
             BlockPos[] nearbyRedstoneTorch = TaskSeekSchemeTools.findPistonNearbyRedstoneTorch(piston.pos, world);
             for (BlockPos pos : nearbyRedstoneTorch) {
                 if (world.getBlockState(pos).getBlock() instanceof RedstoneTorchBlock) {
-                    BlockBreakerUtils.attackBlock(pos);
+                    BlockBreakerUtils.updateBlockBreakingProgress(pos);
                 }
             }
             if (world.getBlockState(redstoneTorch.pos).getBlock() instanceof RedstoneTorchBlock) {
-                BlockBreakerUtils.attackBlock(redstoneTorch.pos);
+                BlockBreakerUtils.updateBlockBreakingProgress(redstoneTorch.pos);
             }
-            BlockBreakerUtils.attackBlock(piston.pos);
+            BlockBreakerUtils.updateBlockBreakingProgress(piston.pos);
             BlockPlacerUtils.placement(piston.pos, direction.getOpposite(), Items.PISTON);
             addRecycled(piston.pos);
             if (executeModify) {
@@ -420,7 +419,7 @@ public class TaskHandler {
             }
             executed = true;
         }
-        setWait(TaskState.WAIT_GAME_UPDATE, 3);
+        setWait(TaskState.WAIT_GAME_UPDATE, 1);
     }
 
     private void waitCustom() {
@@ -475,6 +474,7 @@ public class TaskHandler {
                 return;
             } else if (!(world.getBlockState(this.piston.pos).getBlock() instanceof PistonBlock)) {
                 this.findPiston();
+                this.tickInternal();    // 查找算法,不需要独占TICK执行
                 return;
             }
 
@@ -484,6 +484,7 @@ public class TaskHandler {
                 return;
             } else if (!Block.sideCoversSmallSquare(world, slimeBlock.pos, slimeBlock.facing)) {
                 this.findRedstoneTorch();
+                this.tickInternal();    // 查找算法,不需要独占TICK执行
                 return;
             }
 
@@ -492,6 +493,7 @@ public class TaskHandler {
                 return;
             } else if (!(world.getBlockState(redstoneTorch.pos).getBlock() instanceof RedstoneTorchBlock)) {
                 this.findRedstoneTorch();
+                this.tickInternal();    // 查找算法,不需要独占TICK执行
                 return;
             }
 
@@ -499,6 +501,7 @@ public class TaskHandler {
                 if (world.getBlockState(this.piston.pos).contains(PistonBlock.EXTENDED)) {
                     if (world.getBlockState(this.piston.pos).get(PistonBlock.EXTENDED)) {
                         this.state = TaskState.EXECUTE;
+                        this.tickInternal();
                     }
                 }
             }
