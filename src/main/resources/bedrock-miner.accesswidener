@@ -1,2 +1,11 @@
 accessWidener v2 named
+accessible field net/minecraft/client/network/ClientPlayerInteractionManager currentBreakingPos Lnet/minecraft/util/math/BlockPos;
+accessible field net/minecraft/client/network/ClientPlayerInteractionManager selectedStack Lnet/minecraft/item/ItemStack;
+accessible field net/minecraft/client/network/ClientPlayerInteractionManager currentBreakingProgress F
+accessible field net/minecraft/client/network/ClientPlayerInteractionManager blockBreakingSoundCooldown F
+accessible field net/minecraft/client/network/ClientPlayerInteractionManager blockBreakingCooldown I
+accessible field net/minecraft/client/network/ClientPlayerInteractionManager breakingBlock Z
+accessible field net/minecraft/client/network/ClientPlayerInteractionManager gameMode Lnet/minecraft/world/GameMode;
+accessible field net/minecraft/client/network/ClientPlayerInteractionManager lastSelectedSlot I
 accessible method net/minecraft/client/network/ClientPlayerInteractionManager sendSequencedPacket (Lnet/minecraft/client/world/ClientWorld;Lnet/minecraft/client/network/SequencedPacketCreator;)V
+accessible method net/minecraft/client/network/ClientPlayerInteractionManager syncSelectedSlot ()V
