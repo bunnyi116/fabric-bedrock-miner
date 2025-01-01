@@ -40,4 +40,5 @@ public class LanguageText {
     public static final Text FLOOR_BLACK_LIST_ADD = Text.translatable("bedrockminer.command.floor_black_list.add");
     public static final Text FLOOR_BLACK_LIST_REMOVE = Text.translatable("bedrockminer.command.floor_black_list.remove");
     public static final Text FLOOR_BLACK_LIST_WARN = Text.translatable("bedrockminer.command.floor_black_list.warn");
+    public static final Text FLOOR_BLACK_LIST_SHOW = Text.translatable("bedrockminer.command.floor_black_list.show");
 }

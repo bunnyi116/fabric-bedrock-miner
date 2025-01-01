@@ -25,5 +25,6 @@
   "bedrockminer.command.floor_black_list.add": "高度黑名單添加成功：%count%",
   "bedrockminer.command.floor_black_list.remove": "高度黑名單刪除成功：%count%",
   "bedrockminer.command.floor_black_list.warn": "目標方塊所在高度(#floor#)在層數黑名單中，無法破壞！",
+  "bedrockminer.command.floor_black_list.show": "層數黑名單查看：%listFloor%",
   "bedrockminer.handle.seek": "目前位置(%BlockPos%)沒有可執行的放置方案"
 }

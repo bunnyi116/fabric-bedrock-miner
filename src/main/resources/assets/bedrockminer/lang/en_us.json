@@ -25,5 +25,6 @@
   "bedrockminer.command.floor_black_list.add": "floorBlackList add successfully：%count%",
   "bedrockminer.command.floor_black_list.remove": "floorBlackList remove successfully：%count%",
   "bedrockminer.command.floor_black_list.warn": "The height of the target block (#floor#) is on the floor blacklist and cannot be destroyed!",
+  "bedrockminer.command.floor_black_list.show": "floorBlackList show：%listFloor%",
   "bedrockminer.handle.seek": "There is no placement scheme that can be executed at the current location(%BlockPos%)"
 }
