@@ -29,7 +29,7 @@ public class TaskPlayerLookManager {
     private static PlayerMoveC2SPacket getLookAndOnGroundPacket(ClientPlayerEntity player) {
         var yaw = modifyYaw ? TaskPlayerLookManager.yaw : player.getYaw();
         var pitch = modifyPitch ? TaskPlayerLookManager.pitch : player.getPitch();
-        return new PlayerMoveC2SPacket.LookAndOnGround(yaw, pitch, player.isOnGround(), false);
+        return new PlayerMoveC2SPacket.LookAndOnGround(yaw, pitch, player.isOnGround());
     }
 
     public static void set(float yaw, float pitch) {

@@ -47,7 +47,7 @@ public class BlockPlacerUtils {
         }
 
         // 发送修改视角数据包
-        networkHandler.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(yaw, pitch, player.isOnGround(), false));
+        networkHandler.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(yaw, pitch, player.isOnGround()));
 
         // 模拟选中位置(凭空放置)
         var hitPos = blockPos.offset(facing.getOpposite());
