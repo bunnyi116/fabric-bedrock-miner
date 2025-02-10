@@ -62,11 +62,13 @@ public class CheckingEnvironmentUtils {
         // 获取硬度, 打掉0硬度值的方块
         var blockState1 = world.getBlockState(pos1);
         if (!blockState1.isAir() && blockState1.getBlock().getHardness() < 45f) {
-            BlockBreakerUtils.updateBlockBreakingProgress(pos1);
+            InventoryManagerUtils.autoSwitch(blockState1.getBlock());
+            ClientPlayerInteractionManagerUtils.updateBlockBreakingProgress(pos1);
         }
         var blockState2 = world.getBlockState(pos1);
         if (!blockState2.isAir() && blockState2.getBlock().getHardness() < 45f) {
-            BlockBreakerUtils.updateBlockBreakingProgress(pos2);
+            InventoryManagerUtils.autoSwitch(blockState2.getBlock());
+            ClientPlayerInteractionManagerUtils.updateBlockBreakingProgress(pos2);
         }
         // 实体碰撞箱
         boolean b = true;

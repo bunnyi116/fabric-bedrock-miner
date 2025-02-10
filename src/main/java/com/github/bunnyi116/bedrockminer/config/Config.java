@@ -1,5 +1,6 @@
 package com.github.bunnyi116.bedrockminer.config;
 
+import com.github.bunnyi116.bedrockminer.task.TaskMode;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.loader.api.FabricLoader;
@@ -14,6 +15,12 @@ import java.util.List;
 public class Config {
     public static final File file = new File(FabricLoader.getInstance().getConfigDir().toFile(), "bedrockminer.json");
     public static final Config INSTANCE = Config.load();
+
+    public TaskMode taskMode = TaskMode.REDSTONE_TORCH;
+    public int tickMax = 45;
+    public int retryMax = 1;
+    public int waitMax = 0;
+
     public boolean disable = false;
     public boolean debug = false;
     public boolean vertical = true;

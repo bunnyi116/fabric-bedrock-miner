@@ -1,5 +1,6 @@
-package com.github.bunnyi116.bedrockminer.task2;
+package com.github.bunnyi116.bedrockminer.task;
 
+import com.github.bunnyi116.bedrockminer.BedrockMiner;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.world.ClientWorld;
@@ -12,7 +13,7 @@ import net.minecraft.util.math.Direction;
 import java.util.Objects;
 import java.util.Optional;
 
-public abstract class TaskBlock {
+public class TaskBlock {
     public final ClientWorld world;
     public final BlockPos pos;
 
@@ -131,6 +132,10 @@ public abstract class TaskBlock {
 
     public boolean equalsPos(BlockPos blockPos) {
         return this.pos.equals(blockPos);
+    }
+
+    public boolean canInteractWithBlockAt(double additionalRange) {
+        return BedrockMiner.player.canInteractWithBlockAt(this.pos, additionalRange);
     }
 
     @Override

@@ -1,167 +1,48 @@
 package com.github.bunnyi116.bedrockminer.task;
 
+import com.github.bunnyi116.bedrockminer.config.Config;
+import com.github.bunnyi116.bedrockminer.util.BlockUtils;
+import com.github.bunnyi116.bedrockminer.util.MessageUtils;
 import net.minecraft.block.Block;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.item.Items;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
-import com.github.bunnyi116.bedrockminer.config.Config;
-import com.github.bunnyi116.bedrockminer.util.BlockUtils;
-import com.github.bunnyi116.bedrockminer.util.InventoryManagerUtils;
-import com.github.bunnyi116.bedrockminer.util.MessageUtils;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.github.bunnyi116.bedrockminer.BedrockMiner.*;
 import static com.github.bunnyi116.bedrockminer.I18n.*;
-import static com.github.bunnyi116.bedrockminer.util.InteractionUtils.getClosestFace;
-import static com.github.bunnyi116.bedrockminer.util.InteractionUtils.isBlockWithinReach;
 
 public class TaskManager {
-    private static final List<TaskHandler> handleTasks = new LinkedList<>();
-    private static @Nullable TaskHandler lastTask = null;
-    private static int lastTaskTick = 0;
-    private static final int lastTaskTickMax = 40;
-    private static boolean working = false;
+    public static final TaskManager INSTANCE = new TaskManager();
+    private boolean enabled = false;
+    private final List<Task> tasks = new ArrayList<>();
+    private @Nullable Task currentTask = null;
+    private final int processCoolingMax = 40;
+    private int processCooling = 0;
 
-    public static void switchOnOff(Block block) {
-        if (isDisabled())
-            return;
-
-        if (!checkIsAllowBlock(block))
-            return;
-
-        if (isWorking()) {
-            clearTask();
-            setWorking(false);
-        } else {
-            // 检查玩家是否为创造
-            if (client.interactionManager != null && client.interactionManager.getCurrentGameMode().isCreative()) {
-                MessageUtils.addMessage(FAIL_MISSING_SURVIVAL);
-                return;
-            }
-            setWorking(true);
-            // 检查是否在服务器
-            if (!client.isInSingleplayer()) {
-                MessageUtils.addMessage(WARN_MULTIPLAYER);
-            }
-        }
-    }
-
-    public static void addTask(Block block, BlockPos pos, ClientWorld world) {
-        if (isDisabled() || !isWorking())
-            return;
-
-        if (reverseCheckInventoryItemConditionsAllow())
-            return;
-
-        // 仅生存执行
-        if (gameMode.isSurvivalLike()) {
-            if (!checkIsAllowBlock(block)) {
-                return;
-            }
-            var task = new TaskHandler(world, world.getBlockState(pos).getBlock(), pos);
-            var config = Config.INSTANCE;
-            if (config.floorsBlacklist != null && !config.floorsBlacklist.isEmpty()) {
-                if (config.floorsBlacklist.contains(pos.getY())) {
-                    var msg = FLOOR_BLACK_LIST_WARN.getString().replace("(#floor#)", String.valueOf(pos.getY()));
+    public boolean isAllowBlock(Block block, BlockPos blockPos, boolean overlayMessage) {
+        if (Config.INSTANCE.floorsBlacklist != null && !Config.INSTANCE.floorsBlacklist.isEmpty()) {
+            if (Config.INSTANCE.floorsBlacklist.contains(blockPos.getY())) {
+                if (overlayMessage) {
+                    var msg = FLOOR_BLACK_LIST_WARN.getString().replace("(#floor#)", String.valueOf(blockPos.getY()));
                     MessageUtils.setOverlayMessage(Text.literal(msg));
-                    return;
                 }
-            }
-            for (var targetBlock : handleTasks) {
-                if (targetBlock.pos.equals(pos)) {
-                    return;
-                }
-            }
-            handleTasks.add(task);
-        }
-    }
-
-    public static void clearTask() {
-        if (TaskPlayerLookManager.isModify()) {
-            TaskPlayerLookManager.reset();
-        }
-        handleTasks.clear();
-        MessageUtils.addMessage(COMMAND_TASK_CLEAR);
-    }
-
-    public static void tick() {
-        if (isDisabled() || !working) {
-            TaskPlayerLookManager.onTick();
-            return;
-        }
-        if (handleTasks.isEmpty()
-                || gameMode.isCreative() // 检查玩家模式
-                || (reverseCheckInventoryItemConditionsAllow()) // 检查物品条件
-        ) {
-
-            if (!(lastTask != null && (lastTask.getState() == TaskState.RECYCLED_ITEMS || world.getBlockState(lastTask.pos).isAir()))) {
-                return;
+                return false;
             }
         }
-
-        // 检查任务是否完成, 重置任务
-        if (lastTask != null && !handleTasks.contains(lastTask)) {
-            lastTask = null;
-        }
-        if (lastTask != null) {
-            // 检查与目标方块距离
-            if (isBlockWithinReach(lastTask.pos, getClosestFace(lastTask.pos), 1F)) {
-                // 玩家切换世界
-                if (lastTask.world == world) {
-                    // 执行任务
-                    lastTask.tick();
-                    // 任务完成, 删除当前任务
-                    if (lastTask.isComplete()) {
-                        handleTasks.remove(lastTask);
-                        lastTask = null;
-                    }
-                }
-            } else if (lastTaskTick++ >= lastTaskTickMax) {
-                lastTask = null;
-                lastTaskTick = 0;
-            }
-        }
-
-        // 使用迭代器, 安全删除列表
-        var iterator = handleTasks.iterator();
-        while (iterator.hasNext()) {
-            var handler = iterator.next();
-            // 检查是否有其他任务正在修改视角且不是那个任务
-            if (TaskPlayerLookManager.isModify() && TaskPlayerLookManager.getTaskHandler() != handler) {
-                continue;
-            }
-            // 检查与目标方块距离
-            if (!isBlockWithinReach(handler.pos, getClosestFace(handler.pos), -1)) {
-                continue;
-            }
-            // 玩家切换世界,距离目标方块太远时,删除缓存任务
-            if (handler.world != world) {
-                iterator.remove();
-                continue;
-            }
-            lastTask = handler;
-            return;
-        }
-    }
-
-    public static boolean checkIsAllowBlock(Block block) {
-        var minecraftClient = MinecraftClient.getInstance();
-        var config = Config.INSTANCE;
         // 方块黑名单检查(服务器)
-        if (!minecraftClient.isInSingleplayer()) {
-            for (var defaultBlockBlack : config.blockBlacklistServer) {
+        if (!client.isInSingleplayer()) {
+            for (var defaultBlockBlack : Config.INSTANCE.blockBlacklistServer) {
                 if (BlockUtils.getBlockId(block).equals(defaultBlockBlack)) {
                     return false;
                 }
             }
         }
         // 方块白名单检查(用户自定义)
-        for (var blockBlack : config.blockWhitelist) {
+        for (var blockBlack : Config.INSTANCE.blockWhitelist) {
             if (BlockUtils.getBlockId(block).equals(blockBlack)) {
                 return true;
             }
@@ -169,45 +50,85 @@ public class TaskManager {
         return false;
     }
 
-    public static boolean reverseCheckInventoryItemConditionsAllow() {
-        var client = MinecraftClient.getInstance();
-        var msg = (Text) null;
-        if (client.interactionManager != null && !client.interactionManager.getCurrentGameMode().isSurvivalLike()) {
-            msg = FAIL_MISSING_SURVIVAL;
+    public void switchOnOff(ClientWorld world, BlockPos pos, Block block) {
+        if (!this.isAllowBlock(block, pos, false)) {
+            return;
         }
-        if (InventoryManagerUtils.getInventoryItemCount(Items.PISTON) < 2) {
-            msg = FAIL_MISSING_PISTON;
+        if (enabled) {
+            this.setEnabled(false);
+        } else {
+            if (gameMode.isCreative()) {
+                MessageUtils.addMessage(FAIL_MISSING_SURVIVAL);
+                return;
+            }
+            this.setEnabled(true);
+            if (!client.isInSingleplayer()) {   // 玩家服务器
+                MessageUtils.addMessage(WARN_MULTIPLAYER);
+            }
         }
-        if (InventoryManagerUtils.getInventoryItemCount(Items.REDSTONE_TORCH) < 1) {
-            msg = FAIL_MISSING_REDSTONETORCH;
-        }
-        if (InventoryManagerUtils.getInventoryItemCount(Items.SLIME_BLOCK) < 1) {
-            msg = FAIL_MISSING_SLIME;
-        }
-        if (!InventoryManagerUtils.canInstantlyMinePiston()) {
-            msg = FAIL_MISSING_INSTANTMINE;
-        }
-        if (msg != null) {
-            MessageUtils.setOverlayMessage(msg);
-            return true;
-        }
-        return false;
     }
 
-    public static boolean isWorking() {
-        return working;
+    public void addTask(ClientWorld world, BlockPos pos, Block block) {
+        if (!this.enabled) {
+            return;
+        }
+        if (gameMode.isSurvivalLike() && isAllowBlock(block, pos, true)) {
+            var task = new Task(world, pos, block);
+            if (!tasks.contains(task)) {
+                tasks.add(task);
+            }
+        }
     }
 
-    public static void setWorking(boolean working) {
-        if (working) {
+    public void tick() {
+        if (!this.enabled) {
+            TaskPlayerLookManager.INSTANCE.tickAutoReset();
+            return;
+        }
+        if (this.currentTask != null) {
+            if (this.currentTask.canInteractWithBlockAt()) {
+                this.currentTask.tick();
+                if (this.currentTask.isComplete()) {
+                    this.tasks.remove(this.currentTask);
+                    this.currentTask = null;
+                    this.processCooling = 0;
+                    TaskPlayerLookManager.INSTANCE.reset(true, true);
+                }
+            } else {
+                if (this.processCooling++ >= this.processCoolingMax) {
+                    this.currentTask = null;
+                    this.processCooling = 0;
+                } else {
+                    MessageUtils.setOverlayMessage(Text.literal(String.format("[%s/%s] 开始进入冷却, 请返回当前任务方块处理范围, 超过冷却时间将切换到下一个任务", this.processCooling, this.processCoolingMax)));
+                }
+            }
+        }
+        if (this.currentTask == null && !this.tasks.isEmpty()) {
+            for (Task task : this.tasks) {
+                if (task.canInteractWithBlockAt()) {
+                    this.currentTask = task;
+                    this.currentTask.tick();
+                    if (this.currentTask.isComplete()) {
+                        this.tasks.remove(this.currentTask);
+                        this.currentTask = null;
+                        this.processCooling = 0;
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    public void setEnabled(boolean enabled) {
+        if (enabled) {
             MessageUtils.addMessage(TOGGLE_ON);
         } else {
             MessageUtils.addMessage(TOGGLE_OFF);
         }
-        TaskManager.working = working;
+        this.enabled = enabled;
     }
 
-    private static boolean isDisabled() {
-        return Config.INSTANCE.disable;
+    public void switchOnOff() {
+        this.setEnabled(!this.enabled);
     }
 }

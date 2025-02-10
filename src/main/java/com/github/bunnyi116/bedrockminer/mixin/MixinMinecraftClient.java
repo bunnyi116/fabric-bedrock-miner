@@ -1,5 +1,6 @@
 package com.github.bunnyi116.bedrockminer.mixin;
 
+import com.github.bunnyi116.bedrockminer.task.TaskManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
@@ -17,7 +18,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import com.github.bunnyi116.bedrockminer.BedrockMiner;
-import com.github.bunnyi116.bedrockminer.task.TaskManager;
 import com.github.bunnyi116.bedrockminer.util.ClientPlayerInteractionManagerUtils;
 
 @Mixin(value = MinecraftClient.class, priority = 999)
@@ -50,7 +50,8 @@ public class MixinMinecraftClient {
         var blockPos = blockHitResult.getBlockPos();
         var blockState = world.getBlockState(blockPos);
         var block = blockState.getBlock();
-        TaskManager.switchOnOff(block);
+//        TaskManager.switchOnOff(block);
+        TaskManager.INSTANCE.switchOnOff(world, blockPos, block);
     }
 
     @Inject(method = "handleBlockBreaking", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;updateBlockBreakingProgress(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/util/math/Direction;)Z"), locals = LocalCapture.CAPTURE_FAILSOFT, cancellable = true)
@@ -60,7 +61,8 @@ public class MixinMinecraftClient {
         }
         var blockState = world.getBlockState(blockPos);
         var block = blockState.getBlock();
-        TaskManager.addTask(block, blockPos, world);
+//        TaskManager.addTask(block, blockPos, world);
+        TaskManager.INSTANCE.addTask(world, blockPos, block);
         if (interactionManager != null && !interactionManager.breakingBlock && ClientPlayerInteractionManagerUtils.isBreakingBlock()) {    // 避免冲突, 当模组正在破坏时, 拦截玩家破坏操作
             ci.cancel();
         }
@@ -69,7 +71,7 @@ public class MixinMinecraftClient {
     @Inject(method = "handleInputEvents", at = @At(value = "HEAD"))
     public void tick(CallbackInfo ci) {
         updateGameVariable();
-        TaskManager.tick();
+        TaskManager.INSTANCE.tick();
         ClientPlayerInteractionManagerUtils.autoResetBreaking();    // 自动解除拦截玩家破坏机制，避免任务阻塞或玩家离开任务方块破坏范围
     }
 

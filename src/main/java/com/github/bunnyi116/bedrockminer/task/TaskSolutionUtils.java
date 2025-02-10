@@ -1,17 +1,17 @@
-package com.github.bunnyi116.bedrockminer.task2;
+package com.github.bunnyi116.bedrockminer.task;
 
-import com.github.bunnyi116.bedrockminer.task2.block.scheme.TaskSchemeLeverBlock;
+import com.github.bunnyi116.bedrockminer.task.block.scheme.TaskSchemeLeverBlock;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import com.github.bunnyi116.bedrockminer.task2.block.TaskTargetBlock;
-import com.github.bunnyi116.bedrockminer.task2.block.scheme.TaskSchemeBaseBlockBlock;
-import com.github.bunnyi116.bedrockminer.task2.block.scheme.TaskSchemePistonBlock;
-import com.github.bunnyi116.bedrockminer.task2.block.scheme.TaskSchemeRedstoneTorchBlock;
+import com.github.bunnyi116.bedrockminer.task.block.TaskTargetBlock;
+import com.github.bunnyi116.bedrockminer.task.block.scheme.TaskSchemeBaseBlock;
+import com.github.bunnyi116.bedrockminer.task.block.scheme.TaskSchemePistonBlock;
+import com.github.bunnyi116.bedrockminer.task.block.scheme.TaskSchemeRedstoneTorchBlock;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Finder {
+public class TaskSolutionUtils {
     public final static Direction[] DEFAULT_PISTON_DIRECTIONS = new Direction[]{Direction.UP, Direction.DOWN, Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
     public final static Direction[] DEFAULT_PISTON_FACINGS = new Direction[]{Direction.UP, Direction.DOWN, Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
 
@@ -22,7 +22,7 @@ public class Finder {
     public final static Direction[] DEFAULT_LEVER_FACINGS = new Direction[]{Direction.UP, Direction.DOWN, Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
 
 
-    public static TaskSchemePistonBlock[] findPiston(TaskTargetBlock targetBlock) {
+    public static TaskSchemePistonBlock[] findPistons(TaskTargetBlock targetBlock) {
         List<TaskSchemePistonBlock> pistons = new ArrayList<>();
         for (Direction pistonDirection : DEFAULT_PISTON_DIRECTIONS) {
             final BlockPos pistonPos = targetBlock.offset(pistonDirection);
@@ -35,8 +35,7 @@ public class Finder {
         return pistons.toArray(new TaskSchemePistonBlock[0]);
     }
 
-
-    public static TaskSchemeRedstoneTorchBlock[] findRedstoneTorch(TaskTargetBlock target, TaskSchemePistonBlock piston) {
+    public static TaskSchemeRedstoneTorchBlock[] findRedstoneTorchs(TaskTargetBlock target, TaskSchemePistonBlock piston) {
         List<TaskSchemeRedstoneTorchBlock> redstoneTorchs = new ArrayList<>();
         for (Direction redstoneTorchDirection : DEFAULT_REDSTONE_TORCH_DIRECTIONS) {
             if (redstoneTorchDirection.getAxis().isVertical()) continue;
@@ -68,7 +67,7 @@ public class Finder {
         return redstoneTorchs.toArray(new TaskSchemeRedstoneTorchBlock[0]);
     }
 
-    public static TaskSchemeLeverBlock[] findLever(TaskTargetBlock target, TaskSchemePistonBlock piston) {
+    public static TaskSchemeLeverBlock[] findLevers(TaskTargetBlock target, TaskSchemePistonBlock piston) {
         List<TaskSchemeLeverBlock> levers = new ArrayList<>();
         for (Direction leverDirection : DEFAULT_LEVER_DIRECTIONS) {
             final BlockPos leverPos = target.offset(leverDirection);
@@ -93,8 +92,13 @@ public class Finder {
         return levers.toArray(new TaskSchemeLeverBlock[0]);
     }
 
-    public static TaskSchemeBaseBlockBlock findRedstoneTorchBaseBlock(TaskSchemeRedstoneTorchBlock redstoneTorch) {
+    public static TaskSchemeBaseBlock findRedstoneTorchBaseBlock(TaskSchemeRedstoneTorchBlock redstoneTorch) {
         BlockPos basePos = redstoneTorch.offset(redstoneTorch.facing.getOpposite());
-        return new TaskSchemeBaseBlockBlock(redstoneTorch.world, basePos, redstoneTorch.direction, redstoneTorch.facing);
+        return new TaskSchemeBaseBlock(redstoneTorch.world, basePos, redstoneTorch.direction, redstoneTorch.facing);
+    }
+
+    public static TaskSchemeBaseBlock findLeverBaseBlock(TaskSchemeLeverBlock leverBlock) {
+        BlockPos basePos = leverBlock.offset(leverBlock.facing.getOpposite());
+        return new TaskSchemeBaseBlock(leverBlock.world, basePos, leverBlock.direction, leverBlock.facing);
     }
 }

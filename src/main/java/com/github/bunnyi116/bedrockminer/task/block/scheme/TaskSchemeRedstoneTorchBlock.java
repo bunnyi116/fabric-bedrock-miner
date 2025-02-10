@@ -1,12 +1,12 @@
-package com.github.bunnyi116.bedrockminer.task2.block.scheme;
+package com.github.bunnyi116.bedrockminer.task.block.scheme;
 
-import net.minecraft.block.RedstoneTorchBlock;
-import net.minecraft.block.WallRedstoneTorchBlock;
+import com.github.bunnyi116.bedrockminer.util.ClientPlayerInteractionManagerUtils;
+import net.minecraft.block.*;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.Nullable;
-import com.github.bunnyi116.bedrockminer.task2.block.TaskSchemeBlock;
+import com.github.bunnyi116.bedrockminer.task.block.TaskSchemeBlock;
 
 public class TaskSchemeRedstoneTorchBlock extends TaskSchemeBlock {
     public TaskSchemeRedstoneTorchBlock(ClientWorld world, BlockPos pos, Direction direction, Direction facing) {
@@ -26,5 +26,18 @@ public class TaskSchemeRedstoneTorchBlock extends TaskSchemeBlock {
             return Direction.UP;
         }
         return null;
+    }
+
+    public boolean canPlace() {
+        if (this.facing == Direction.DOWN) {    // 红石火把不能倒着放置
+            return false;
+        }
+        final boolean isWall = this.facing.getAxis().isHorizontal();
+        final Block block = isWall ? Blocks.REDSTONE_WALL_TORCH : Blocks.REDSTONE_TORCH;
+        final BlockState blockState = block.getDefaultState();
+        if (isWall) {
+            blockState.with(WallRedstoneTorchBlock.FACING, this.facing);
+        }
+        return ClientPlayerInteractionManagerUtils.canPlace(blockState, this.pos);
     }
 }

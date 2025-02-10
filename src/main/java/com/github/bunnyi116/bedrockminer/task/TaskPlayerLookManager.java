@@ -1,5 +1,6 @@
 package com.github.bunnyi116.bedrockminer.task;
 
+import com.github.bunnyi116.bedrockminer.task.block.TaskSchemeBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -11,85 +12,148 @@ import static com.github.bunnyi116.bedrockminer.BedrockMiner.networkHandler;
 import static com.github.bunnyi116.bedrockminer.BedrockMiner.player;
 
 public class TaskPlayerLookManager {
-    private static boolean modifyYaw = false;
-    private static boolean modifyPitch = false;
-    private static float yaw = 0F;
-    private static float pitch = 0F;
-    private static int ticks = 0;
-    private static @Nullable TaskHandler taskHandler = null;
+    public static final TaskPlayerLookManager INSTANCE = new TaskPlayerLookManager();
 
-    public static float onModifyLookYaw(float yaw) {
-        return modifyYaw ? TaskPlayerLookManager.yaw : yaw;
+    private boolean modifyYaw = false;
+    private boolean modifyPitch = false;
+    private float yaw = 0F;
+    private float pitch = 0F;
+    private int ticks = 0;
+    private @Nullable Task task = null;
+    private @Nullable TaskBlock taskBlock = null;
+
+    public float onModifyLookYaw(float yaw) {
+        return this.modifyYaw ? this.yaw : yaw;
     }
 
-    public static float onModifyLookPitch(float pitch) {
-        return modifyPitch ? TaskPlayerLookManager.pitch : pitch;
+    public float onModifyLookPitch(float pitch) {
+        return this.modifyPitch ? this.pitch : pitch;
     }
 
-    private static PlayerMoveC2SPacket getLookAndOnGroundPacket(ClientPlayerEntity player) {
-        var yaw = modifyYaw ? TaskPlayerLookManager.yaw : player.getYaw();
-        var pitch = modifyPitch ? TaskPlayerLookManager.pitch : player.getPitch();
+    private PlayerMoveC2SPacket getLookAndOnGroundPacket() {
+        var yaw = this.modifyYaw ? this.yaw : player.getYaw();
+        var pitch = this.modifyPitch ? this.pitch : player.getPitch();
         return new PlayerMoveC2SPacket.LookAndOnGround(yaw, pitch, player.isOnGround(), false);
     }
 
-    public static void set(float yaw, float pitch) {
-        TaskPlayerLookManager.modifyYaw = true;
-        TaskPlayerLookManager.yaw = yaw;
-        TaskPlayerLookManager.modifyPitch = true;
-        TaskPlayerLookManager.pitch = pitch;
+    public void sendLookAndOnGroundPacket() {
+        networkHandler.sendPacket(getLookAndOnGroundPacket());
     }
 
-    public static void set(Direction facing, TaskHandler handler) {
-        taskHandler = handler;
-        float yaw = switch (facing) {
+
+    private void setYaw(float yaw) {
+        this.modifyYaw = true;
+        this.yaw = yaw;
+    }
+
+    private void setYawAndSendPacket(float yaw) {
+        this.setYaw(yaw);
+        this.sendLookAndOnGroundPacket();
+    }
+
+    private void setPitch(float pitch) {
+        this.modifyPitch = true;
+        this.pitch = pitch;
+    }
+
+    private void setPitchAndSendPacket(float pitch) {
+        this.setPitch(pitch);
+        this.sendLookAndOnGroundPacket();
+    }
+
+    public void setYawPitch(float yaw, float pitch) {
+        this.setYaw(yaw);
+        this.setPitch(pitch);
+    }
+
+    private void setYawPitchAndSendPacket(float yaw, float pitch) {
+        this.setYaw(yaw);
+        this.setPitch(pitch);
+        this.sendLookAndOnGroundPacket();
+    }
+
+    public void setFacing(Direction facing, @Nullable Task task, @Nullable TaskBlock taskBlock) {
+        this.task = task;
+        this.taskBlock = taskBlock;
+        var yaw = switch (facing) {
             case SOUTH -> 180F;
             case EAST -> 90F;
             case NORTH -> 0F;
             case WEST -> -90F;
             default -> player == null ? 0F : player.getYaw();
         };
-        float pitch = switch (facing) {
+        var pitch = switch (facing) {
             case UP -> 90F;
             case DOWN -> -90F;
             default -> 0F;
         };
-        set(yaw, pitch);
-        if (networkHandler != null && player != null) {
-            networkHandler.sendPacket(getLookAndOnGroundPacket(player));
-        }
-    }
-
-    public static void reset() {
-        modifyYaw = false;
-        yaw = 0F;
-        modifyPitch = false;
-        pitch = 0F;
-        taskHandler = null;
-        // 发送一个还原视角的数据包
-        MinecraftClient client = MinecraftClient.getInstance();
-        ClientPlayerEntity player = client.player;
-        ClientPlayNetworkHandler networkHandler = client.getNetworkHandler();
-        if (networkHandler != null && player != null) {
-            networkHandler.sendPacket(getLookAndOnGroundPacket(player));
-        }
+        this.setYawPitchAndSendPacket(yaw, pitch);
     }
 
 
-    public static void onTick() {
-        // 自动重置视角
+    public void reset(boolean resetTask, boolean resetTaskBlock) {
+        this.modifyYaw = false;
+        this.modifyPitch = false;
+        if (resetTask) {
+            this.task = null;
+        }
+        if (resetTaskBlock) {
+            this.taskBlock = null;
+        }
+    }
+
+    public void reset() {
+        this.reset(true, true);
+    }
+
+    public void resetAndSendPacket(boolean resetTask, boolean resetTaskBlock) {
+        this.reset(resetTask, resetTaskBlock);
+        this.sendLookAndOnGroundPacket();
+    }
+
+    public void resetAndSendPacket() {
+        this.resetAndSendPacket(true, true);
+    }
+
+    public void tickAutoReset() {
         if (isModify()) {
-            if (ticks++ > 20) {
-                ticks = 0;
-                reset();
+            if (this.ticks++ > 20) {
+                this.ticks = 0;
+                reset(true, true);
             }
+        } else {
+            this.ticks = 0;
         }
     }
 
-    public static boolean isModify() {
-        return modifyYaw || modifyPitch;
+    public boolean isModify() {
+        return this.modifyYaw || this.modifyPitch;
     }
 
-    public static @Nullable TaskHandler getTaskHandler() {
-        return taskHandler;
+    public boolean isModify(Task task) {
+        return this.isModify() && this.task == task;
+    }
+
+    public boolean isModify(TaskBlock taskBlock) {
+        return this.isModify() && this.taskBlock == taskBlock;
+    }
+
+    public boolean isModify(Task task, TaskBlock taskBlock) {
+        return this.isModify() && this.task == task && this.taskBlock == taskBlock;
+    }
+
+    public boolean isOf(Task task) {
+        return this.task != null && this.task == task;
+    }
+
+    public boolean isOf(TaskBlock taskBlock) {
+        return this.taskBlock != null && this.taskBlock == taskBlock;
+    }
+
+    public boolean isOf(Task task, TaskBlock taskBlock) {
+        if (this.task != null && this.task.equals(task)) {
+            return true;
+        }
+        return this.taskBlock != null && this.taskBlock.equals(taskBlock);
     }
 }
