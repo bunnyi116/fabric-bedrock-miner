@@ -31,7 +31,6 @@ public class BehaviorCommand extends CommandBase {
                                 .then(argument("floor", IntegerArgumentType.integer())
                                         .executes(this::addFloor)
                                 )
-
                         )
                         .then(literal("remove")
                                 .then(argument("floor", IntegerArgumentType.integer())

@@ -7,8 +7,8 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.Nullable;
 
-import static com.github.bunnyi116.bedrockminer.BedrockMiner.networkHandler;
-import static com.github.bunnyi116.bedrockminer.BedrockMiner.player;
+import static com.github.bunnyi116.bedrockminer.Mod.networkHandler;
+import static com.github.bunnyi116.bedrockminer.Mod.player;
 
 public class TaskPlayerLookManager {
     private static boolean modifyYaw = false;
@@ -26,10 +26,14 @@ public class TaskPlayerLookManager {
         return modifyPitch ? TaskPlayerLookManager.pitch : pitch;
     }
 
-    private static PlayerMoveC2SPacket getLookAndOnGroundPacket(ClientPlayerEntity player) {
+    public static PlayerMoveC2SPacket getLookAndOnGroundPacket() {
         var yaw = modifyYaw ? TaskPlayerLookManager.yaw : player.getYaw();
         var pitch = modifyPitch ? TaskPlayerLookManager.pitch : player.getPitch();
         return new PlayerMoveC2SPacket.LookAndOnGround(yaw, pitch, player.isOnGround(), false);
+    }
+
+    public static void sendLookAndOnGroundPacket() {
+        networkHandler.sendPacket(getLookAndOnGroundPacket());
     }
 
     public static void set(float yaw, float pitch) {
@@ -55,7 +59,7 @@ public class TaskPlayerLookManager {
         };
         set(yaw, pitch);
         if (networkHandler != null && player != null) {
-            networkHandler.sendPacket(getLookAndOnGroundPacket(player));
+            sendLookAndOnGroundPacket();
         }
     }
 
@@ -70,7 +74,7 @@ public class TaskPlayerLookManager {
         ClientPlayerEntity player = client.player;
         ClientPlayNetworkHandler networkHandler = client.getNetworkHandler();
         if (networkHandler != null && player != null) {
-            networkHandler.sendPacket(getLookAndOnGroundPacket(player));
+            sendLookAndOnGroundPacket();
         }
     }
 

@@ -2,8 +2,8 @@ package com.github.bunnyi116.bedrockminer.task;
 
 import com.github.bunnyi116.bedrockminer.config.Config;
 import com.github.bunnyi116.bedrockminer.util.BlockUtils;
-import com.github.bunnyi116.bedrockminer.util.InventoryManagerUtils;
 import com.github.bunnyi116.bedrockminer.util.MessageUtils;
+import com.github.bunnyi116.bedrockminer.util.PlayerInventoryManagerUtils;
 import net.minecraft.block.Block;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
@@ -14,10 +14,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 
-import static com.github.bunnyi116.bedrockminer.BedrockMiner.*;
 import static com.github.bunnyi116.bedrockminer.I18n.*;
-import static com.github.bunnyi116.bedrockminer.util.InteractionUtils.getClosestFace;
-import static com.github.bunnyi116.bedrockminer.util.InteractionUtils.isBlockWithinReach;
+import static com.github.bunnyi116.bedrockminer.Mod.*;
+import static com.github.bunnyi116.bedrockminer.util.ClientPlayerInteractionManagerUtils.getClosestFace;
+import static com.github.bunnyi116.bedrockminer.util.ClientPlayerInteractionManagerUtils.isBlockWithinReach;
 
 public class TaskManager {
     private static final ArrayList<TaskHandler> tasks = new ArrayList<>();
@@ -161,16 +161,16 @@ public class TaskManager {
         if (client.interactionManager != null && !client.interactionManager.getCurrentGameMode().isSurvivalLike()) {
             msg = FAIL_MISSING_SURVIVAL;
         }
-        if (InventoryManagerUtils.getInventoryItemCount(Items.PISTON) < 2) {
+        if (PlayerInventoryManagerUtils.getInventoryItemCount(Items.PISTON) < 2) {
             msg = FAIL_MISSING_PISTON;
         }
-        if (InventoryManagerUtils.getInventoryItemCount(Items.REDSTONE_TORCH) < 1) {
+        if (PlayerInventoryManagerUtils.getInventoryItemCount(Items.REDSTONE_TORCH) < 1) {
             msg = FAIL_MISSING_REDSTONETORCH;
         }
-        if (InventoryManagerUtils.getInventoryItemCount(Items.SLIME_BLOCK) < 1) {
+        if (PlayerInventoryManagerUtils.getInventoryItemCount(Items.SLIME_BLOCK) < 1) {
             msg = FAIL_MISSING_SLIME;
         }
-        if (!InventoryManagerUtils.canInstantlyMinePiston()) {
+        if (!PlayerInventoryManagerUtils.canInstantlyMinePiston()) {
             msg = FAIL_MISSING_INSTANTMINE;
         }
         if (msg != null && setOverlayMessage) {

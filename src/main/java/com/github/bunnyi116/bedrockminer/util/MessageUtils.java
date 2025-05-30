@@ -2,7 +2,7 @@ package com.github.bunnyi116.bedrockminer.util;
 
 import net.minecraft.text.Text;
 
-import static com.github.bunnyi116.bedrockminer.BedrockMiner.client;
+import static com.github.bunnyi116.bedrockminer.Mod.client;
 
 public class MessageUtils {
     public static void setOverlayMessage(Text message) {

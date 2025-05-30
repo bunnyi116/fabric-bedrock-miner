@@ -1,7 +1,6 @@
 package com.github.bunnyi116.bedrockminer.command.argument;
 
 import com.github.bunnyi116.bedrockminer.I18n;
-import com.github.bunnyi116.bedrockminer.util.StringReaderUtils;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -41,7 +40,7 @@ public class BlockArgument implements ArgumentType<Block> {
     }
 
     public Block parse(StringReader reader) throws CommandSyntaxException {
-        var input = StringReaderUtils.readUnquotedString(reader);
+        var input = readUnquotedString(reader);
         var blockResult = (Block) null;
         for (var block : Registries.BLOCK) {
             if (block.getName().getString().equals(input)) {
@@ -62,7 +61,7 @@ public class BlockArgument implements ArgumentType<Block> {
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
         var reader = new StringReader(builder.getInput());
         reader.setCursor(builder.getStart());
-        var input = StringReaderUtils.readUnquotedString(reader);
+        var input = readUnquotedString(reader);
         for (var block : Registries.BLOCK) {
             var blockName = block.getName().getString();
             if (blockName.contains(input)) {
@@ -82,5 +81,13 @@ public class BlockArgument implements ArgumentType<Block> {
     public BlockArgument setFilter(Predicate<Block> filter) {
         this.filter = filter;
         return this;
+    }
+
+    public static String readUnquotedString(StringReader reader) {
+        int start = reader.getCursor();
+        while (reader.canRead()) {
+            reader.skip();
+        }
+        return reader.getString().substring(start, reader.getCursor());
     }
 }

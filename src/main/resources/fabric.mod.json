@@ -17,7 +17,7 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "com.github.bunnyi116.bedrockminer.BedrockMiner"
+      "com.github.bunnyi116.bedrockminer.Mod"
     ]
   },
   "mixins": [

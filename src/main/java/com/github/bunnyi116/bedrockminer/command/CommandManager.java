@@ -1,11 +1,7 @@
 package com.github.bunnyi116.bedrockminer.command;
 
-import com.github.bunnyi116.bedrockminer.BedrockMiner;
-import com.github.bunnyi116.bedrockminer.Test;
-import com.github.bunnyi116.bedrockminer.command.commands.BehaviorCommand;
-import com.github.bunnyi116.bedrockminer.command.commands.DebugCommand;
-import com.github.bunnyi116.bedrockminer.command.commands.DisableCommand;
-import com.github.bunnyi116.bedrockminer.command.commands.TaskCommand;
+import com.github.bunnyi116.bedrockminer.Mod;
+import com.github.bunnyi116.bedrockminer.command.commands.*;
 import com.github.bunnyi116.bedrockminer.task.TaskManager;
 import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -27,7 +23,7 @@ public class CommandManager {
     }
 
     private static String getCommandPrefix() {
-        return BedrockMiner.COMMAND_PREFIX;
+        return Mod.COMMAND_PREFIX;
     }
 
     public static void init() {
@@ -40,8 +36,8 @@ public class CommandManager {
             // 主命令执行
             var root = literal(getCommandPrefix()).executes(CommandManager::executes);
             // 测试命令
-            if (BedrockMiner.TEST) {
-                Test.register(root);
+            if (Mod.TEST) {
+                TestCommand.register(root);
             }
             dispatcher.register(root);
         });

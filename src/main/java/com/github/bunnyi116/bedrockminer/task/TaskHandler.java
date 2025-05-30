@@ -3,7 +3,9 @@ package com.github.bunnyi116.bedrockminer.task;
 import com.github.bunnyi116.bedrockminer.Debug;
 import com.github.bunnyi116.bedrockminer.I18n;
 import com.github.bunnyi116.bedrockminer.config.Config;
-import com.github.bunnyi116.bedrockminer.util.*;
+import com.github.bunnyi116.bedrockminer.util.ClientPlayerInteractionManagerUtils;
+import com.github.bunnyi116.bedrockminer.util.MessageUtils;
+import com.github.bunnyi116.bedrockminer.util.PlayerInventoryManagerUtils;
 import com.google.common.collect.Queues;
 import net.minecraft.block.*;
 import net.minecraft.client.world.ClientWorld;
@@ -16,7 +18,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Queue;
 
-import static com.github.bunnyi116.bedrockminer.BedrockMiner.player;
+import static com.github.bunnyi116.bedrockminer.Mod.player;
 import static net.minecraft.block.Block.sideCoversSmallSquare;
 
 public class TaskHandler {
@@ -146,7 +148,7 @@ public class TaskHandler {
             setModifyLook(slimeBlock);
             return;
         }
-        BlockPlacerUtils.placement(slimeBlock.pos, slimeBlock.facing, Items.SLIME_BLOCK);
+        ClientPlayerInteractionManagerUtils.placement(slimeBlock.pos, slimeBlock.facing, Items.SLIME_BLOCK);
         addRecycled(slimeBlock.pos);
         this.state = TaskState.WAIT_GAME_UPDATE;
         resetModifyLook();
@@ -160,7 +162,7 @@ public class TaskHandler {
             setModifyLook(redstoneTorch);
             return;
         }
-        BlockPlacerUtils.placement(redstoneTorch.pos, redstoneTorch.facing, Items.REDSTONE_TORCH);
+        ClientPlayerInteractionManagerUtils.placement(redstoneTorch.pos, redstoneTorch.facing, Items.REDSTONE_TORCH);
         addRecycled(redstoneTorch.pos);
         setWait(TaskState.WAIT_GAME_UPDATE, Config.INSTANCE.taskShortWait ? 1 : 3); // 3是激活活塞伸出的时间
         resetModifyLook();
@@ -170,12 +172,13 @@ public class TaskHandler {
         if (piston == null) {
             findPiston();
         }
-        if (CheckingEnvironmentUtils.canPlace(piston.pos, Blocks.PISTON, piston.facing)) {
+        BlockState defaultState = Blocks.PISTON.getDefaultState().with(PistonBlock.FACING, piston.facing);
+        if (ClientPlayerInteractionManagerUtils.canPlace(piston.pos, defaultState)) {
             if (piston.isNeedModify() && !piston.modify) {
                 setModifyLook(piston);
                 return;
             }
-            BlockPlacerUtils.placement(piston.pos, piston.facing, Items.PISTON);
+            ClientPlayerInteractionManagerUtils.placement(piston.pos, piston.facing, Items.PISTON);
             addRecycled(piston.pos);
             setWait(TaskState.WAIT_GAME_UPDATE, 1);
             resetModifyLook();
@@ -215,7 +218,7 @@ public class TaskHandler {
                             if (!(world.getBlockState(slimeBlock.pos).isReplaceable() || sideCoversSmallSquare(world, slimeBlock.pos, slimeBlock.facing))) {
                                 continue;
                             }
-                            if (!CheckingEnvironmentUtils.canPlace(slimeBlock.pos, Blocks.SLIME_BLOCK, slimeBlock.facing)) {
+                            if (!ClientPlayerInteractionManagerUtils.canPlace(slimeBlock.pos, Blocks.SLIME_BLOCK.getDefaultState())) {
                                 continue;
                             }
                             if (slimeBlock.facing.getAxis().isHorizontal()) {
@@ -269,7 +272,7 @@ public class TaskHandler {
                         if (!(world.getBlockState(slimeBlock.pos).isReplaceable() || sideCoversSmallSquare(world, slimeBlock.pos, slimeBlock.facing))) {
                             continue;
                         }
-                        if (!CheckingEnvironmentUtils.canPlace(slimeBlock.pos, Blocks.SLIME_BLOCK, slimeBlock.facing)) {
+                        if (!ClientPlayerInteractionManagerUtils.canPlace(slimeBlock.pos, Blocks.SLIME_BLOCK.getDefaultState())) {
                             continue;
                         }
                         if (redstoneTorch.facing.getAxis().isHorizontal()) {
@@ -334,7 +337,7 @@ public class TaskHandler {
                     if (!(world.getBlockState(slimeBlock.pos).isReplaceable() || sideCoversSmallSquare(world, slimeBlock.pos, slimeBlock.facing))) {
                         continue;
                     }
-                    if (!CheckingEnvironmentUtils.canPlace(slimeBlock.pos, Blocks.SLIME_BLOCK, slimeBlock.facing)) {
+                    if (!ClientPlayerInteractionManagerUtils.canPlace(slimeBlock.pos, Blocks.SLIME_BLOCK.getDefaultState())) {
                         continue;
                     }
                     if (piston.facing.getAxis().isHorizontal()) {
@@ -372,7 +375,7 @@ public class TaskHandler {
             var blockPos = recycledQueue.peek();
             var blockState = world.getBlockState(blockPos);
             debug("任务物品正在回收: (%s) --> %s", blockPos.toShortString(), blockState.getBlock().getName().getString());
-            InventoryManagerUtils.autoSwitch(blockState);
+            PlayerInventoryManagerUtils.autoSwitch(blockState);
             ClientPlayerInteractionManagerUtils.updateBlockBreakingProgress(blockPos);
             if (blockState.isReplaceable()) {
                 recycledQueue.remove(blockPos);
@@ -401,7 +404,7 @@ public class TaskHandler {
         } else {
             // 切换到工具
             if (world.getBlockState(piston.pos).calcBlockBreakingDelta(player, world, piston.pos) < 1F) {
-                InventoryManagerUtils.autoSwitch(world.getBlockState(piston.pos));
+                PlayerInventoryManagerUtils.autoSwitch(world.getBlockState(piston.pos));
                 setWait(TaskState.EXECUTE, Config.INSTANCE.taskShortWait ? 1 : 3);
                 return;
             }
@@ -416,7 +419,7 @@ public class TaskHandler {
                 ClientPlayerInteractionManagerUtils.updateBlockBreakingProgress(redstoneTorch.pos);
             }
             ClientPlayerInteractionManagerUtils.updateBlockBreakingProgress(piston.pos);
-            BlockPlacerUtils.placement(piston.pos, direction.getOpposite(), Items.PISTON);
+            ClientPlayerInteractionManagerUtils.placement(piston.pos, direction.getOpposite(), Items.PISTON);
             addRecycled(piston.pos);
             if (executeModify) {
                 resetModifyLook();

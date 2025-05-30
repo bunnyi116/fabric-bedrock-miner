@@ -1,7 +1,7 @@
 package com.github.bunnyi116.bedrockminer.config;
 
-import com.github.bunnyi116.bedrockminer.BedrockMiner;
 import com.github.bunnyi116.bedrockminer.Debug;
+import com.github.bunnyi116.bedrockminer.Mod;
 import com.github.bunnyi116.bedrockminer.util.BlockUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -14,7 +14,7 @@ import java.util.List;
 
 public class Config {
     public static final File CONFIG_DIR = FabricLoader.getInstance().getConfigDir().toFile();
-    public static final File CONFIG_FILE = new File(CONFIG_DIR, BedrockMiner.MOD_ID + ".json");
+    public static final File CONFIG_FILE = new File(CONFIG_DIR, Mod.MOD_ID + ".json");
     public static final Config INSTANCE = Config.load();
     public boolean disable = false;
     public boolean debug = false;
@@ -28,7 +28,7 @@ public class Config {
     public static List<String> getDefaultBlockWhitelist() {
         var list = new ArrayList<String>();
         list.add(BlockUtils.getBlockId(Blocks.BEDROCK));                  // 基岩
-        // 防误触，取消以下默认白名单
+        // 放置玩家意外点击以下方块所以取消以下默认白名单, 需要的可以通过命令添加
         // list.add(BlockUtils.getId(Blocks.END_PORTAL));               // 末地传送门
         // list.add(BlockUtils.getId(Blocks.END_PORTAL_FRAME));         // 末地传送门-框架
         // list.add(BlockUtils.getId(Blocks.END_GATEWAY));              // 末地折跃门

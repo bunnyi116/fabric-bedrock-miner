@@ -18,10 +18,10 @@ import net.minecraft.util.math.BlockPos;
 
 import java.util.Objects;
 
-import static com.github.bunnyi116.bedrockminer.BedrockMiner.*;
+import static com.github.bunnyi116.bedrockminer.Mod.*;
 
 
-public class InventoryManagerUtils {
+public class PlayerInventoryManagerUtils {
 
     public static void autoSwitch(Block block) {
         autoSwitch(block.getDefaultState());
@@ -34,11 +34,11 @@ public class InventoryManagerUtils {
         for (int i = 0; i < playerInventory.size(); i++) {
             var itemStack = playerInventory.getStack(i);
             // 检查耐久是否发起警告(剩余耐久<=检查值)
-            if (InventoryManagerUtils.isItemDamageWarning(itemStack, 5)) {
+            if (PlayerInventoryManagerUtils.isItemDamageWarning(itemStack, 5)) {
                 continue;
             }
             // 选取最快工具
-            float blockBreakingTotalTime = InventoryManagerUtils.getBlockBreakingTotalTime(blockState, itemStack);
+            float blockBreakingTotalTime = PlayerInventoryManagerUtils.getBlockBreakingTotalTime(blockState, itemStack);
             if (blockBreakingTotalTime != -1) {
                 if (lastTime == -1 || lastTime > blockBreakingTotalTime) {
                     lastTime = blockBreakingTotalTime;
@@ -47,7 +47,7 @@ public class InventoryManagerUtils {
             }
         }
         if (lastSlot != -1) {
-            InventoryManagerUtils.switchToSlot(lastSlot);
+            PlayerInventoryManagerUtils.switchToSlot(lastSlot);
         }
     }
 
@@ -71,7 +71,7 @@ public class InventoryManagerUtils {
             for (Item item : items) {
                 if (stack.isOf(item)) {
                     // 检查耐久是否发起警告(剩余耐久<=检查值)
-                    if (minDamage > 0 && InventoryManagerUtils.isItemDamageWarning(stack, minDamage)) {
+                    if (minDamage > 0 && PlayerInventoryManagerUtils.isItemDamageWarning(stack, minDamage)) {
                         continue;
                     }
                     switchToSlot(i);

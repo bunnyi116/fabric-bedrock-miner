@@ -1,6 +1,6 @@
 package com.github.bunnyi116.bedrockminer.mixin;
 
-import com.github.bunnyi116.bedrockminer.BedrockMiner;
+import com.github.bunnyi116.bedrockminer.Mod;
 import com.github.bunnyi116.bedrockminer.task.TaskManager;
 import com.github.bunnyi116.bedrockminer.util.ClientPlayerInteractionManagerUtils;
 import net.minecraft.client.MinecraftClient;
@@ -14,7 +14,6 @@ import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -61,31 +60,18 @@ public class MixinMinecraftClient {
         var blockState = world.getBlockState(blockPos);
         var block = blockState.getBlock();
         TaskManager.addTask(block, blockPos, world);
-        if (interactionManager != null && !interactionManager.breakingBlock && ClientPlayerInteractionManagerUtils.isBreakingBlock()) {    // 避免冲突, 当模组正在破坏时, 拦截玩家破坏操作
+        if (interactionManager != null
+                && !interactionManager.breakingBlock
+                && ClientPlayerInteractionManagerUtils.isBreakingBlock())
+        {    // 避免冲突, 当模组正在破坏时, 暂时拦截玩家破坏操作
             ci.cancel();
         }
     }
 
     @Inject(method = "handleInputEvents", at = @At(value = "HEAD"))
     public void tick(CallbackInfo ci) {
-        updateGameVariable();
+        Mod.updateGameVariable();   // 在执行前更新环境变量
         TaskManager.tick();
         ClientPlayerInteractionManagerUtils.autoResetBreaking();    // 自动解除拦截玩家破坏机制，避免任务阻塞或玩家离开任务方块破坏范围
-    }
-
-    @Unique
-    private void updateGameVariable() {
-        BedrockMiner.client = (MinecraftClient) (Object) this;
-        BedrockMiner.world = BedrockMiner.client.world;
-        BedrockMiner.player = BedrockMiner.client.player;
-        if (BedrockMiner.player != null) {
-            BedrockMiner.playerInventory = BedrockMiner.player.getInventory();
-        }
-        BedrockMiner.crosshairTarget = BedrockMiner.client.crosshairTarget;
-        BedrockMiner.interactionManager = BedrockMiner.client.interactionManager;
-        BedrockMiner.networkHandler = BedrockMiner.client.getNetworkHandler();
-        if (BedrockMiner.interactionManager != null) {
-            BedrockMiner.gameMode = BedrockMiner.interactionManager.getCurrentGameMode();
-        }
     }
 }

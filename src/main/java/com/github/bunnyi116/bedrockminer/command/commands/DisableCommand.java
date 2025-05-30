@@ -17,7 +17,8 @@ public class DisableCommand extends CommandBase {
 
     @Override
     public void build(LiteralArgumentBuilder<FabricClientCommandSource> builder, CommandRegistryAccess registryAccess) {
-        builder.executes(context -> toggleSwitch());
+        builder
+                .executes(context -> toggleSwitch());
     }
 
     private int toggleSwitch() {
