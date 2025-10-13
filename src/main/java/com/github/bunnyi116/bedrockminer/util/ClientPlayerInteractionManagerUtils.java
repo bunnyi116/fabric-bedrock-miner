@@ -5,31 +5,25 @@ import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.network.PendingUpdateManager;
 import net.minecraft.client.network.SequencedPacketCreator;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.listener.ServerPlayPacketListener;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket.Action;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.sound.BlockSoundGroup;
-import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.Nullable;
 
 import static com.github.bunnyi116.bedrockminer.BedrockMiner.*;
 
 @Environment(EnvType.CLIENT)
 public class ClientPlayerInteractionManagerUtils {  // 该类是为后续开发做准备
-    private static final float BREAKING_PROGRESS_MAX = 0.7F;
+    public static final float BREAKING_PROGRESS_MAX = 0.7F;
 
     private static BlockPos currentBreakingPos = new BlockPos(-1, -1, -1);
     private static ItemStack selectedStack;
     private static float currentBreakingProgress;
-    private static float blockBreakingSoundCooldown;
     private static boolean breakingBlock;
     private static int lastSelectedSlot;
     private static int breakingTicks;
@@ -59,27 +53,28 @@ public class ClientPlayerInteractionManagerUtils {  // 该类是为后续开发�
             return false;
         } else {
             if (gameMode.isCreative()) {
-                BlockState blockState = world.getBlockState(pos);
-                client.getTutorialManager().onBlockBreaking(world, pos, blockState, 1.0F);
+                breakingBlock = true;
                 sendSequencedPacket((sequence) -> {
                     interactionManager.breakBlock(pos);
                     return new PlayerActionC2SPacket(Action.START_DESTROY_BLOCK, pos, direction, sequence);
                 }, beforeBreaking, afterBreaking);
+                breakingBlock = false;
             } else if (!breakingBlock || !isCurrentlyBreaking(pos)) {
                 if (breakingBlock) {
                     networkHandler.sendPacket(new PlayerActionC2SPacket(Action.ABORT_DESTROY_BLOCK, currentBreakingPos, direction));
                     breakingBlock = false;
                 }
                 BlockState blockState = world.getBlockState(pos);
-                client.getTutorialManager().onBlockBreaking(world, pos, blockState, 0.0F);
                 var calcBlockBreakingDelta = blockState.calcBlockBreakingDelta(player, player.getEntityWorld(), pos);
                 if (calcBlockBreakingDelta >= BREAKING_PROGRESS_MAX) {
+                    breakingBlock = true;
                     sendSequencedPacket((sequence) -> {
                         if (!blockState.isAir()) {
                             interactionManager.breakBlock(pos);
                         }
                         return new PlayerActionC2SPacket(Action.START_DESTROY_BLOCK, pos, direction, sequence);
                     }, beforeBreaking, afterBreaking);
+                    breakingBlock = false;
                 } else {
                     sendSequencedPacket((sequence) -> {
                         if (!blockState.isAir() && currentBreakingProgress == 0.0F) {
@@ -89,7 +84,6 @@ public class ClientPlayerInteractionManagerUtils {  // 该类是为后续开发�
                         currentBreakingPos = pos;
                         selectedStack = player.getMainHandStack();
                         currentBreakingProgress = 0.0F;
-                        blockBreakingSoundCooldown = 0.0F;
                         world.setBlockBreakingInfo(player.getId(), currentBreakingPos, getBlockBreakingProgress());
                         return new PlayerActionC2SPacket(Action.START_DESTROY_BLOCK, pos, direction, sequence);
                     });
@@ -103,8 +97,7 @@ public class ClientPlayerInteractionManagerUtils {  // 该类是为后续开发�
     public static boolean updateBlockBreakingProgress(BlockPos pos, Direction direction, @Nullable Runnable beforeBreaking, @Nullable Runnable afterBreaking) {
         syncSelectedSlot();
         if (gameMode.isCreative() && world.getWorldBorder().contains(pos)) {
-            BlockState blockState = world.getBlockState(pos);
-            client.getTutorialManager().onBlockBreaking(world, pos, blockState, 1.0F);
+            breakingBlock = true;
             sendSequencedPacket((sequence) -> {
                 interactionManager.breakBlock(pos);
                 return new PlayerActionC2SPacket(Action.START_DESTROY_BLOCK, pos, direction, sequence);
@@ -118,25 +111,15 @@ public class ClientPlayerInteractionManagerUtils {  // 该类是为后续开发�
                 breakingBlock = false;
                 return false;
             } else {
+                breakingBlock = true;
                 currentBreakingProgress += blockState.calcBlockBreakingDelta(player, player.getEntityWorld(), pos);
-                if (blockBreakingSoundCooldown % 4.0F == 0.0F) {
-                    BlockSoundGroup blockSoundGroup = blockState.getSoundGroup();
-                    client.getSoundManager().play(new PositionedSoundInstance(blockSoundGroup.getHitSound(), SoundCategory.BLOCKS, (blockSoundGroup.getVolume() + 1.0F) / 8.0F, blockSoundGroup.getPitch() * 0.5F, SoundInstance.createRandom(), pos));
-                }
-                ++blockBreakingSoundCooldown;
                 if (currentBreakingProgress >= BREAKING_PROGRESS_MAX) {
-                    client.getTutorialManager().onBlockBreaking(world, pos, blockState, 1.0F);
-                } else {
-                    client.getTutorialManager().onBlockBreaking(world, pos, blockState, MathHelper.clamp(currentBreakingProgress, 0.0F, 1.0F));
-                }
-                if (currentBreakingProgress >= BREAKING_PROGRESS_MAX) {
-                    breakingBlock = false;
                     sendSequencedPacket((sequence) -> {
                         interactionManager.breakBlock(pos);
                         return new PlayerActionC2SPacket(Action.STOP_DESTROY_BLOCK, pos, direction, sequence);
                     }, beforeBreaking, afterBreaking);
                     currentBreakingProgress = 0.0F;
-                    blockBreakingSoundCooldown = 0.0F;
+                    breakingBlock = false;
                 }
                 world.setBlockBreakingInfo(player.getId(), currentBreakingPos, getBlockBreakingProgress());
                 ++breakingTickMax;
@@ -147,8 +130,8 @@ public class ClientPlayerInteractionManagerUtils {  // 该类是为后续开发�
         }
     }
 
-    public static boolean updateBlockBreakingProgress(BlockPos pos) {
-        return updateBlockBreakingProgress(pos, InteractionUtils.getClosestFace(pos), null, null);
+    public static void updateBlockBreakingProgress(BlockPos pos) {
+        updateBlockBreakingProgress(pos, InteractionUtils.getClosestFace(pos), null, null);
     }
 
     public static void sendSequencedPacket(SequencedPacketCreator packetCreator, @Nullable Runnable beforeSending, @Nullable Runnable afterSending) {

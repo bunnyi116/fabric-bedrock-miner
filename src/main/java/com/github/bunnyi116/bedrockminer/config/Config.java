@@ -18,8 +18,6 @@ public class Config {
     public static final Config INSTANCE = Config.load();
     public boolean disable = false;
     public boolean debug = false;
-    public boolean vertical = true;
-    public boolean horizontal = true;
     public boolean taskShortWait = true;
     public List<Integer> floorsBlacklist = new ArrayList<>();
     public List<String> blockWhitelist = getDefaultBlockWhitelist();

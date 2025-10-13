@@ -4,6 +4,7 @@ import com.github.bunnyi116.bedrockminer.config.Config;
 import com.github.bunnyi116.bedrockminer.util.BlockUtils;
 import com.github.bunnyi116.bedrockminer.util.InventoryManagerUtils;
 import com.github.bunnyi116.bedrockminer.util.MessageUtils;
+import com.github.bunnyi116.bedrockminer.util.PlayerLookManager;
 import net.minecraft.block.Block;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
@@ -20,15 +21,21 @@ import static com.github.bunnyi116.bedrockminer.util.InteractionUtils.getClosest
 import static com.github.bunnyi116.bedrockminer.util.InteractionUtils.isBlockWithinReach;
 
 public class TaskManager {
-    private static final ArrayList<TaskHandler> tasks = new ArrayList<>();
-    private static @Nullable TaskHandler task = null;
+    private static final ArrayList<Task> tasks = new ArrayList<>();
+    private static @Nullable Task task = null;
     private static int lastTaskTick = 0;
     private static final int lastTaskTickMax = 40;
     private static boolean working = false;
 
+    public static boolean isProcessing() {
+        return processing;
+    }
+
+    private static boolean processing;
+
     public static void tick() {
         if (isDisabled() || !isWorking()) {
-            TaskPlayerLookManager.onTick();
+            PlayerLookManager.onTick();
             return;
         }
         // 没有任务
@@ -43,7 +50,9 @@ public class TaskManager {
         if (task != null) {
             // 检查玩家是否在玩家处理范围内
             if (task.world == world && isBlockWithinReach(task.pos, 1F)) {
+                processing = true;
                 task.tick();
+                processing = false;
                 if (task.isComplete()) {    // 任务执行后, 如果任务已经完成, 先删除任务减少TICK浪费
                     tasks.remove(task);
                     task = null;
@@ -62,7 +71,7 @@ public class TaskManager {
         while (iterator.hasNext()) {
             var handler = iterator.next();
             // 检查是否有其他任务正在修改视角且不是那个任务
-            if (TaskPlayerLookManager.isModify() && TaskPlayerLookManager.getTaskHandler() != handler) {
+            if (PlayerLookManager.isModify() && PlayerLookManager.getTask() != handler) {
                 continue;
             }
             // 检查与目标方块距离
@@ -81,8 +90,8 @@ public class TaskManager {
 
     public static void clearTask() {
         tasks.clear();
-        if (TaskPlayerLookManager.isModify()) { // 如果有任务正在修改事件, 则还原玩家视角
-            TaskPlayerLookManager.reset();
+        if (PlayerLookManager.isModify()) { // 如果有任务正在修改事件, 则还原玩家视角
+            PlayerLookManager.reset();
         }
         MessageUtils.addMessage(COMMAND_TASK_CLEAR);
     }
@@ -96,7 +105,7 @@ public class TaskManager {
             if (!isAllowBlock(block)) {
                 return;
             }
-            var task = new TaskHandler(world, block, pos);
+            var task = new Task(world, block, pos);
             var config = Config.INSTANCE;
             if (config.floorsBlacklist != null && !config.floorsBlacklist.isEmpty()) {  // 楼层限制
                 if (config.floorsBlacklist.contains(pos.getY())) {

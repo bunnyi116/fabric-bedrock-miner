@@ -61,7 +61,7 @@ public class MixinMinecraftClient {
         var blockState = world.getBlockState(blockPos);
         var block = blockState.getBlock();
         TaskManager.addTask(block, blockPos, world);
-        if (interactionManager != null && !interactionManager.breakingBlock && ClientPlayerInteractionManagerUtils.isBreakingBlock()) {    // 避免冲突, 当模组正在破坏时, 拦截玩家破坏操作
+        if (TaskManager.isProcessing() || ClientPlayerInteractionManagerUtils.isBreakingBlock()) {    // 避免冲突, 当模组正在破坏时, 拦截玩家破坏操作
             ci.cancel();
         }
     }

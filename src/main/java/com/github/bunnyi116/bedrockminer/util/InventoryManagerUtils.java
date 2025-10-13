@@ -9,12 +9,12 @@ import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.effect.StatusEffectUtil;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.registry.tag.FluidTags;
-import net.minecraft.util.math.BlockPos;
 
 import java.util.Objects;
 
@@ -55,9 +55,10 @@ public class InventoryManagerUtils {
         // 背包中没有指定的物品
         if (PlayerInventory.isValidHotbarIndex(slot)) {
             playerInventory.setSelectedSlot(slot);
-        } else {
-            interactionManager.pickItemFromBlock(BlockPos.fromLong(slot), true);
         }
+//        else {
+//            interactionManager.pickItemFromEntity(player, true);
+//        }
         networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(playerInventory.getSelectedSlot())); // 发送更新手持物品的数据包
     }
 

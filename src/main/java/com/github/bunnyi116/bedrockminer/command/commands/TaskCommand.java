@@ -31,20 +31,6 @@ public class TaskCommand extends CommandBase {
     @Override
     public void build(LiteralArgumentBuilder<FabricClientCommandSource> builder, CommandRegistryAccess registryAccess) {
         builder
-                .then(literal("vertical")
-                        .then(argument("bool", BoolArgumentType.bool()).executes(context -> {
-                            Config.INSTANCE.vertical = BoolArgumentType.getBool(context, "bool");
-                            MessageUtils.addMessage(Text.translatable(String.valueOf(Config.INSTANCE.vertical)));
-                            Config.save();
-                            return 0;
-                        })))
-                .then(literal("horizontal")
-                        .then(argument("bool", BoolArgumentType.bool()).executes(context -> {
-                            Config.INSTANCE.horizontal = BoolArgumentType.getBool(context, "bool");
-                            MessageUtils.addMessage(Text.translatable(String.valueOf(Config.INSTANCE.horizontal)));
-                            Config.save();
-                            return 0;
-                        })))
                 .then(literal("shortWait")
                         .then(argument("isShortWait", BoolArgumentType.bool())
                                 .executes(this::onWait)

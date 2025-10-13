@@ -1,5 +1,6 @@
-package com.github.bunnyi116.bedrockminer.task;
+package com.github.bunnyi116.bedrockminer.util;
 
+import com.github.bunnyi116.bedrockminer.task.Task;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -10,37 +11,43 @@ import org.jetbrains.annotations.Nullable;
 import static com.github.bunnyi116.bedrockminer.BedrockMiner.networkHandler;
 import static com.github.bunnyi116.bedrockminer.BedrockMiner.player;
 
-public class TaskPlayerLookManager {
+public class PlayerLookManager {
     private static boolean modifyYaw = false;
     private static boolean modifyPitch = false;
     private static float yaw = 0F;
     private static float pitch = 0F;
     private static int ticks = 0;
-    private static @Nullable TaskHandler taskHandler = null;
+    private static @Nullable Task task = null;
 
     public static float onModifyLookYaw(float yaw) {
-        return modifyYaw ? TaskPlayerLookManager.yaw : yaw;
+        return modifyYaw ? PlayerLookManager.yaw : yaw;
     }
 
     public static float onModifyLookPitch(float pitch) {
-        return modifyPitch ? TaskPlayerLookManager.pitch : pitch;
+        return modifyPitch ? PlayerLookManager.pitch : pitch;
     }
 
     private static PlayerMoveC2SPacket getLookAndOnGroundPacket(ClientPlayerEntity player) {
-        var yaw = modifyYaw ? TaskPlayerLookManager.yaw : player.getYaw();
-        var pitch = modifyPitch ? TaskPlayerLookManager.pitch : player.getPitch();
+        var yaw = modifyYaw ? PlayerLookManager.yaw : player.getYaw();
+        var pitch = modifyPitch ? PlayerLookManager.pitch : player.getPitch();
         return new PlayerMoveC2SPacket.LookAndOnGround(yaw, pitch, player.isOnGround(), false);
     }
 
-    public static void set(float yaw, float pitch) {
-        TaskPlayerLookManager.modifyYaw = true;
-        TaskPlayerLookManager.yaw = yaw;
-        TaskPlayerLookManager.modifyPitch = true;
-        TaskPlayerLookManager.pitch = pitch;
+    public static void sendLookAndOnGroundPacket() {
+        if (networkHandler != null && player != null) {
+            networkHandler.sendPacket(getLookAndOnGroundPacket(player));
+        }
     }
 
-    public static void set(Direction facing, TaskHandler handler) {
-        taskHandler = handler;
+    public static void set(float yaw, float pitch) {
+        PlayerLookManager.modifyYaw = true;
+        PlayerLookManager.yaw = yaw;
+        PlayerLookManager.modifyPitch = true;
+        PlayerLookManager.pitch = pitch;
+    }
+
+    public static void set(Direction facing, Task task) {
+        PlayerLookManager.task = task;
         float yaw = switch (facing) {
             case SOUTH -> 180F;
             case EAST -> 90F;
@@ -54,9 +61,7 @@ public class TaskPlayerLookManager {
             default -> 0F;
         };
         set(yaw, pitch);
-        if (networkHandler != null && player != null) {
-            networkHandler.sendPacket(getLookAndOnGroundPacket(player));
-        }
+        sendLookAndOnGroundPacket();
     }
 
     public static void reset() {
@@ -64,7 +69,7 @@ public class TaskPlayerLookManager {
         yaw = 0F;
         modifyPitch = false;
         pitch = 0F;
-        taskHandler = null;
+        task = null;
         // 发送一个还原视角的数据包
         MinecraftClient client = MinecraftClient.getInstance();
         ClientPlayerEntity player = client.player;
@@ -87,7 +92,7 @@ public class TaskPlayerLookManager {
         return modifyYaw || modifyPitch;
     }
 
-    public static @Nullable TaskHandler getTaskHandler() {
-        return taskHandler;
+    public static @Nullable Task getTask() {
+        return task;
     }
 }
