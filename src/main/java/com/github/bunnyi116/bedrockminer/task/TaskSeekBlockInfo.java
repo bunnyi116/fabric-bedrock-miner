@@ -23,4 +23,13 @@ public class TaskSeekBlockInfo {
     public boolean isNeedModify() {
         return facing.getAxis().isHorizontal();
     }
+
+    @Override
+    public String toString() {
+        return "TaskSeekBlockInfo{" +
+                "pos=" + pos +
+                ", facing=" + facing +
+                ", level=" + level +
+                '}';
+    }
 }

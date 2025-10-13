@@ -1,5 +1,6 @@
 package com.github.bunnyi116.bedrockminer.task;
 
+import com.github.bunnyi116.bedrockminer.Debug;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.world.ClientWorld;
@@ -96,43 +97,49 @@ public class TaskSeekSchemeTools {
                     default -> throw new IllegalStateException("Unexpected value: " + facing);
                 };
 
+                if (redstoneTorchPos.equals(pistonInfo.pos)) {
+                    Debug.alwaysWrite("");
+                }
+
                 // 添加到方案
                 list.add(new TaskSeekBlockInfo(redstoneTorchPos, facing, level));
             }
         }
 
         for (Direction redstoneTorchDirection : Direction.values()) {
-            // 检查红石火把位置是否与活塞臂伸出的位置重叠
             final var redstoneTorchPos = pistonInfo.pos.offset(redstoneTorchDirection);
+            // 红石火把位置与活塞臂伸出的位置重叠
             if (pistonHeadPos.equals(redstoneTorchPos))
                 continue;
 
             // 常规位置
-            for (Direction facing : redstoneTorchFacings) {
-                final var basePos = redstoneTorchPos.offset(facing.getOpposite());
-
-                // 红石火把无法倒置
-                if (facing == Direction.DOWN)
-                    continue;
-
-                // 红石火把在吸附在活塞上
-                if (redstoneTorchDirection == facing)
-                    continue;
+            for (Direction redstoneTorchFacing : redstoneTorchFacings) {
+                final var basePos = redstoneTorchPos.offset(redstoneTorchFacing.getOpposite());
 
                 // 过滤红石火把附在活塞面上位置
                 if (basePos.equals(pistonInfo.pos))
                     continue;
 
+                // 红石火把无法倒置
+                if (redstoneTorchFacing == Direction.DOWN)
+                    continue;
+
                 // 设置排序等级
-                int level = switch (facing) {
+                int level = switch (redstoneTorchFacing) {
                     case UP -> 0;
                     case NORTH, SOUTH, WEST, EAST -> 2;
-                    default -> throw new IllegalStateException("Unexpected value: " + facing);
+                    default -> throw new IllegalStateException("Unexpected value: " + redstoneTorchFacing);
                 };
 
                 // 添加到方案
-                list.add(new TaskSeekBlockInfo(redstoneTorchPos, facing, level));
-                list.add(new TaskSeekBlockInfo(redstoneTorchPos.up(), facing, level + 1));
+                list.add(new TaskSeekBlockInfo(redstoneTorchPos, redstoneTorchFacing, level));
+                if (!redstoneTorchPos.equals(targetPos)) {
+                    list.add(new TaskSeekBlockInfo(redstoneTorchPos.up(), redstoneTorchFacing, level + 1));
+                }
+                var redstoneTorchPosUp = redstoneTorchPos.up();
+                if (!redstoneTorchPosUp.equals(targetPos) && !redstoneTorchPosUp.equals(pistonInfo.pos)) {
+                    list.add(new TaskSeekBlockInfo(redstoneTorchPos.up(), redstoneTorchFacing, level + 1));
+                }
             }
         }
         return list.toArray(TaskSeekBlockInfo[]::new);

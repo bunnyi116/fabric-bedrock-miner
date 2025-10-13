@@ -116,6 +116,8 @@ public class Task {
                         retryCount++;
                         debug("任务物品回收已完成, 超时重试: %s", retryCount);
                         currentState = TaskState.INITIALIZE;
+                    } else {
+                        currentState = TaskState.COMPLETE;
                     }
                 }
                 case TIMEOUT -> {
@@ -130,16 +132,18 @@ public class Task {
                 case COMPLETE -> debug("任务已完成");
             }
             if (this.lastState == this.currentState) {  // 开始状态与结束状态一致, 避免无意义的内循环
+                debug("状态一致，无需内部循环");
                 break;
             }
+
             if (this.currentState.isExclusiveTick()) {
                 if (this.lastState.isExclusiveTick()) {
                     if (this.lastState == TaskState.WAIT_GAME_UPDATE) {
+                        debug("避免浪费TICK");
                         continue;
                     }
+                    debug("独占TICK运行");
                     break;
-                } else {
-                    continue;
                 }
             }
             ++tickInternalCount;
@@ -239,6 +243,7 @@ public class Task {
                     continue;
                 }
 
+
                 this.direction = direction;
                 this.piston = piston;
                 this.redstoneTorch = redstoneTorch;
@@ -246,10 +251,19 @@ public class Task {
                 break;
             }
         }
-        if (this.piston == null) {
-            currentState = TaskState.FAIL;
+        if (this.piston == null || this.redstoneTorch == null || this.slimeBlock == null) {
+            this.currentState = TaskState.FAIL;
             MessageUtils.setOverlayMessage(Text.literal(I18n.HANDLE_SEEK.getString().replace("%BlockPos%", pos.toShortString())));
         } else {
+            debug("目标: %s", pos);
+            debug("方案: %s", direction);
+            debug("活塞: %s", piston);
+            debug("底座: %s", slimeBlock);
+            debug("红石火把: %s", redstoneTorch);
+
+            if (piston.pos.equals(redstoneTorch.pos)){
+                debug("");
+            }
             this.currentState = TaskState.WAIT_GAME_UPDATE;
         }
     }
@@ -341,6 +355,10 @@ public class Task {
         }
         if (!this.executed) {
             debugUpdateStates("任务未执行过");
+            if (lastState == currentState) {
+                debug("");
+            }
+
             // 获取放置位置
             if (this.piston == null) {
                 this.debugUpdateStates("活塞未获取,准备查找合适的位置");
@@ -357,37 +375,56 @@ public class Task {
                 this.currentState = TaskState.FIND;
                 return;
             }
-            // 放活塞
+
+            // 活塞
             if (world.getBlockState(this.piston.pos).isReplaceable()) {
                 this.debugUpdateStates("[%s] [%s] 活塞未放置且该位置可放置物品,设置放置状态", this.piston.pos.toShortString(), this.piston.facing);
                 this.currentState = TaskState.PLACE_PISTON;
                 return;
-            } else if (!(world.getBlockState(this.piston.pos).getBlock() instanceof PistonBlock)) {
-                this.currentState = TaskState.FIND;
-                return;
             }
-            // 先放底座
+            if (world.getBlockState(this.piston.pos).getBlock() instanceof PistonBlock) {
+                if (world.getBlockState(this.piston.pos).get(PistonBlock.FACING) != this.piston.facing) {
+                    this.debugUpdateStates("[%s] [%s] 活塞已放置, 但放置方向不正确", this.piston.pos.toShortString(), this.piston.facing);
+                    this.currentState = TaskState.FAIL;
+                    return;
+                }
+            }
+
+            // 底座
             if (world.getBlockState(this.slimeBlock.pos).isReplaceable()) {
                 this.debugUpdateStates("[%s] [%s] 底座未放置且该位置可放置物品,设置放置状态", this.slimeBlock.pos.toShortString(), this.slimeBlock.facing);
                 this.currentState = TaskState.PLACE_SLIME_BLOCK;
                 return;
-            } else if (!Block.sideCoversSmallSquare(world, slimeBlock.pos, slimeBlock.facing)) {
-                this.currentState = TaskState.FIND;
+            }
+            if (!Block.sideCoversSmallSquare(world, slimeBlock.pos, slimeBlock.facing)) {
+                this.debugUpdateStates("[%s] [%s] 底座已放置, 但不是完整的方块", this.slimeBlock.pos.toShortString(), this.slimeBlock.facing);
+                this.currentState = TaskState.FAIL;
                 return;
             }
-            // 放红石火把
+
+            // 红石火把
             if (world.getBlockState(redstoneTorch.pos).isReplaceable()) {
                 this.debugUpdateStates("[%s] [%s] 红石火把未放置且该位置可放置物品,设置放置状态", this.redstoneTorch.pos.toShortString(), this.redstoneTorch.facing);
                 this.currentState = TaskState.PLACE_REDSTONE_TORCH;
                 return;
-            } else if (!(world.getBlockState(redstoneTorch.pos).getBlock() instanceof RedstoneTorchBlock
-                    || world.getBlockState(redstoneTorch.pos).getBlock() instanceof WallRedstoneTorchBlock)) {
-                this.currentState = TaskState.FIND;
+            }
+            if (world.getBlockState(redstoneTorch.pos).getBlock() instanceof RedstoneTorchBlock && this.redstoneTorch.facing != Direction.UP) {
+                this.debugUpdateStates("[%s] [%s] 红石火把已放置, 但放置状态与方案不一致", this.redstoneTorch.pos.toShortString(), this.redstoneTorch.facing);
+                this.currentState = TaskState.FAIL;
                 return;
             }
+            if (world.getBlockState(redstoneTorch.pos).getBlock() instanceof WallRedstoneTorchBlock) {
+                if (world.getBlockState(redstoneTorch.pos).get(WallRedstoneTorchBlock.FACING) != this.redstoneTorch.facing) {
+                    this.debugUpdateStates("[%s] [%s] 红石火把已放置, 但放置状态与方案不一致", this.redstoneTorch.pos.toShortString(), this.redstoneTorch.facing);
+                    this.currentState = TaskState.FAIL;
+                    return;
+                }
+            }
+
             if (world.getBlockState(this.piston.pos).getBlock() instanceof PistonBlock) {
                 if (world.getBlockState(this.piston.pos).contains(PistonBlock.EXTENDED)) {
                     if (world.getBlockState(this.piston.pos).get(PistonBlock.EXTENDED)) {
+                        this.debugUpdateStates("[%s] [%s] 条件已充足, 准备开始尝试", this.piston.pos.toShortString(), this.piston.facing);
                         this.currentState = TaskState.EXECUTE;
                     }
                 }
