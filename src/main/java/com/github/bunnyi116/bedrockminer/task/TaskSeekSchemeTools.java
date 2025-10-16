@@ -132,9 +132,8 @@ public class TaskSeekSchemeTools {
                 };
 
                 // 添加到方案
-                list.add(new TaskSeekBlockInfo(redstoneTorchPos, redstoneTorchFacing, level));
                 if (!redstoneTorchPos.equals(targetPos)) {
-                    list.add(new TaskSeekBlockInfo(redstoneTorchPos.up(), redstoneTorchFacing, level + 1));
+                    list.add(new TaskSeekBlockInfo(redstoneTorchPos, redstoneTorchFacing, level));
                 }
                 var redstoneTorchPosUp = redstoneTorchPos.up();
                 if (!redstoneTorchPosUp.equals(targetPos) && !redstoneTorchPosUp.equals(pistonInfo.pos)) {
