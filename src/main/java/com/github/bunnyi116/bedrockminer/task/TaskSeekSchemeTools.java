@@ -36,25 +36,6 @@ public class TaskSeekSchemeTools {
         schemes.sort(Comparator
                 .comparingInt((TaskSeekSchemeInfo scheme) -> scheme.piston.level + scheme.redstoneTorch.level)
         );
-
-//        schemes.sort((o1, o2) -> {
-//            int cr = 0;
-//            int a = o1.piston.level - o2.piston.level;
-//            if (a != 0) {
-//                cr = (a > 0) ? 3 : -1;
-//            } else {
-//                a = o1.redstoneTorch.level - o2.redstoneTorch.level;
-//                if (a != 0) {
-//                    cr = (a > 0) ? 2 : -2;
-//                } else {
-//                    a = o1.slimeBlock.level - o2.slimeBlock.level;
-//                    if (a != 0) {
-//                        cr = (a > 0) ? 1 : -3;
-//                    }
-//                }
-//            }
-//            return cr;
-//        });
         return schemes.toArray(TaskSeekSchemeInfo[]::new);
     }
 
@@ -96,11 +77,6 @@ public class TaskSeekSchemeTools {
                     case NORTH, SOUTH, WEST, EAST -> 2;
                     default -> throw new IllegalStateException("Unexpected value: " + facing);
                 };
-
-                if (redstoneTorchPos.equals(pistonInfo.pos)) {
-                    Debug.alwaysWrite("");
-                }
-
                 // 添加到方案
                 list.add(new TaskSeekBlockInfo(redstoneTorchPos, facing, level));
             }

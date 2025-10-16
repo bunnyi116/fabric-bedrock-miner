@@ -260,10 +260,6 @@ public class Task {
             debug("活塞: %s", piston);
             debug("底座: %s", slimeBlock);
             debug("红石火把: %s", redstoneTorch);
-
-            if (piston.pos.equals(redstoneTorch.pos)){
-                debug("");
-            }
             this.currentState = TaskState.WAIT_GAME_UPDATE;
         }
     }
@@ -355,10 +351,6 @@ public class Task {
         }
         if (!this.executed) {
             debugUpdateStates("任务未执行过");
-            if (lastState == currentState) {
-                debug("");
-            }
-
             // 获取放置位置
             if (this.piston == null) {
                 this.debugUpdateStates("活塞未获取,准备查找合适的位置");
