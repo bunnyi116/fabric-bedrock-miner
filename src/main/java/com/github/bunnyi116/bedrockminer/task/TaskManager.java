@@ -19,7 +19,6 @@ import static com.github.bunnyi116.bedrockminer.I18n.*;
 
 public class TaskManager {
     public static TaskManager INSTANCE = new TaskManager();
-
     private final ArrayList<Task> pendingTasks = new ArrayList<>();
     @Nullable
     private Task currentTask;
@@ -238,5 +237,13 @@ public class TaskManager {
 
     private boolean isDisabled() {
         return Config.INSTANCE.disable;
+    }
+
+    public ArrayList<Task> getPendingTasks() {
+        return pendingTasks;
+    }
+
+    public @Nullable Task getCurrentTask() {
+        return currentTask;
     }
 }
