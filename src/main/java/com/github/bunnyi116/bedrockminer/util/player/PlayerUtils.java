@@ -2,9 +2,7 @@ package com.github.bunnyi116.bedrockminer.util.player;
 
 import com.github.bunnyi116.bedrockminer.util.ClientPlayerInteractionManagerUtils;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -18,7 +16,7 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.Objects;
 
-import static com.github.bunnyi116.bedrockminer.BedrockMiner.*;
+import static com.github.bunnyi116.bedrockminer.BedrockMiner.player;
 
 public class PlayerUtils {
     /**

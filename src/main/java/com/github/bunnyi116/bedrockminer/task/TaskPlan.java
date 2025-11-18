@@ -6,7 +6,7 @@ import net.minecraft.block.Block;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
-import static com.github.bunnyi116.bedrockminer.BedrockMiner.*;
+import static com.github.bunnyi116.bedrockminer.BedrockMiner.world;
 
 
 public class TaskPlan {

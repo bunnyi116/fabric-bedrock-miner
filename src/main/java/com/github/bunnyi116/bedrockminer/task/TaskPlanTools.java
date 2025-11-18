@@ -2,7 +2,6 @@ package com.github.bunnyi116.bedrockminer.task;
 
 import com.github.bunnyi116.bedrockminer.config.ConfigManager;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.RedstoneTorchBlock;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.BlockPos;

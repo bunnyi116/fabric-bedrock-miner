@@ -1,13 +1,10 @@
 package com.github.bunnyi116.bedrockminer.config;
 
-import com.github.bunnyi116.bedrockminer.BedrockMiner;
 import com.github.bunnyi116.bedrockminer.Debug;
 import com.github.bunnyi116.bedrockminer.api.IConfigManager;
-import com.github.bunnyi116.bedrockminer.task.TaskManager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.block.Block;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
