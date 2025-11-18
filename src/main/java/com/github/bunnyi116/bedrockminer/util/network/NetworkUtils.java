@@ -6,8 +6,7 @@ import net.minecraft.network.listener.ServerPlayPacketListener;
 import net.minecraft.network.packet.Packet;
 import org.jetbrains.annotations.Nullable;
 
-import static com.github.bunnyi116.bedrockminer.BedrockMiner.networkHandler;
-import static com.github.bunnyi116.bedrockminer.BedrockMiner.world;
+import static com.github.bunnyi116.bedrockminer.BedrockMiner.*;
 
 public class NetworkUtils {
     public static void sendSequencedPacket(SequencedPacketCreator packetCreator, @Nullable Runnable beforeSending, @Nullable Runnable afterSending) {

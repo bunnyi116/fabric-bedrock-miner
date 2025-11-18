@@ -1,7 +1,7 @@
 package com.github.bunnyi116.bedrockminer;
 
 import com.github.bunnyi116.bedrockminer.command.argument.BlockPosArgumentType;
-import com.github.bunnyi116.bedrockminer.util.BlockPlacerUtils;
+import com.github.bunnyi116.bedrockminer.util.player.PlayerInteractionUtils;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
@@ -41,7 +41,6 @@ public class Test {
 
     private static int executesBlockPos(CommandContext<FabricClientCommandSource> context) {
         var blockPos = BlockPosArgumentType.getBlockPos(context, "blockPos");
-        BlockPlacerUtils.placement(blockPos.up(), Direction.NORTH);
         return 0;
     }
 }

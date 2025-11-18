@@ -3,9 +3,9 @@ package com.github.bunnyi116.bedrockminer.task;
 import com.github.bunnyi116.bedrockminer.api.ITaskManager;
 import com.github.bunnyi116.bedrockminer.config.Config;
 import com.github.bunnyi116.bedrockminer.util.CombinedIterator;
-import com.github.bunnyi116.bedrockminer.util.InventoryManagerUtils;
 import com.github.bunnyi116.bedrockminer.util.MessageUtils;
 import com.github.bunnyi116.bedrockminer.util.block.BlockUtils;
+import com.github.bunnyi116.bedrockminer.util.player.PlayerInventoryUtils;
 import com.github.bunnyi116.bedrockminer.util.player.PlayerLookManager;
 import com.github.bunnyi116.bedrockminer.util.player.PlayerUtils;
 import net.minecraft.block.Block;
@@ -193,13 +193,13 @@ public class TaskManager implements ITaskManager {
         if (client.interactionManager != null && !client.interactionManager.getCurrentGameMode().isSurvivalLike()) {
             msg = FAIL_MISSING_SURVIVAL;
         }
-        if (InventoryManagerUtils.getInventoryItemCount(Items.PISTON) < 2) {
+        if (PlayerInventoryUtils.getInventoryItemCount(Items.PISTON) < 2) {
             msg = FAIL_MISSING_PISTON;
         }
-        if (InventoryManagerUtils.getInventoryItemCount(Items.REDSTONE_TORCH) < 1) {
+        if (PlayerInventoryUtils.getInventoryItemCount(Items.REDSTONE_TORCH) < 1) {
             msg = FAIL_MISSING_REDSTONETORCH;
         }
-        if (!InventoryManagerUtils.canInstantlyMinePiston()) {
+        if (!PlayerInventoryUtils.canInstantlyMinePiston()) {
             msg = FAIL_MISSING_INSTANTMINE;
         }
         if (msg != null && setOverlayMessage) {

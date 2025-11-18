@@ -2,7 +2,7 @@ package com.github.bunnyi116.bedrockminer.mixin;
 
 import com.github.bunnyi116.bedrockminer.BedrockMiner;
 import com.github.bunnyi116.bedrockminer.task.TaskManager;
-import com.github.bunnyi116.bedrockminer.util.ClientPlayerInteractionManagerUtils;
+import com.github.bunnyi116.bedrockminer.util.player.PlayerInteractionUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -70,7 +70,7 @@ public abstract class MixinMinecraftClient {
         if (TaskManager.getInstance().isBedrockMinerFeatureEnable()) {
             TaskManager.getInstance().addBlockTask(world, blockPos, block);
         }
-        if (TaskManager.getInstance().isProcessing() || ClientPlayerInteractionManagerUtils.isBreakingBlock()) {    // 避免冲突, 当模组正在破坏时, 拦截玩家破坏操作
+        if (TaskManager.getInstance().isProcessing() || PlayerInteractionUtils.isBreakingBlock()) {    // 避免冲突, 当模组正在破坏时, 拦截玩家破坏操作
             ci.cancel();
         }
     }
@@ -79,7 +79,7 @@ public abstract class MixinMinecraftClient {
     public void tick(CallbackInfo ci) {
         updateGameVariable();
         TaskManager.getInstance().tick();
-        ClientPlayerInteractionManagerUtils.autoResetBreaking();    // 自动解除拦截玩家破坏机制，避免任务阻塞或玩家离开任务方块破坏范围
+        PlayerInteractionUtils.autoResetBreaking();    // 自动解除拦截玩家破坏机制，避免任务阻塞或玩家离开任务方块破坏范围
     }
 
     @Unique
