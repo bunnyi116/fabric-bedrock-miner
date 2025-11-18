@@ -184,9 +184,6 @@ public class PlayerUtils {
         //$$ }
         //#endif
 
-        if (!player.isOnGround()) { // 如果玩家不在地面上，则减缓破坏速度
-            f /= 5.0F;
-        }
         // 如果玩家不在地面上，则减缓破坏速度
         if (!player.isOnGround()) {
             f /= 5.0F;
