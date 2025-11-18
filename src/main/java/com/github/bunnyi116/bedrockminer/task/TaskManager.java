@@ -281,9 +281,15 @@ public class TaskManager implements ITaskManager {
     }
 
     public void removeAll() {
+        removeAll(true);
+    }
+
+    public void removeAll(boolean showMessage) {
         removeBlockTaskAll();
         removeRegionTaskAll();
-        MessageUtils.addMessage(COMMAND_TASK_CLEAR);
+        if (showMessage) {
+            MessageUtils.addMessage(COMMAND_TASK_CLEAR);
+        }
     }
 
     public void switchToggle(@Nullable Block block) {
