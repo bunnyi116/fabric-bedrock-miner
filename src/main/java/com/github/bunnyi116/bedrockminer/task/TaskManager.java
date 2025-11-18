@@ -18,6 +18,7 @@ import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import static com.github.bunnyi116.bedrockminer.BedrockMiner.*;
@@ -75,24 +76,63 @@ public class TaskManager implements ITaskManager {
                 MessageUtils.setOverlayMessage(Text.literal("远离当前正在处理的方块位置，冷却TICK剩余: " + (resetCountMax - resetCount)));
             }
         }
+        BlockPos playerBlockPos = player.getBlockPos();
+        double playerBlockInteractionRange = PlayerUtils.getBlockInteractionRange();
+        int radius = (int) Math.ceil(playerBlockInteractionRange) - 1;
 
         // 没有正在处理的任务, 准备选择一个新的任务
         if (this.currentTask == null) {
-            final var iterator1 = pendingBlockTasks.iterator();
-            while (iterator1.hasNext()) {
-                var task = iterator1.next();
-                if (!task.canInteractWithBlockAt()) {
-                    continue;
+//            final var iterator1 = pendingBlockTasks.iterator();
+//            while (iterator1.hasNext()) {
+//                var task = iterator1.next();
+//                if (!task.canInteractWithBlockAt()) {
+//                    continue;
+//                }
+//                if (PlayerLookManager.INSTANCE.isModify() && PlayerLookManager.INSTANCE.getTask() != task) {
+//                    continue;
+//                }
+//                if (task.world != world) {
+//                    iterator1.remove();
+//                    continue;
+//                }
+//                this.currentTask = task;
+//                return;
+//            }
+            for (int dy = radius; dy > -radius; dy--) {
+                for (int dx = -radius; dx <= radius; dx++) {
+                    for (int dz = -radius; dz <= radius; dz++) {
+                        final BlockPos blockPos = playerBlockPos.add(dx, dy, dz);
+                        final BlockState blockState = world.getBlockState(blockPos);
+                        final Block block = blockState.getBlock();
+                        Iterator<Task> iterator = this.pendingBlockTasks.iterator();
+                        while (iterator.hasNext()) {
+                            Task task = iterator.next();
+                            if (blockPos.equals(task.pos)) {
+                                if (blockState.isAir() || BlockUtils.isReplaceable(blockState)) {
+                                    continue;
+                                }
+                                if (!Config.getInstance().isAllowBlock(block)) {
+                                    continue;
+                                }
+                                if (Config.getInstance().isFloorsBlacklist(blockPos)) {
+                                    continue;
+                                }
+                                if (!task.canInteractWithBlockAt()) {
+                                    continue;
+                                }
+                                if (PlayerLookManager.INSTANCE.isModify() && PlayerLookManager.INSTANCE.getTask() != task) {
+                                    continue;
+                                }
+                                if (task.world != world) {
+                                    iterator.remove();
+                                    continue;
+                                }
+                                this.currentTask = task;
+                                return;
+                            }
+                        }
+                    }
                 }
-                if (PlayerLookManager.INSTANCE.isModify() && PlayerLookManager.INSTANCE.getTask() != task) {
-                    continue;
-                }
-                if (task.world != world) {
-                    iterator1.remove();
-                    continue;
-                }
-                this.currentTask = task;
-                return;
             }
         }
 
@@ -103,16 +143,13 @@ public class TaskManager implements ITaskManager {
             while (iterator2.hasNext()) {
                 var range = iterator2.next();
                 if (!range.isForWorld(world)) continue;
-                final BlockPos playerBlockPos = player.getBlockPos();
                 final BlockBox rangeBox = BlockBox.create(range.pos1, range.pos2);
                 final BlockBox playerBox = new BlockBox(playerBlockPos);
-                final double playerBlockInteractionRange = PlayerUtils.getBlockInteractionRange();
-                final int radius = (int) Math.ceil(playerBlockInteractionRange) - 1;
                 final BlockBox playerExpandBox = playerBox.expand(radius);
                 if (!rangeBox.intersects(playerExpandBox)) continue;
-                for (int dy = radius; dy > -playerBlockInteractionRange; dy--) {
-                    for (int dx = -radius; dx <= playerBlockInteractionRange; dx++) {
-                        for (int dz = -radius; dz <= playerBlockInteractionRange; dz++) {
+                for (int dy = radius; dy > -radius; dy--) {
+                    for (int dx = -radius; dx <= radius; dx++) {
+                        for (int dz = -radius; dz <= radius; dz++) {
                             final BlockPos blockPos = playerBlockPos.add(dx, dy, dz);
                             if (!PlayerUtils.canInteractWithBlockAt(blockPos, 1.0F)) {
                                 continue;
