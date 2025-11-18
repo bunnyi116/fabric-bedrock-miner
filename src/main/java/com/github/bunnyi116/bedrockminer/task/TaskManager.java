@@ -2,7 +2,9 @@ package com.github.bunnyi116.bedrockminer.task;
 
 import com.github.bunnyi116.bedrockminer.api.ITaskManager;
 import com.github.bunnyi116.bedrockminer.config.Config;
-import com.github.bunnyi116.bedrockminer.util.*;
+import com.github.bunnyi116.bedrockminer.util.CombinedIterator;
+import com.github.bunnyi116.bedrockminer.util.InventoryManagerUtils;
+import com.github.bunnyi116.bedrockminer.util.MessageUtils;
 import com.github.bunnyi116.bedrockminer.util.block.BlockUtils;
 import com.github.bunnyi116.bedrockminer.util.player.PlayerLookManager;
 import com.github.bunnyi116.bedrockminer.util.player.PlayerUtils;
@@ -28,7 +30,7 @@ public class TaskManager implements ITaskManager {
     private @Nullable Task currentTask;
     private boolean running;
     private boolean processing;
-    private boolean bedrockMinerFeatureEnable;
+    private boolean bedrockMinerFeatureEnable = true;
     private int resetCount;
 
     public void tick() {
