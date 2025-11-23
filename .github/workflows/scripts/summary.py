@@ -40,7 +40,6 @@ def main():
     # 写入 GitHub Action 步骤摘要
     with open(os.environ['GITHUB_STEP_SUMMARY'], 'w') as f:
         f.write('## 构建构件摘要\n\n')
-        f.write('<style>td:nth-child(2) { min-width: 80px; }</style>\n')
         f.write('| 构件类型 | 支持的 Minecraft 版本 | 文件 | 大小 | SHA-256 |\n')
         f.write('| --- | --- | --- | --- | --- |\n')
 
