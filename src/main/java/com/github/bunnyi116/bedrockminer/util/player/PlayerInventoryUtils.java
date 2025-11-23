@@ -107,8 +107,8 @@ public class PlayerInventoryUtils {
                 return;
             }
         }
-        swapSlots(player, interactionManager, slot, 0);
-        PlayerInventoryUtils.setSelectedSlot(0);
+        swapSlots(player, interactionManager, slot, 6);
+        PlayerInventoryUtils.setSelectedSlot(6);
     }
 
     public static void switchToSlot(int slot) {
