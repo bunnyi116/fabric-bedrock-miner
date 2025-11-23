@@ -108,7 +108,6 @@ public class TaskManager implements ITaskManager {
                                 }
                                 if (task.world != world) {
                                     iterator.remove();
-                                    continue;
                                 }
                                 this.currentTask = task;
                                 return;

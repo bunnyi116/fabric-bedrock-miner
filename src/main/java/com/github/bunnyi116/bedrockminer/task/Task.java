@@ -344,7 +344,9 @@ public class Task {
             debug("任务物品正在回收: (%s) --> %s", blockPos.toShortString(), blockState.getBlock().getName().getString());
             if (blockState.getBlock().getHardness() < 0) {
                 recycledQueue.remove(blockPos);
-                recycledItems();
+                if (!recycledQueue.isEmpty()) {
+                    recycledItems();    // 目标位置被删除队列
+                }
             }
             var instant = PlayerUtils.canInstantlyMineBlock(blockState);
             if (!instant) {
@@ -353,12 +355,14 @@ public class Task {
             PlayerInteractionUtils.updateBlockBreakingProgress(blockPos);
             if (BlockUtils.isReplaceable(blockState)) {
                 recycledQueue.remove(blockPos);
+                if (!recycledQueue.isEmpty()) {
+                    recycledItems();
+                }
             }
             if (instant && !recycledQueue.isEmpty()) {
                 recycledItems();
             }
-        }
-        if (recycledQueue.isEmpty()) {
+        } else {
             debug("任务物品回收已完成");
             if (retry) {
                 currentState = TaskState.RETRY;
@@ -366,7 +370,6 @@ public class Task {
                 currentState = TaskState.COMPLETE;
             }
         }
-
     }
 
     private void execute() {
@@ -512,7 +515,7 @@ public class Task {
         this.nextState = null;
         this.tickTotalCount = 0;
         this.ticksTotalMax = 100;
-        this.ticksTimeoutMax = 45;
+        this.ticksTimeoutMax = 30;
         this.tickWaitMax = 0;
         this.planItem = null;
         this.recycledQueue.clear();
