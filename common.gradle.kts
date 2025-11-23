@@ -9,7 +9,7 @@ plugins {
 // 这些属性通常从 Gradle 属性文件 (如 gradle.properties) 或 settings.gradle.kts 中传入。
 val mcVersion: Int = project.property("mcVersion") as Int
 val modId: String = project.property("mod_id") as String
-val modWrapperId: String = "$modId-wrapper"
+val modWrapperId: String = project.property("mod_wrapper_id") as String
 val modName: String = project.property("mod_name") as String
 val modVersion: String = project.property("mod_version") as String
 val modMavenGroup: String = project.property("mod_maven_group") as String
@@ -96,8 +96,8 @@ if (System.getenv("BUILD_RELEASE") != "true") {
     // 非发布版本产物通常是 SNAPSHOT 版本
     artifactVersionSuffix = "-SNAPSHOT"
 }
-val fullModVersion = modVersion + modVersionSuffix // 完整的 Mod 版本 (用于 fabric.mod.json)
-var fullProjectVersion: String // 完整的项目版本 (用于 JAR 文件名)
+val fullModVersion = "${modVersion}-mc${minecraftVersion}${modVersionSuffix}" // 完整的 Mod 版本 (用于 fabric.mod.json)
+var fullProjectVersion: String  // 完整的项目版本 (用于 JAR 文件名)
 var fullArtifactVersion: String // 完整的 Maven 产物版本
 
 

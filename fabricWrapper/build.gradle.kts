@@ -1,8 +1,7 @@
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.TimeZone
+import java.util.*
 
 plugins {
     id("java-library")
@@ -10,9 +9,8 @@ plugins {
 }
 
 // --- 项目属性定义 ---
-// 这些属性通常从 Gradle 属性文件 (如 gradle.properties) 或 settings.gradle.kts 中传入。
 val modId: String = project.property("mod_id") as String
-val modWrapperId: String = "$modId-wrapper"
+val modWrapperId: String = project.property("mod_wrapper_id") as String
 val modName: String = project.property("mod_name") as String
 val modMavenGroup: String = project.property("mod_maven_group") as String
 val modVersion: String = project.property("mod_version") as String
@@ -23,7 +21,8 @@ val modLicense: String = project.property("mod_license") as String
 val modSources: String = project.property("mod_sources") as String
 val loaderVersion: String = project.property("loader_version") as String
 
-val time: String? = SimpleDateFormat("yyMMddHH").apply {
+// 生成时间戳
+val time: String = SimpleDateFormat("yyMMddHH").apply {
     timeZone = TimeZone.getTimeZone("GMT+08:00")
 }.format(Date())
 
@@ -34,135 +33,145 @@ base {
     archivesName.set("$modArchivesBaseName-versionpack")
 }
 
-// 获取父项目的所有子项目，并过滤掉当前项目 (fabricWrapper)
+// 获取所有子项目（排除当前项目）
 val fabricSubprojects = rootProject.subprojects.filter { it.name != "fabricWrapper" }
 
-// 确保在评估当前项目之前，先评估所有相关的子项目
-// 强制 Gradle 先“读取并执行”完所有子项目的 build.gradle 脚本，然后再继续处理当前项目（Wrapper）的脚本。
+// 确保先评估所有子项目
 fabricSubprojects.forEach {
     evaluationDependsOn(":${it.name}")
 }
 
-tasks.register("collectSubModules") {
-    // 禁用缓存
-    outputs.upToDateWhen { false }
+tasks {
+    register("copyWrapperIcon") {
+        description = "复制图标到 wrapper 资源目录"
+        outputs.upToDateWhen { false }
 
-    // 依赖所有子项目的 remapJar 任务
-    // 注意：我们需要使用 tasks.getByName 或 findByName 来获取动态添加的任务 (Loom 添加的 remapJar)
-    dependsOn(fabricSubprojects.map {
-        it.tasks.getByName("remapJar")
-    })
+        val rootIcon = rootProject.file("src/main/resources/assets/$modId/icon.png")
+        val resourcesFile = layout.projectDirectory.file("src/main/resources/assets/$modWrapperId/icon.png").asFile
+        val buildIconFile = layout.buildDirectory.file("resources/main/assets/$modWrapperId/icon.png").get().asFile
 
-    doFirst {
-        delete(layout.buildDirectory.dir("tmp/submods/META-INF/jars"))
-        delete(layout.buildDirectory.dir("build/libs"))
-
-        // 复制所有重映射后的 JAR 文件
-        copy {
-            from(fabricSubprojects.map { sub ->
-                sub.tasks.getByName("remapJar").outputs.files   // 获取 remapJar 任务的输出文件
-            })
-            into(layout.buildDirectory.dir("tmp/submods/META-INF/jars"))
-        }
-    }
-
-    doFirst {
-        val wrapperIcon = project.file("resources/assets/$modWrapperId/icon.png")
-        println(wrapperIcon)
-        if (!wrapperIcon.exists()) {
-            // 从根项目复制图标
-            val rootIcon = rootProject.file("src/main/resources/assets/$modId/icon.png")
-            println(rootIcon)
+        doLast {
             if (rootIcon.exists()) {
-                val outputIcon =
-                    layout.buildDirectory.file("/resources/main/assets/$modWrapperId/icon.png").get().asFile
-                println(outputIcon)
-                outputIcon.parentFile.mkdirs()  // 确保目标目录存在
-                rootIcon.copyTo(outputIcon, overwrite = true)   // 复制文件
+                if (!resourcesFile.exists()) {
+                    println("⚠ 子项目未找到图标文件，准备从根项目中复制图标")
+                    buildIconFile.parentFile.mkdirs()
+                    rootIcon.copyTo(buildIconFile, overwrite = true)
+                    println("✓ 图标复制成功: ${rootIcon.name} -> ${buildIconFile.name}")
+                }
+            } else {
+                println("⚠ 根项目中未找到图标文件，跳过图标复制")
             }
         }
     }
-}
 
-tasks.named<Jar>("jar") {
-    outputs.upToDateWhen { false }  // 禁用缓存
-    dependsOn("collectSubModules")  // 依赖子模块收集任务
-    from(rootProject.file("LICENSE"))
-    from(layout.buildDirectory.dir("tmp/submods"))  // 从收集目录添加文件
-}
+    // 收集子模块 JAR 文件任务
+    register("collectSubModules") {
+        description = "收集所有子模块的 JAR 文件"
+        outputs.upToDateWhen { false }
 
-tasks.named<ProcessResources>("processResources") {
-    outputs.upToDateWhen { false }  // 禁用缓存
+        // 依赖所有子项目的 remapJar 任务
+        dependsOn(fabricSubprojects.map { it.tasks.named("remapJar") })
 
-    filesMatching("fabric.mod.json") {
-        expand(
-            mapOf(
-                "mod_id" to modWrapperId,
-                "mod_name" to modName,
-                "mod_version" to project.version,
-                "mod_description" to modDescription,
-                "mod_homepage" to modHomepage,
-                "mod_license" to modLicense,
-                "mod_sources" to modSources,
-                "loader_version" to loaderVersion,
+        doFirst {
+            // 清理相关目录
+            delete(layout.buildDirectory.dir("libs"))
+            delete(layout.buildDirectory.dir("tmp/submods/META-INF/jars"))
+            // 复制所有重映射后的 JAR 文件
+            copy {
+                from(fabricSubprojects.map { sub ->
+                    sub.tasks.named("remapJar").get().outputs.files
+                })
+                into(layout.buildDirectory.dir("tmp/submods/META-INF/jars"))
+            }
+        }
+    }
+
+    // JAR 打包任务
+    named<Jar>("jar") {
+        outputs.upToDateWhen { false }
+        dependsOn("copyWrapperIcon")
+        dependsOn("collectSubModules")
+        from(rootProject.file("LICENSE"))
+        from(layout.buildDirectory.dir("tmp/submods"))
+    }
+
+    // 资源处理任务
+    named<ProcessResources>("processResources") {
+        outputs.upToDateWhen { false }
+        dependsOn("copyWrapperIcon")
+
+        filesMatching("fabric.mod.json") {
+            expand(
+                mapOf(
+                    "mod_id" to modWrapperId,
+                    "mod_name" to modName,
+                    "mod_version" to project.version,
+                    "mod_description" to modDescription,
+                    "mod_homepage" to modHomepage,
+                    "mod_license" to modLicense,
+                    "mod_sources" to modSources,
+                    "loader_version" to loaderVersion,
+                )
             )
-        )
-    }
-
-    doLast {
-        val jars = ArrayList<Map<String, String>>()
-        val jarsDir = layout.buildDirectory.dir("tmp/submods/META-INF/jars").get().asFile
-
-        // 方法1: 扫描实际收集到的 JAR 文件
-        if (jarsDir.exists() && jarsDir.isDirectory) {
-            val jarFiles = jarsDir.listFiles { file ->
-                file.isFile && file.name.endsWith(".jar") &&
-                        !file.name.contains("-dev.jar") &&
-                        !file.name.contains("-sources.jar") &&
-                        !file.name.contains("-shadow.jar")
-            }
-
-            jarFiles?.forEach { jarFile ->
-                jars.add(mapOf("file" to "META-INF/jars/${jarFile.name}"))
-                println("✓ 找到实际 JAR 文件: ${jarFile.name}")
-            }
         }
 
-        // 获取构建输出目录中的 fabric.mod.json
-        val jsonFile = layout.buildDirectory.file("resources/main/fabric.mod.json").get().asFile
-        if (jsonFile.exists()) {
-            val slurper = JsonSlurper()
+        doLast {
+            val jars = ArrayList<Map<String, String>>()
+            val jarsDir = layout.buildDirectory.dir("tmp/submods/META-INF/jars").get().asFile
 
-            @Suppress("UNCHECKED_CAST")
-            val jsonContent = slurper.parse(jsonFile) as MutableMap<String, Any>
+            // 扫描实际收集到的 JAR 文件
+            if (jarsDir.exists() && jarsDir.isDirectory) {
+                val jarFiles = jarsDir.listFiles { file ->
+                    file.isFile && file.name.endsWith(".jar") &&
+                            !file.name.contains("-dev.jar") &&
+                            !file.name.contains("-sources.jar") &&
+                            !file.name.contains("-shadow.jar")
+                }
 
-            // 设置 jars 数组
-            jsonContent["jars"] = jars
-
-            // 使用 JsonBuilder 写回
-            val builder = JsonBuilder(jsonContent)
-            jsonFile.bufferedWriter().use { writer ->
-                writer.write(builder.toPrettyString())
+                jarFiles?.forEach { jarFile ->
+                    jars.add(mapOf("file" to "META-INF/jars/${jarFile.name}"))
+                    println("✓ 找到实际 JAR 文件: ${jarFile.name}")
+                }
             }
 
-            println("- JAR 文件数量: ${jars.size}")
-            jars.forEach { jar ->
-                println("  - ${jar["file"]}")
+            // 更新 fabric.mod.json 文件
+            val jsonFile = layout.buildDirectory.file("resources/main/fabric.mod.json").get().asFile
+            if (jsonFile.exists()) {
+                val slurper = JsonSlurper()
+
+                @Suppress("UNCHECKED_CAST")
+                val jsonContent = slurper.parse(jsonFile) as MutableMap<String, Any>
+
+                // 设置 jars 数组
+                jsonContent["jars"] = jars
+
+                // 写回文件
+                val builder = JsonBuilder(jsonContent)
+                jsonFile.bufferedWriter().use { writer ->
+                    writer.write(builder.toPrettyString())
+                }
+
+                println("- JAR 文件数量: ${jars.size}")
+                jars.forEach { jar ->
+                    println("  - ${jar["file"]}")
+                }
+            } else {
+                println("警告: 找不到生成的 fabric.mod.json 文件: ${jsonFile.absolutePath}")
             }
-        } else {
-            println("警告: 找不到生成的 fabric.mod.json 文件: ${jsonFile.absolutePath}")
         }
     }
 }
 
+// Java 配置
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
+// 发布配置
 publishing {
     publications {
-        register<MavenPublication>("mavenJava") {
+        create<MavenPublication>("mavenJava") {
             groupId = modMavenGroup
             artifactId = modId
             version = "versionpack-${project.version}"
