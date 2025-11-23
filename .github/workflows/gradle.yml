@@ -2,6 +2,7 @@ name: build
 
 on:
   push:
+    branches: [ main, master, dev, preprocess ]
     paths:
       - "*.gradle"
       - "gradle.properties"
