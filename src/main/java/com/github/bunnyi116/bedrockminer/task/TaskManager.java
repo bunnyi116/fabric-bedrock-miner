@@ -69,9 +69,8 @@ public class TaskManager implements ITaskManager {
                 if (this.currentTask.isComplete()) {
                     this.pendingBlockTasks.remove(this.currentTask);
                     this.currentTask = null;
-                } else {
-                    return; // 任务没有处理完成, 返回等待下一个TICK继续处理
                 }
+                return;
             } else {
                 MessageUtils.setOverlayMessage(Text.literal("远离当前正在处理的方块位置，冷却TICK剩余: " + (resetCountMax - resetCount)));
             }
@@ -82,22 +81,6 @@ public class TaskManager implements ITaskManager {
 
         // 没有正在处理的任务, 准备选择一个新的任务
         if (this.currentTask == null) {
-//            final var iterator1 = pendingBlockTasks.iterator();
-//            while (iterator1.hasNext()) {
-//                var task = iterator1.next();
-//                if (!task.canInteractWithBlockAt()) {
-//                    continue;
-//                }
-//                if (PlayerLookManager.INSTANCE.isModify() && PlayerLookManager.INSTANCE.getTask() != task) {
-//                    continue;
-//                }
-//                if (task.world != world) {
-//                    iterator1.remove();
-//                    continue;
-//                }
-//                this.currentTask = task;
-//                return;
-//            }
             for (int dy = radius; dy > -radius; dy--) {
                 for (int dx = -radius; dx <= radius; dx++) {
                     for (int dz = -radius; dz <= radius; dz++) {

@@ -9,11 +9,11 @@ plugins {
 // 这些属性通常从 Gradle 属性文件 (如 gradle.properties) 或 settings.gradle.kts 中传入。
 val mcVersion: Int = project.property("mcVersion") as Int
 val modId: String = project.property("mod_id") as String
+val modWrapperId: String = "$modId-wrapper"
 val modName: String = project.property("mod_name") as String
 val modVersion: String = project.property("mod_version") as String
 val modMavenGroup: String = project.property("mod_maven_group") as String
 val modArchivesBaseName: String = project.property("mod_archives_base_name") as String
-
 val minecraftDependency: String = project.property("minecraft_dependency") as String
 val minecraftVersion: String = project.property("minecraft_version") as String
 val yarnMappings: String = project.property("yarn_mappings") as String
@@ -122,9 +122,10 @@ version = fullProjectVersion // 设置项目的版本号
 // 请参阅 https://youtrack.jetbrains.com/issue/IDEA-296490
 tasks.withType<ProcessResources> {
     // 设置输入属性，以便 Gradle 知道在这些属性变化时需要重新运行任务
-    inputs.property("id", modId)
-    inputs.property("name", modName)
-    inputs.property("version", fullModVersion)
+    inputs.property("mod_id", modId)
+    inputs.property("mod_wrapper_id", modWrapperId)
+    inputs.property("mod_name", modName)
+    inputs.property("mod_version", fullModVersion)
     inputs.property("loader_version", loaderVersion)
     inputs.property("minecraft_dependency", minecraftDependency)
 
@@ -132,9 +133,10 @@ tasks.withType<ProcessResources> {
         // 使用 expand 替换 fabric.mod.json 中的占位符
         expand(
             mapOf(
-                "id" to modId,
-                "name" to modName,
-                "version" to fullModVersion,
+                "mod_id" to modId,
+                "mod_wrapper_id" to modWrapperId,
+                "mod_name" to modName,
+                "mod_version" to fullModVersion,
                 "loader_version" to loaderVersion,
                 "minecraft_dependency" to minecraftDependency,
             )

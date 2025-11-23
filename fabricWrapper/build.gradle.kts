@@ -12,6 +12,7 @@ plugins {
 // --- 项目属性定义 ---
 // 这些属性通常从 Gradle 属性文件 (如 gradle.properties) 或 settings.gradle.kts 中传入。
 val modId: String = project.property("mod_id") as String
+val modWrapperId: String = "$modId-wrapper"
 val modName: String = project.property("mod_name") as String
 val modMavenGroup: String = project.property("mod_maven_group") as String
 val modVersion: String = project.property("mod_version") as String
@@ -53,17 +54,32 @@ tasks.register("collectSubModules") {
     })
 
     doFirst {
-        // 清理旧的子模块目录
-        // 使用 layout.buildDirectory 获取构建目录
         delete(layout.buildDirectory.dir("tmp/submods/META-INF/jars"))
+        delete(layout.buildDirectory.dir("build/libs"))
 
         // 复制所有重映射后的 JAR 文件
         copy {
             from(fabricSubprojects.map { sub ->
-                // 获取 remapJar 任务的输出文件
-                sub.tasks.getByName("remapJar").outputs.files
+                sub.tasks.getByName("remapJar").outputs.files   // 获取 remapJar 任务的输出文件
             })
             into(layout.buildDirectory.dir("tmp/submods/META-INF/jars"))
+        }
+    }
+
+    doFirst {
+        val wrapperIcon = project.file("resources/assets/$modWrapperId/icon.png")
+        println(wrapperIcon)
+        if (!wrapperIcon.exists()) {
+            // 从根项目复制图标
+            val rootIcon = rootProject.file("src/main/resources/assets/$modId/icon.png")
+            println(rootIcon)
+            if (rootIcon.exists()) {
+                val outputIcon =
+                    layout.buildDirectory.file("/resources/main/assets/$modWrapperId/icon.png").get().asFile
+                println(outputIcon)
+                outputIcon.parentFile.mkdirs()  // 确保目标目录存在
+                rootIcon.copyTo(outputIcon, overwrite = true)   // 复制文件
+            }
         }
     }
 }
@@ -78,33 +94,10 @@ tasks.named<Jar>("jar") {
 tasks.named<ProcessResources>("processResources") {
     outputs.upToDateWhen { false }  // 禁用缓存
 
-    doFirst {
-        val wrapperIcon = project.file("src/main/resources/assets/$modId/icon.png")
-        val outputIcon = layout.buildDirectory.file("resources/main/assets/$modId/icon.png").get().asFile
-
-        if (wrapperIcon.exists()) {
-            println("使用 fabricWrapper 自带的图标: ${wrapperIcon.absolutePath}")
-        } else {
-            println("fabricWrapper 资源目录中未找到图标，尝试从根项目复制...")
-
-            // 从根项目复制图标
-            val rootIcon = rootProject.file("src/main/resources/assets/$modId/icon.png")
-            if (rootIcon.exists()) {
-                // 确保目标目录存在
-                outputIcon.parentFile.mkdirs()
-                // 复制文件
-                rootIcon.copyTo(outputIcon, overwrite = true)
-                println("已从根项目复制图标: ${rootIcon.absolutePath} -> ${outputIcon.absolutePath}")
-            } else {
-                println("警告: 根项目中也未找到图标文件: ${rootIcon.absolutePath}")
-            }
-        }
-    }
-
     filesMatching("fabric.mod.json") {
         expand(
             mapOf(
-                "mod_id" to modId,
+                "mod_id" to modWrapperId,
                 "mod_name" to modName,
                 "mod_version" to project.version,
                 "mod_description" to modDescription,
@@ -117,43 +110,44 @@ tasks.named<ProcessResources>("processResources") {
     }
 
     doLast {
-        val mcCondition = ArrayList<String>()
         val jars = ArrayList<Map<String, String>>()
+        val jarsDir = layout.buildDirectory.dir("tmp/submods/META-INF/jars").get().asFile
 
-        fabricSubprojects.forEach { sub ->
-            val dep = sub.property("minecraft_dependency").toString()
-            val mcVer = sub.property("minecraft_version").toString()
-            mcCondition.add(dep)
-            // 添加子模块的 JAR 文件列表
-            jars.add(mapOf("file" to "META-INF/jars/$modArchivesBaseName-$mcVer-${project.version}.jar"))
+        // 方法1: 扫描实际收集到的 JAR 文件
+        if (jarsDir.exists() && jarsDir.isDirectory) {
+            val jarFiles = jarsDir.listFiles { file ->
+                file.isFile && file.name.endsWith(".jar") &&
+                        !file.name.contains("-dev.jar") &&
+                        !file.name.contains("-sources.jar") &&
+                        !file.name.contains("-shadow.jar")
+            }
+
+            jarFiles?.forEach { jarFile ->
+                jars.add(mapOf("file" to "META-INF/jars/${jarFile.name}"))
+                println("✓ 找到实际 JAR 文件: ${jarFile.name}")
+            }
         }
 
         // 获取构建输出目录中的 fabric.mod.json
-        // destinationDir 在 Gradle高版本中已废弃，推荐使用 outputs 查找或 direct location
-        // 这里为了稳健直接指向通常的输出路径，或者使用 this.outputs.files 过滤
         val jsonFile = layout.buildDirectory.file("resources/main/fabric.mod.json").get().asFile
         if (jsonFile.exists()) {
             val slurper = JsonSlurper()
-            // 解析 JSON 为 MutableMap
+
             @Suppress("UNCHECKED_CAST")
             val jsonContent = slurper.parse(jsonFile) as MutableMap<String, Any>
 
-            // 修改 depends 和 jars
-            // 注意：Groovy 的 builder.content.depends.minecraft 语法在 Kotlin 中需要显式的 Map 操作
-            // 确保 jsonContent["depends"] 存在且是一个 Map
-            if (!jsonContent.containsKey("depends")) {
-                jsonContent["depends"] = mutableMapOf<String, Any>()
-            }
-
-            @Suppress("UNCHECKED_CAST")
-            val depends = jsonContent["depends"] as MutableMap<String, Any>
-
-            depends["minecraft"] = mcCondition
+            // 设置 jars 数组
             jsonContent["jars"] = jars
+
             // 使用 JsonBuilder 写回
             val builder = JsonBuilder(jsonContent)
             jsonFile.bufferedWriter().use { writer ->
                 writer.write(builder.toPrettyString())
+            }
+
+            println("- JAR 文件数量: ${jars.size}")
+            jars.forEach { jar ->
+                println("  - ${jar["file"]}")
             }
         } else {
             println("警告: 找不到生成的 fabric.mod.json 文件: ${jsonFile.absolutePath}")

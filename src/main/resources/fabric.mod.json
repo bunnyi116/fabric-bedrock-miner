@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "id": "${id}",
-  "version": "${version}",
-  "name": "${name}",
+  "id": "${mod_id}",
+  "version": "${mod_version}",
+  "name": "${mod_name}",
   "description": "Client mod to mine bedrock!",
   "authors": [
     "bunnyi116"
@@ -29,5 +29,10 @@
   "suggests": {
     "another-mod": "*"
   },
-  "accessWidener": "bedrockminer.accesswidener"
+  "accessWidener": "bedrockminer.accesswidener",
+  "custom": {
+    "modmenu": {
+      "parent": "${mod_wrapper_id}"
+    }
+  }
 }
