@@ -20,6 +20,7 @@ pluginManagement {
     }
 }
 
+
 @Suppress("UNCHECKED_CAST")
 val settings = JsonSlurper().parseText(file("settings.json").readText()) as Map<String, List<String>>
 
@@ -30,3 +31,5 @@ for (version in settings["versions"]!!) {
         buildFileName = "../../common.gradle.kts"
     }
 }
+
+include(":fabricWrapper")

@@ -74,27 +74,73 @@ preprocess {
 //    mc1_17_00.link(mc1_16_05, null)
 }
 
-tasks.register("buildAndGather") {
-    subprojects {
-        dependsOn(tasks.named("build"))
+
+// 获取所有子项目（排除 fabricWrapper）
+val fabricSubprojects = rootProject.subprojects.filter { it.name != "fabricWrapper" }
+
+tasks.register("build") {
+    group = "build"
+    description = "构建 fabricWrapper 版本包（推荐用于发布）"
+
+    dependsOn(":fabricWrapper:build")
+
+    doLast {
+        println("fabricWrapper 版本包构建完成！")
+        println("- fabricWrapper 版本包位于: fabricWrapper/build/libs/")
+        println("- 此版本包包含所有支持的 Minecraft 版本")
     }
+}
+
+tasks.register("buildAndGather") {
+    group = "build"
+    description = "收集所有子项目的构建产物到根项目的 libs 目录（开发便利工具）"
+
+    // 依赖所有子项目的构建任务
+    fabricSubprojects.forEach { sub ->
+        evaluationDependsOn(":${sub.name}")
+        dependsOn(sub.tasks.named("build"))
+    }
+
     doFirst {
-        println("Gathering builds")
-        val buildLibs = { p: Project ->
-            p.layout.buildDirectory.dir("libs").get().asFile.toPath()
-        }
-        delete(fileTree(buildLibs(rootProject)) {
+        println("开始收集各个版本的构建产物...")
+
+        val rootLibsDir = layout.buildDirectory.dir("libs").get().asFile
+
+        // 清理根项目的 libs 目录
+        delete(fileTree(rootLibsDir) {
             include("*")
         })
-        subprojects {
+
+        // 收集各个版本的 JAR 文件
+        fabricSubprojects.forEach { sub ->
+            val subLibsDir = sub.layout.buildDirectory.dir("libs").get().asFile
+
             copy {
-                from(buildLibs(project)) {
+                from(subLibsDir) {
                     include("*.jar")
                     exclude("*-dev.jar", "*-sources.jar", "*-shadow.jar")
                 }
-                into(buildLibs(rootProject))
+                into(rootLibsDir)
                 duplicatesStrategy = DuplicatesStrategy.INCLUDE
             }
+
+            println("已收集 ${sub.name} 的构建产物")
         }
+
+        println("构建产物收集完成，文件位于: ${rootLibsDir.absolutePath}")
+    }
+}
+
+tasks.register("buildAll") {
+    group = "build"
+    description = "构建所有子项目以及 fabricWrapper 版本包（推荐用于发布）"
+
+    dependsOn(tasks.named("buildAndGather"))
+    dependsOn(":fabricWrapper:build")
+
+    doLast {
+        println("完整构建完成！")
+        println("- 各个版本的独立 JAR 文件位于: ${layout.buildDirectory.dir("libs").get().asFile.absolutePath}")
+        println("- fabricWrapper 版本包位于: fabricWrapper/build/libs/")
     }
 }

@@ -6,19 +6,19 @@ plugins {
     id("me.fallenbreath.yamlang") // 启用 yamlang 插件 (用于处理语言文件，例如 YAML 格式)
 }
 
-// --- 项目属性定义 ---
 // 这些属性通常从 Gradle 属性文件 (如 gradle.properties) 或 settings.gradle.kts 中传入。
 val mcVersion: Int = project.property("mcVersion") as Int
 val modId: String = project.property("mod_id") as String
 val modName: String = project.property("mod_name") as String
 val modVersion: String = project.property("mod_version") as String
-val mavenGroup: String = project.property("maven_group") as String
+val modMavenGroup: String = project.property("mod_maven_group") as String
+val modArchivesBaseName: String = project.property("mod_archives_base_name") as String
+
 val minecraftDependency: String = project.property("minecraft_dependency") as String
 val minecraftVersion: String = project.property("minecraft_version") as String
 val yarnMappings: String = project.property("yarn_mappings") as String
 val loaderVersion: String = project.property("loader_version") as String
 val fabricApiVersion: String = project.property("fabric_api_version") as String
-val archivesBaseName: String = project.property("archives_base_name") as String
 
 // 常量
 val mixinConfigPath = "blockminer.mixins.json"
@@ -104,17 +104,17 @@ var fullArtifactVersion: String // 完整的 Maven 产物版本
 // 根据是否在 JITPACK 环境中运行进行版本和产物名称配置
 if (System.getenv("JITPACK") == "true") {
     base.archivesName.set(
-        "$archivesBaseName-mc$minecraftVersion"
+        "$modArchivesBaseName-mc$minecraftVersion"
     )
     fullProjectVersion = "v$modVersion$modVersionSuffix" // 例如 v1.0.3+build.88
     fullArtifactVersion = artifactVersion + artifactVersionSuffix // 例如 1.0.3-SNAPSHOT
 } else {
-    base.archivesName.set(archivesBaseName)
+    base.archivesName.set(modArchivesBaseName)
     fullProjectVersion = "v$modVersion-mc$minecraftVersion$modVersionSuffix" // 例如 v1.0.3-mc1.15.2+build.88
     fullArtifactVersion = "$artifactVersion-mc$minecraftVersion$artifactVersionSuffix" // 例如 1.0.3-mc1.15.2-SNAPSHOT
 }
 
-group = mavenGroup // 设置 Maven Group ID
+group = modMavenGroup // 设置 Maven Group ID
 version = fullProjectVersion // 设置项目的版本号
 
 // --- 资源处理 (Resource Processing) ---
@@ -178,7 +178,7 @@ java {
 tasks.withType<Jar> {
     // 将 LICENSE 文件添加到 JAR 包中
     from(rootProject.file("LICENSE")) {
-        rename { "${it}_${archivesBaseName}" }
+        rename { "${it}_${modArchivesBaseName}" }
     }
 }
 
