@@ -119,7 +119,6 @@ tasks {
             val jars = ArrayList<Map<String, String>>()
             val jarsDir = layout.buildDirectory.dir("tmp/submods/META-INF/jars").get().asFile
 
-            // 扫描实际收集到的 JAR 文件
             if (jarsDir.exists() && jarsDir.isDirectory) {
                 val jarFiles = jarsDir.listFiles { file ->
                     file.isFile && file.name.endsWith(".jar") &&
@@ -130,9 +129,22 @@ tasks {
 
                 jarFiles?.forEach { jarFile ->
                     jars.add(mapOf("file" to "META-INF/jars/${jarFile.name}"))
-                    println("✓ 找到实际 JAR 文件: ${jarFile.name}")
                 }
             }
+
+            val minecraftVersions = mutableListOf<String>()
+            fabricSubprojects.forEach { subproject ->
+                try {
+                    val minecraftVersion = subproject.property("minecraft_dependency") as String
+                    if (minecraftVersion.isNotBlank()) {
+                        minecraftVersions.add(minecraftVersion)
+                        println("收集到 Minecraft 版本: $minecraftVersion")
+                    }
+                } catch (e: Exception) {
+                    println("⚠ 无法从子项目 ${subproject.name} 获取 Minecraft 版本")
+                }
+            }
+
 
             // 更新 fabric.mod.json 文件
             val jsonFile = layout.buildDirectory.file("resources/main/fabric.mod.json").get().asFile
@@ -145,6 +157,11 @@ tasks {
                 // 设置 jars 数组
                 jsonContent["jars"] = jars
 
+                // 更新 Minecraft 依赖
+                @Suppress("UNCHECKED_CAST")
+                val depends = jsonContent["depends"] as? MutableMap<String, Any>
+                depends?.put("minecraft", minecraftVersions)
+
                 // 写回文件
                 val builder = JsonBuilder(jsonContent)
                 jsonFile.bufferedWriter().use { writer ->
@@ -155,6 +172,7 @@ tasks {
                 jars.forEach { jar ->
                     println("  - ${jar["file"]}")
                 }
+                println("✅ Minecraft 依赖已更新为: $minecraftVersions")
             } else {
                 println("警告: 找不到生成的 fabric.mod.json 文件: ${jsonFile.absolutePath}")
             }

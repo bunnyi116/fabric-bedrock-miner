@@ -15,7 +15,6 @@
   "icon": "assets/${mod_id}/icon.png",
   "environment": "*",
   "depends": {
-    "fabricloader": ">=${loader_version}",
-    "minecraft": "*"
+    "fabricloader": ">=${loader_version}"
   }
 }

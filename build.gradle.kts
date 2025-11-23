@@ -85,9 +85,8 @@ tasks.register("build") {
     dependsOn(":fabricWrapper:build")
 
     doLast {
-        println("fabricWrapper 版本包构建完成！")
-        println("- fabricWrapper 版本包位于: fabricWrapper/build/libs/")
-        println("- 此版本包包含所有支持的 Minecraft 版本")
+        println()
+        println("fabricWrapper 版本包构建完成！位于: fabricWrapper/build/libs/")
     }
 }
 

@@ -126,8 +126,14 @@ jobs:
         id: versions
         run: |
           # 从 settings.json 获取所有支持的版本
-          VERSIONS=$(jq -r '.versions | join(",")' settings.json)
-          echo "versions=$VERSIONS" >> $GITHUB_OUTPUT
+          if [ -f "settings.json" ]; then
+            VERSIONS=$(jq -r '.versions | join(",")' settings.json)
+            echo "versions=$VERSIONS" >> $GITHUB_OUTPUT
+            echo "成功获取版本: $VERSIONS"
+          else
+            echo "错误: 找不到 settings.json 文件"
+            exit 1
+          fi
 
       - name: 准备更新日志
         uses: actions/github-script@v7
