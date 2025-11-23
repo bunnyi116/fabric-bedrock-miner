@@ -4,10 +4,9 @@ import com.github.bunnyi116.bedrockminer.BedrockMiner;
 import com.github.bunnyi116.bedrockminer.task.TaskManager;
 import com.github.bunnyi116.bedrockminer.util.player.PlayerInteractionUtils;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
@@ -19,6 +18,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(value = MinecraftClient.class, priority = 999)
@@ -36,27 +36,36 @@ public abstract class MixinMinecraftClient {
     public HitResult crosshairTarget;
 
     @Shadow
-    @Nullable
-    public ClientPlayerInteractionManager interactionManager;
+    private int itemUseCooldown;
 
     @Shadow
-    @Nullable
-    public abstract ClientPlayNetworkHandler getNetworkHandler();
+    public int attackCooldown;
 
-    @Inject(method = "doItemUse", at = @At(value = "HEAD"))
+    @Inject(method = "doItemUse", at = @At(value = "HEAD"), cancellable = true)
     private void doItemUse(CallbackInfo ci) {
         if (crosshairTarget == null || world == null || player == null) {
             return;
         }
-        if (crosshairTarget.getType() != HitResult.Type.BLOCK || !player.getMainHandStack().isEmpty()) {
+        if (crosshairTarget.getType() != HitResult.Type.BLOCK) {
             return;
         }
+        this.itemUseCooldown = 4;
         var blockHitResult = (BlockHitResult) crosshairTarget;
         var blockPos = blockHitResult.getBlockPos();
         var blockState = world.getBlockState(blockPos);
         var block = blockState.getBlock();
-        if (TaskManager.getInstance().isBedrockMinerFeatureEnable()) {
+        if (TaskManager.getInstance().isBedrockMinerFeatureEnable() && player.getMainHandStack().isEmpty()) {
             TaskManager.getInstance().switchToggle(block);
+        }
+        if (TaskManager.getInstance().isRunning()) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "doAttack", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;attackBlock(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/util/math/Direction;)Z"), locals = LocalCapture.CAPTURE_FAILSOFT, cancellable = true)
+    private void handleBlockBreaking(CallbackInfoReturnable<Boolean> cir, ItemStack itemStack, boolean bl, BlockHitResult blockHitResult, BlockPos blockPos) {
+        if (TaskManager.getInstance().isRunning()) {
+            cir.cancel();
         }
     }
 
@@ -70,7 +79,7 @@ public abstract class MixinMinecraftClient {
         if (TaskManager.getInstance().isBedrockMinerFeatureEnable()) {
             TaskManager.getInstance().addBlockTask(world, blockPos, block);
         }
-        if (TaskManager.getInstance().isProcessing() || PlayerInteractionUtils.isBreakingBlock()) {    // 避免冲突, 当模组正在破坏时, 拦截玩家破坏操作
+        if (TaskManager.getInstance().isRunning()) {
             ci.cancel();
         }
     }

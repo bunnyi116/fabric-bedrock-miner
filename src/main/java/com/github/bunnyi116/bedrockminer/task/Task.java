@@ -515,7 +515,7 @@ public class Task {
         this.nextState = null;
         this.tickTotalCount = 0;
         this.ticksTotalMax = 100;
-        this.ticksTimeoutMax = 30;
+        this.ticksTimeoutMax = 45;
         this.tickWaitMax = 0;
         this.planItem = null;
         this.recycledQueue.clear();

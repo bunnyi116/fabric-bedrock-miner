@@ -53,8 +53,7 @@ public class TaskManager implements ITaskManager {
         if (!isAllowExecutionEnvironment(currentTask != null)) return;
 
         if (this.currentTask != null) {
-            // 当玩家不在处理范围时, 等待40TICK约2秒时间, 如果玩家未回处理位置, 将重新选择任务
-            int resetCountMax = 20;
+            int resetCountMax = 5;
             if (this.resetCount++ >= resetCountMax) {
                 // 检查现有任务, 如果只有一个任务, 就没必要重新选择新任务了(因为不存在其他任务)
                 if (this.pendingBlockTasks.size() > 1 || !this.pendingRegionTasks.isEmpty() || !Config.getInstance().ranges.isEmpty()) {
