@@ -1,7 +1,8 @@
-name: Dev Builds
+name: build
 
 on:
   push:
+    branches: [ main, master, dev, preprocess ]
     paths:
       - "*.gradle"
       - "gradle.properties"
@@ -9,11 +10,9 @@ on:
       - "versions/**"
       - "settings.json"
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
     uses: ./.github/workflows/build.yml
     secrets: inherit
-#    # [FEATURE] MIXIN_AUDITOR
-#    with:
-#      mixin_audit: true

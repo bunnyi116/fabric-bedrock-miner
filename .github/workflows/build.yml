@@ -7,6 +7,17 @@ on:
         type: boolean
         required: false
         default: false
+      target_subproject:
+        description: see release.yml, leave it empty to build all
+        type: string
+        required: false
+        default: ''
+#      # [FEATURE] MIXIN_AUDITOR
+#      mixin_audit:
+#        description: run mixin audit for Minecraft after build
+#        type: boolean
+#        required: false
+#        default: false
 
 jobs:
   build:
@@ -14,43 +25,79 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: 设置 JDK 21
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: 21
 
-      - name: 设置 Gradle
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          # 对于非主分支/主分支/开发分支，缓存设为只读
           cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master' && github.ref != 'refs/heads/dev' }}
 
-      - name: 使用 Gradle 构建
+      - name: Build with gradle
         run: |
           chmod +x gradlew
-          # 只构建 fabricWrapper，它会自动处理所有版本
-          ./gradlew :fabricWrapper:build
+          if [ -z "${{ inputs.target_subproject }}" ]; then
+              echo "Building all subprojects"
+              ./gradlew build
+          else
+              args=$(echo "${{ inputs.target_subproject }}" | tr ',' '\n' | sed 's/$/:build/' | paste -sd ' ')
+              echo "Building with arguments=$args"
+              ./gradlew $args
+          fi
         env:
           BUILD_ID: ${{ github.run_number }}
           BUILD_RELEASE: ${{ inputs.release }}
 
-      - name: 收集 fabricWrapper 版本包
-        run: |
-          shopt -s extglob
-          mkdir -p fabric-wrapper-jar
-          # 只收集 fabricWrapper 的 JAR 文件（用于发布）
-          for jar in fabricWrapper/build/libs/!(*-@(dev|sources|shadow)).jar; do
-              cp -p "$jar" fabric-wrapper-jar/
-          done
-          echo "fabricWrapper 版本包:"
-          ls -l fabric-wrapper-jar
+#      # [FEATURE] MIXIN_AUDITOR
+#      - name: Run mixin audit check for Minecraft client
+#        if: ${{ inputs.mixin_audit }}
+#        timeout-minutes: 10
+#        run: |
+#          mkdir -p ./run
+#          echo eula=true > ./run/eula.txt  # server needs this
+#          ./gradlew runClientMixinAudit
 
-      - name: 上传 fabricWrapper 版本包（发布用）
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: fabric-wrapper-jar
-          path: fabric-wrapper-jar/*.jar
+          name: build-artifacts
+          path: versions/*/build/libs/
+
+      - name: Collect mod jars
+        run: |
+          shopt -s extglob
+          mkdir mod-jars
+          for jar in versions/*/build/libs/!(*-@(dev|sources|shadow)).jar; do
+              cp -p "$jar" mod-jars/
+          done
+          ls -l mod-jars
+
+      # This is the artifact recommended for users to download
+      - name: Upload mod jars
+        uses: actions/upload-artifact@v4
+        with:
+          name: mod-jars
+          path: mod-jars/*.jar
+
+#      # [FEATURE] FALLENS_MAVEN
+#      - name: Publish with gradle
+#        if: inputs.release || github.ref == 'refs/heads/dev'
+#        run: |
+#          if [ -z "${{ inputs.target_subproject }}" ]; then
+#              echo "Publishing all subprojects"
+#              ./gradlew publish
+#          else
+#              args=$(echo "${{ inputs.target_subproject }}" | tr ',' '\n' | sed 's/$/:publish/' | paste -sd ' ')
+#              echo "Publishing with arguments=$args"
+#              ./gradlew $args
+#          fi
+#        env:
+#          BUILD_ID: ${{ github.run_number }}
+#          BUILD_RELEASE: ${{ inputs.release }}
+#          FALLENS_MAVEN_TOKEN: ${{ secrets.FALLENS_MAVEN_TOKEN }}
 
   summary:
     runs-on: ubuntu-latest
@@ -63,13 +110,15 @@ jobs:
         with:
           python-version: 3.12
 
-      - name: 下载构建产物
+      - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: fabric-wrapper-jar
-          path: build-artifacts/fabricWrapper/build/libs
+          name: build-artifacts
+          path: build-artifacts
 
-      - name: 生成构建摘要
+      - name: Make build summary
         run: |
           pip install jproperties
           python .github/workflows/scripts/summary.py
+        env:
+          TARGET_SUBPROJECT: ${{ inputs.target_subproject }}
