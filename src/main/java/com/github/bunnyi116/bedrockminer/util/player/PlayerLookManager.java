@@ -5,6 +5,7 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.Nullable;
 
 import static com.github.bunnyi116.bedrockminer.BedrockMiner.networkHandler;
@@ -19,6 +20,64 @@ public class PlayerLookManager {
     private float pitch = 0F;
     private int ticks = 0;
     private @Nullable Task task = null;
+
+
+    public Direction getPlacementDirection() {
+        float currentYaw = this.modifyYaw ? this.yaw : (player != null ? player.getYaw() : 0F);
+        float currentPitch = this.modifyPitch ? this.pitch : (player != null ? player.getPitch() : 0F);
+        return getDirectionFromYawPitch(currentYaw, currentPitch);
+    }
+
+    // 静态工具方法：根据yaw和pitch计算方向
+    public static Direction getDirectionFromYawPitch(float yaw, float pitch) {
+        // 标准化yaw到0-360范围
+        float normalizedYaw = MathHelper.wrapDegrees(yaw);
+        if (normalizedYaw < 0) {
+            normalizedYaw += 360;
+        }
+
+        // 根据pitch判断上下方向
+        if (pitch <= -45) {
+            return Direction.UP;
+        } else if (pitch >= 45) {
+            return Direction.DOWN;
+        }
+
+        // 根据yaw判断水平方向
+        if (normalizedYaw >= 315 || normalizedYaw < 45) {
+            return Direction.SOUTH;
+        } else if (normalizedYaw >= 45 && normalizedYaw < 135) {
+            return Direction.WEST;
+        } else if (normalizedYaw >= 135 && normalizedYaw < 225) {
+            return Direction.NORTH;
+        } else {
+            return Direction.EAST;
+        }
+    }
+
+    // 获取当前水平方向（忽略上下看）
+    public Direction getPlacementHorizontalDirection() {
+        float currentYaw = this.modifyYaw ? this.yaw : (player != null ? player.getYaw() : 0F);
+        return getHorizontalDirectionFromYaw(currentYaw);
+    }
+
+    // 静态工具方法：根据yaw计算水平方向
+    public static Direction getHorizontalDirectionFromYaw(float yaw) {
+        float normalizedYaw = MathHelper.wrapDegrees(yaw);
+        if (normalizedYaw < 0) {
+            normalizedYaw += 360;
+        }
+
+        if (normalizedYaw >= 315 || normalizedYaw < 45) {
+            return Direction.SOUTH;
+        } else if (normalizedYaw >= 45 && normalizedYaw < 135) {
+            return Direction.WEST;
+        } else if (normalizedYaw >= 135 && normalizedYaw < 225) {
+            return Direction.NORTH;
+        } else {
+            return Direction.EAST;
+        }
+    }
 
     public float onModifyLookYaw(float yaw) {
         return this.modifyYaw ? this.yaw : yaw;
@@ -68,7 +127,6 @@ public class PlayerLookManager {
         this.pitch = pitch;
         this.modifyPitch = true;
     }
-
 
     public void set(float yaw, float pitch) {
         this.setYaw(yaw);

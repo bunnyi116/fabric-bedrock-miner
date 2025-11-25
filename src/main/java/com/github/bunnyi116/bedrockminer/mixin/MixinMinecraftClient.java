@@ -57,14 +57,14 @@ public abstract class MixinMinecraftClient {
         if (TaskManager.getInstance().isBedrockMinerFeatureEnable() && player.getMainHandStack().isEmpty()) {
             TaskManager.getInstance().switchToggle(block);
         }
-        if (TaskManager.getInstance().isRunning()) {
+        if (PlayerInteractionUtils.isBreakingBlock()) {
             ci.cancel();
         }
     }
 
     @Inject(method = "doAttack", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;attackBlock(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/util/math/Direction;)Z"), locals = LocalCapture.CAPTURE_FAILSOFT, cancellable = true)
     private void handleBlockBreaking(CallbackInfoReturnable<Boolean> cir, ItemStack itemStack, boolean bl, BlockHitResult blockHitResult, BlockPos blockPos) {
-        if (TaskManager.getInstance().isRunning()) {
+        if (PlayerInteractionUtils.isBreakingBlock()) {
             cir.cancel();
         }
     }
@@ -79,31 +79,8 @@ public abstract class MixinMinecraftClient {
         if (TaskManager.getInstance().isBedrockMinerFeatureEnable()) {
             TaskManager.getInstance().addBlockTask(world, blockPos, block);
         }
-        if (TaskManager.getInstance().isRunning()) {
+        if (PlayerInteractionUtils.isBreakingBlock()) {
             ci.cancel();
-        }
-    }
-
-    @Inject(method = "handleInputEvents", at = @At(value = "HEAD"))
-    public void tick(CallbackInfo ci) {
-        updateGameVariable();
-        TaskManager.getInstance().tick();
-        PlayerInteractionUtils.autoResetBreaking();    // 自动解除拦截玩家破坏机制，避免任务阻塞或玩家离开任务方块破坏范围
-    }
-
-    @Unique
-    private void updateGameVariable() {
-        BedrockMiner.client = (MinecraftClient) (Object) this;
-        BedrockMiner.world = BedrockMiner.client.world;
-        BedrockMiner.player = BedrockMiner.client.player;
-        if (BedrockMiner.player != null) {
-            BedrockMiner.playerInventory = BedrockMiner.player.getInventory();
-        }
-        BedrockMiner.crosshairTarget = BedrockMiner.client.crosshairTarget;
-        BedrockMiner.interactionManager = BedrockMiner.client.interactionManager;
-        BedrockMiner.networkHandler = BedrockMiner.client.getNetworkHandler();
-        if (BedrockMiner.interactionManager != null) {
-            BedrockMiner.gameMode = BedrockMiner.interactionManager.getCurrentGameMode();
         }
     }
 }

@@ -1,77 +1,107 @@
 package com.github.bunnyi116.bedrockminer.util.player;
 
+import com.github.bunnyi116.bedrockminer.BedrockMiner;
+import com.github.bunnyi116.bedrockminer.mixin.ClientPlayerInteractionManagerAccessor;
 import com.github.bunnyi116.bedrockminer.util.block.BlockUtils;
 import com.github.bunnyi116.bedrockminer.util.network.NetworkUtils;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.Item;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket.Action;
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
+import net.minecraft.sound.BlockSoundGroup;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayDeque;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Queue;
 
 import static com.github.bunnyi116.bedrockminer.BedrockMiner.*;
 
+
 @Environment(EnvType.CLIENT)
 public class PlayerInteractionUtils {
-    public static final float BREAKING_PROGRESS_MAX = 0.7F;
+    public static final float BREAKING_PROGRESS_MAX = 1.0F;
     private static boolean breakingBlock;
     private static int breakingTicks;
     private static int breakingTickMax;
+    private static final Queue<BlockPos> blockQueue = new ArrayDeque<>();
 
-    public static boolean attackBlock(BlockPos pos, Direction direction, @Nullable Runnable beforeBreaking, @Nullable Runnable afterBreaking) {
-        interactionManager.syncSelectedSlot();
-        if (player.isBlockBreakingRestricted(world, pos, gameMode)) {
+    private static ClientPlayerInteractionManagerAccessor getAccessor() {
+        return (ClientPlayerInteractionManagerAccessor) BedrockMiner.interactionManager;
+    }
+
+    public static boolean attackBlock(BlockPos pos, Direction direction, @Nullable Runnable packetSending, @Nullable Runnable packetSent) {
+        breakingTicks = 0;
+        ClientPlayerInteractionManagerAccessor accessor = getAccessor();
+        if (accessor == null) return false;
+
+        MinecraftClient client = accessor.getClient();
+        ClientPlayerEntity player = client.player;
+        ClientWorld world = client.world;
+        if (player == null || world == null) return false;
+
+        if (!pos.equals(accessor.getCurrentBreakingPos())) {
+            blockQueue.add(accessor.getCurrentBreakingPos());
+        }
+
+        accessor.setBreakingBlock(false);   // 避免原版游戏TICK发送取消破坏数据包
+        accessor.setBlockBreakingCooldown(0);
+        if (player.isBlockBreakingRestricted(world, pos, accessor.getGameMode())) {
             return false;
         }
         if (!world.getWorldBorder().contains(pos)) {
             return false;
         }
-        if (gameMode.isCreative()) {
+        if (player.getAbilities().creativeMode) {
             setBreakingBlock(true);
-            NetworkUtils.sendSequencedPacket((sequence) -> {
-                interactionManager.breakBlock(pos);
+            NetworkUtils.sendSequencedPacket(world, (sequence) -> {
+                accessor.interactBreakBlock(pos);
+                setBreakingBlock(false);
                 return new PlayerActionC2SPacket(Action.START_DESTROY_BLOCK, pos, direction, sequence);
-            }, beforeBreaking, afterBreaking);
-            setBreakingBlock(false);
-        } else if (!(breakingBlock || interactionManager.breakingBlock) || !interactionManager.isCurrentlyBreaking(pos)) {
-            if ((breakingBlock || interactionManager.breakingBlock)) {
-                networkHandler.sendPacket(new PlayerActionC2SPacket(Action.ABORT_DESTROY_BLOCK, interactionManager.currentBreakingPos, direction));
-                setBreakingBlock(false);
+            }, packetSending, packetSent);
+        } else if (!isBreakingBlock() || !accessor.interactIsCurrentlyBreaking(pos)) {
+            if (isBreakingBlock()) {
+                accessor.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(Action.ABORT_DESTROY_BLOCK, accessor.getCurrentBreakingPos(), direction));
             }
-            BlockState blockState = world.getBlockState(pos);
-            float calcBlockBreakingDelta = PlayerUtils.calcBlockBreakingDelta(blockState);
-            if (calcBlockBreakingDelta >= BREAKING_PROGRESS_MAX) {
-                setBreakingBlock(true);
-                NetworkUtils.sendSequencedPacket((sequence) -> {
-                    if (!blockState.isAir()) {
-                        interactionManager.breakBlock(pos);
-                    }
-                    return new PlayerActionC2SPacket(Action.START_DESTROY_BLOCK, pos, direction, sequence);
-                }, beforeBreaking, afterBreaking);
-                setBreakingBlock(false);
-            } else {
-                NetworkUtils.sendSequencedPacket((sequence) -> {
-                    if (!blockState.isAir() && interactionManager.currentBreakingProgress == 0.0F) {
-                        blockState.onBlockBreakStart(world, pos, player);
-                    }
+            NetworkUtils.sendSequencedPacket(world, (sequence) -> {
+                BlockState blockState = world.getBlockState(pos);
+                boolean bl = !blockState.isAir();
+                if (bl && accessor.getCurrentBreakingProgress() == 0.0F) {
+                    blockState.onBlockBreakStart(world, pos, player);
+                }
+                if (bl && PlayerUtils.calcBlockBreakingDelta(blockState) >= BREAKING_PROGRESS_MAX) {
+                    accessor.interactBreakBlock(pos);
+                    setBreakingBlock(false);
+                } else {
+                    accessor.setCurrentBreakingPos(pos);
+                    accessor.setSelectedStack(player.getMainHandStack());
+                    accessor.setCurrentBreakingProgress(0.0F);
+                    accessor.setBlockBreakingSoundCooldown(0.0F);
+                    world.setBlockBreakingInfo(player.getId(), accessor.getCurrentBreakingPos(), accessor.interactGetBlockBreakingProgress());
                     setBreakingBlock(true);
-                    interactionManager.currentBreakingPos = pos;
-                    interactionManager.selectedStack = player.getMainHandStack();
-                    interactionManager.currentBreakingProgress = 0.0F;
-                    world.setBlockBreakingInfo(player.getId(), interactionManager.currentBreakingPos, getBlockBreakingProgress());
-                    return new PlayerActionC2SPacket(Action.START_DESTROY_BLOCK, pos, direction, sequence);
-                });
-            }
+                }
+                return new PlayerActionC2SPacket(Action.START_DESTROY_BLOCK, pos, direction, sequence);
+            }, packetSending, packetSent);
         }
-        ++breakingTickMax;
         return true;
     }
 
@@ -79,52 +109,72 @@ public class PlayerInteractionUtils {
         return attackBlock(pos, PlayerUtils.getClosestFace(pos), null, null);
     }
 
-    public static boolean updateBlockBreakingProgress(BlockPos pos, Direction direction, @Nullable Runnable beforeBreaking, @Nullable Runnable afterBreaking) {
-        interactionManager.syncSelectedSlot();
-        if (gameMode.isCreative() && world.getWorldBorder().contains(pos)) {
+    public static boolean updateBlockBreakingProgress(BlockPos pos, Direction direction, @Nullable Runnable packetSending, @Nullable Runnable packetSent) {
+        breakingTicks = 0;
+        ClientPlayerInteractionManagerAccessor accessor = getAccessor();
+        if (accessor == null) return false;
+
+        MinecraftClient client = getAccessor().getClient();
+        ClientPlayerEntity player = getAccessor().getClient().player;
+        ClientWorld world = getAccessor().getClient().world;
+        if (player == null || world == null) return false;
+
+        if (!pos.equals(accessor.getCurrentBreakingPos())) {
+            blockQueue.add(accessor.getCurrentBreakingPos());
+        }
+
+        accessor.setBreakingBlock(false);   // 避免原版游戏TICK发送取消破坏数据包
+        accessor.setBlockBreakingCooldown(0);
+        accessor.invokeSyncSelectedSlot();
+        if (player.getAbilities().creativeMode && world.getWorldBorder().contains(pos)) {
             setBreakingBlock(true);
-            NetworkUtils.sendSequencedPacket((sequence) -> {
-                interactionManager.breakBlock(pos);
+            NetworkUtils.sendSequencedPacket(world, (sequence) -> {
+                accessor.interactBreakBlock(pos);
+                setBreakingBlock(false);
                 return new PlayerActionC2SPacket(Action.START_DESTROY_BLOCK, pos, direction, sequence);
-            }, beforeBreaking, afterBreaking);
-            setBreakingBlock(false);
-            ++breakingTickMax;
+            }, packetSending, packetSent);
             return true;
         }
-        if ((breakingBlock || interactionManager.breakingBlock) && interactionManager.isCurrentlyBreaking(pos)) {
+
+        if (accessor.interactIsCurrentlyBreaking(pos)) {
             BlockState blockState = world.getBlockState(pos);
             if (blockState.isAir()) {
                 setBreakingBlock(false);
                 return false;
+            } else {
+                accessor.setCurrentBreakingProgress(accessor.getCurrentBreakingProgress() + PlayerUtils.calcBlockBreakingDelta(blockState));
+                if (accessor.getBlockBreakingSoundCooldown() % 4.0F == 0.0F) {
+                    BlockSoundGroup blockSoundGroup = blockState.getSoundGroup();
+                    client.getSoundManager().play(new PositionedSoundInstance(blockSoundGroup.getHitSound(), SoundCategory.BLOCKS, (blockSoundGroup.getVolume() + 1.0F) / 8.0F, blockSoundGroup.getPitch() * 0.5F, SoundInstance.createRandom(), pos));
+                }
+                accessor.setBlockBreakingSoundCooldown(accessor.getBlockBreakingSoundCooldown() + 1);
+                setBreakingBlock(true);
+                if (accessor.getCurrentBreakingProgress() >= BREAKING_PROGRESS_MAX) {
+                    NetworkUtils.sendSequencedPacket(world, (sequence) -> {
+                        accessor.interactBreakBlock(pos);
+                        setBreakingBlock(false);
+                        return new PlayerActionC2SPacket(Action.STOP_DESTROY_BLOCK, pos, direction, sequence);
+                    }, packetSending, packetSent);
+
+                    accessor.setCurrentBreakingProgress(0.0F);
+                    accessor.setBlockBreakingSoundCooldown(0.0F);
+                    accessor.setBlockBreakingCooldown(0);
+                }
+                world.setBlockBreakingInfo(player.getId(), accessor.getCurrentBreakingPos(), accessor.interactGetBlockBreakingProgress());
+                return true;
             }
-            setBreakingBlock(true);
-            interactionManager.currentBreakingProgress += PlayerUtils.calcBlockBreakingDelta(blockState);
-            if (interactionManager.currentBreakingProgress >= BREAKING_PROGRESS_MAX) {
-                NetworkUtils.sendSequencedPacket((sequence) -> {
-                    interactionManager.breakBlock(pos);
-                    return new PlayerActionC2SPacket(Action.STOP_DESTROY_BLOCK, pos, direction, sequence);
-                }, beforeBreaking, afterBreaking);
-                interactionManager.currentBreakingProgress = 0.0F;
-                setBreakingBlock(false);
-            }
-            world.setBlockBreakingInfo(player.getId(), interactionManager.currentBreakingPos, getBlockBreakingProgress());
-            ++breakingTickMax;
-            return true;
+        } else {
+            return attackBlock(pos, direction, packetSending, packetSent);
         }
-        return attackBlock(pos, direction, beforeBreaking, afterBreaking);
     }
 
     public static void updateBlockBreakingProgress(BlockPos pos) {
         updateBlockBreakingProgress(pos, PlayerUtils.getClosestFace(pos), null, null);
     }
 
-    public static int getBlockBreakingProgress() {
-        return interactionManager.currentBreakingProgress > 0.0F ? (int) (interactionManager.currentBreakingProgress * 10.0F) : -1;
-    }
-
     public static void resetBreaking() {
         breakingTicks = 0;
-        breakingTickMax = 200;
+        breakingTickMax = 20;
         setBreakingBlock(false);
     }
 
@@ -143,11 +193,114 @@ public class PlayerInteractionUtils {
 
     public static void setBreakingBlock(boolean breakingBlock) {
         PlayerInteractionUtils.breakingBlock = breakingBlock;
-        interactionManager.breakingBlock = breakingBlock;
     }
 
 
-    public static void placement(BlockPos blockPos, Direction facing, @Nullable Item... items) {
+    public static void addBlockToQueue(BlockPos pos) {
+        if (pos != null && !blockQueue.contains(pos)) {
+            blockQueue.add(pos);
+        }
+    }
+
+    /**
+     * 批量添加方块到破坏队列
+     */
+    public static void addBlocksToQueue(List<BlockPos> posList) {
+        for (BlockPos pos : posList) {
+            addBlockToQueue(pos);
+        }
+    }
+
+    /**
+     * 清空破坏队列并停止当前破坏
+     */
+    public static void clearQueue() {
+        blockQueue.clear();
+        resetBreaking();
+        // 此时如果正在破坏，应该发送 ABORT 包
+        ClientPlayerInteractionManagerAccessor accessor = getAccessor();
+        if (accessor != null && accessor.isBreakingBlock()) {
+            accessor.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(Action.ABORT_DESTROY_BLOCK, accessor.getCurrentBreakingPos(), Direction.DOWN));
+        }
+    }
+
+    /**
+     * 返回当前队列的大小
+     */
+    public static int getQueueSize() {
+        return blockQueue.size();
+    }
+
+    public static boolean isCancel() {
+        return !blockQueue.isEmpty();
+    }
+
+    /**
+     * 核心 Tick 方法
+     * 应该在客户端 Tick 事件中调用此方法 (例如 ClientTickEvents.END_CLIENT_TICK)
+     */
+    public static void tick() {
+        ClientPlayerInteractionManagerAccessor accessor = getAccessor();
+        if (accessor == null) return;
+        MinecraftClient client = getAccessor().getClient();
+        if (client.player == null || client.world == null) {
+            clearQueue();
+            return;
+        }
+        int i = 0;
+        Iterator<BlockPos> iterator = blockQueue.iterator();
+        while (iterator.hasNext() && i++ < 10) {
+            BlockPos currentQueuePos = iterator.next();
+            if (currentQueuePos == null) continue;
+            BlockState state = client.world.getBlockState(currentQueuePos);
+            if (state.isOf(Blocks.MOVING_PISTON)) {
+                return;
+            }
+            if (state.isAir() || state.getBlock().getHardness() < 0 || !PlayerUtils.canInteractWithBlockAt(currentQueuePos, 1F)) {
+                iterator.remove();
+            } else {
+                if (PlayerUtils.canInteractWithBlockAt(currentQueuePos, 1f)) {
+                    PlayerInventoryUtils.autoSwitch(state);
+                    updateBlockBreakingProgress(currentQueuePos);
+                    if (!PlayerUtils.canInstantlyMineBlock(state)) {
+                        return;
+                    }
+                }
+            }
+        }
+        if (blockQueue.isEmpty()) {
+            autoResetBreaking();
+        }
+    }
+
+    public static ActionResult interactBlock(ClientPlayerEntity player, Hand hand, BlockHitResult hitResult, @Nullable Runnable beforeInteract, @Nullable Runnable afterInteract) {
+        ClientPlayerInteractionManagerAccessor accessor = getAccessor();
+        if (accessor == null) return ActionResult.FAIL;
+
+        accessor.invokeSyncSelectedSlot();
+
+        MinecraftClient client = accessor.getClient();
+        if (!client.world.getWorldBorder().contains(hitResult.getBlockPos())) {
+            return ActionResult.FAIL;
+        }
+
+        MutableObject<ActionResult> mutableObject = new MutableObject<>();
+
+        NetworkUtils.sendSequencedPacket(client.world, (sequence) -> {
+            mutableObject.setValue(accessor.interactInteractBlockInternal(player, hand, hitResult));
+            return new PlayerInteractBlockC2SPacket(hand, hitResult, sequence);
+        }, beforeInteract, afterInteract);
+
+        return mutableObject.getValue();
+    }
+
+
+    public static ActionResult interactBlock(ClientPlayerEntity player, Hand hand, BlockHitResult hitResult) {
+        return interactBlock(player, hand, hitResult, null, null);
+    }
+
+
+    public static void placement(BlockPos blockPos, Direction facing, @Nullable Runnable beforeInteract, @Nullable Runnable afterInteract, @Nullable Item... items) {
         if (blockPos == null || facing == null)
             return;
 
@@ -183,8 +336,13 @@ public class PlayerInteractionUtils {
         var hitVec3d = Vec3d.ofCenter(hitPos).offset(facing, 0.5F);   // 放置面中心坐标
         var hitResult = new BlockHitResult(hitVec3d, facing, blockPos, false);
 
-        // 发送交互方块数据包
-        interactionManager.interactBlock(player, Hand.MAIN_HAND, hitResult);
+        // 使用新的 interactBlock 方法
+        interactBlock(player, Hand.MAIN_HAND, hitResult, beforeInteract, afterInteract);
+    }
+
+    // 重载方法，保持向后兼容
+    public static void placement(BlockPos blockPos, Direction facing, @Nullable Item... items) {
+        placement(blockPos, facing, null, null, items);
     }
 
     public static void placement(BlockPos blockPos, Direction facing) {
