@@ -20,9 +20,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Queue;
 
 import static com.github.bunnyi116.bedrockminer.BedrockMiner.player;
 import static net.minecraft.block.Block.sideCoversSmallSquare;
@@ -39,7 +39,7 @@ public class Task {
     public final List<TaskPlan> planItems;
     public @Nullable TaskPlan planItem;
 
-    public final Queue<BlockPos> recycledQueue;
+    public final List<BlockPos> recycledItems;
     public boolean executeModify;
     private int tickTotalCount;
     private int tickInternalCount;
@@ -52,14 +52,19 @@ public class Task {
     public boolean executed;
     public boolean recycled;
     public boolean timeout;
+    private boolean tickOccupied;   // 当前TICK已被占用
 
     public Task(ClientWorld world, Block block, BlockPos pos) {
         this.world = world;
         this.block = block;
         this.pos = pos;
         this.planItems = TaskPlanTools.findAllPossible(pos, world);
-        this.recycledQueue = Queues.newConcurrentLinkedQueue();
+        this.recycledItems = new ArrayList<>();
         this.init();
+    }
+
+    private void tickOccupied() {
+        this.tickOccupied = true;
     }
 
     public boolean canInteractWithBlockAt() {
@@ -85,11 +90,14 @@ public class Task {
             debug("修改视角");
             setModifyLook(blockInfo.facing);
             blockInfo.modify = true;
+            this.tickOccupied();
         }
     }
 
+
     private void setModifyLook(Direction facing) {
         PlayerLookManager.INSTANCE.set(facing, this);
+        this.tickOccupied();
     }
 
     private void resetModifyLook() {
@@ -99,71 +107,67 @@ public class Task {
     }
 
     public void tick() {
-        if (this.currentState == TaskState.COMPLETE) {
-            return;
-        }
-        this.lastState = this.currentState; // 先将现有状态记录（debug输出）
         debug("开始");
-        if (this.tickTotalCount >= this.ticksTotalMax) {
-            this.currentState = TaskState.COMPLETE;
-        }
-        if (!this.timeout && this.tickTotalCount >= this.ticksTimeoutMax) {
-            this.timeout = true;
-            this.currentState = TaskState.TIMEOUT;
-        }
-        this.tickInternalCount = 0;
-        while (tickInternalCount < 10) {
-            this.lastState = this.currentState;
-            switch (this.currentState) {
-                case INITIALIZE -> this.init();
-                case WAIT_GAME_UPDATE -> this.updateStates();
-                case WAIT_CUSTOM -> this.waitCustom();
-                case FIND -> this.find();
-                case PLACE_PISTON -> this.placePiston();
-                case PLACE_REDSTONE_TORCH -> this.placeRedstoneTorch();
-                case PLACE_SLIME_BLOCK -> this.placeSlimeBlock();
-                case EXECUTE -> this.execute();
-                case RETRY -> {
-                    retry = true;
-                    if (!recycledQueue.isEmpty()) {
-                        currentState = TaskState.RECYCLED_ITEMS;
-                        return;
-                    }
-                    if (retryCount < retryCountMax) {
-                        retryCount++;
-                        debug("任务物品回收已完成, 超时重试: %s", retryCount);
-                        currentState = TaskState.INITIALIZE;
-                    } else {
-                        currentState = TaskState.COMPLETE;
-                    }
-                }
-                case TIMEOUT -> {
-                    debug("任务已超时");
-                    currentState = TaskState.RETRY;
-                }
-                case FAIL -> {
-                    debug("任务已失败");
-                    currentState = TaskState.RETRY;
-                }
-                case RECYCLED_ITEMS -> this.recycledItems();
-                case COMPLETE -> debug("任务已完成");
+        this.tickOccupied = false;  // 重置状态
+        if (this.currentState == TaskState.COMPLETE) {
+            debug("任务已完成");
+        } else {
+            this.lastState = this.currentState; // 先将现有状态记录（debug输出）
+            if (this.tickTotalCount >= this.ticksTotalMax) {
+                this.currentState = TaskState.COMPLETE;
+                this.tickOccupied();
             }
-            if (this.lastState == this.currentState) {  // 开始状态与结束状态一致, 避免无意义的内循环
-                debug("状态一致，无需内部循环");
-                break;
+            if (!this.timeout && this.tickTotalCount >= this.ticksTimeoutMax) {
+                this.timeout = true;
+                this.currentState = TaskState.TIMEOUT;
             }
-
-            if (this.currentState.isExclusiveTick()) {
-                if (this.lastState.isExclusiveTick()) {
-                    if (this.lastState == TaskState.WAIT_GAME_UPDATE) {
-                        debug("避免浪费TICK");
-                        continue;
+            this.tickInternalCount = 0;
+            while (tickInternalCount < 10) {
+                this.lastState = this.currentState;
+                switch (this.currentState) {
+                    case INITIALIZE -> this.init();
+                    case WAIT_GAME_UPDATE -> this.updateStates();
+                    case WAIT_CUSTOM -> this.waitCustom();
+                    case FIND -> this.find();
+                    case PLACE_PISTON -> this.placePiston();
+                    case PLACE_REDSTONE_TORCH -> this.placeRedstoneTorch();
+                    case PLACE_SLIME_BLOCK -> this.placeSlimeBlock();
+                    case EXECUTE -> this.execute();
+                    case RETRY -> {
+                        retry = true;
+                        if (!recycledItems.isEmpty()) {
+                            currentState = TaskState.RECYCLED_ITEMS;
+                            return;
+                        }
+                        if (retryCount < retryCountMax) {
+                            retryCount++;
+                            debug("任务物品回收已完成, 超时重试: %s", retryCount);
+                            currentState = TaskState.INITIALIZE;
+                        } else {
+                            currentState = TaskState.COMPLETE;
+                        }
                     }
+                    case TIMEOUT -> {
+                        debug("任务已超时");
+                        currentState = TaskState.RETRY;
+                    }
+                    case FAIL -> {
+                        debug("任务已失败");
+                        currentState = TaskState.RETRY;
+                    }
+                    case RECYCLED_ITEMS -> this.recycledItems();
+                    case COMPLETE -> debug("任务已完成");
+                }
+                if (this.lastState == this.currentState) {  // 开始状态与结束状态一致, 避免无意义的内循环
+                    debug("状态一致，无需内部循环");
+                    break;
+                }
+                if (this.tickOccupied) {
                     debug("独占TICK运行");
                     break;
                 }
+                ++tickInternalCount;
             }
-            ++tickInternalCount;
         }
         debug("结束\r\n");
         ++tickTotalCount;
@@ -338,42 +342,26 @@ public class Task {
     }
 
     private void recycledItems() {
-        if (!recycledQueue.isEmpty()) {
-            var blockPos = recycledQueue.peek();
-            var blockState = world.getBlockState(blockPos);
-            debug("任务物品正在回收: (%s) --> %s", blockPos.toShortString(), blockState.getBlock().getName().getString());
-            if (blockState.getBlock().getHardness() < 0) {
-                recycledQueue.remove(blockPos);
-                if (!recycledQueue.isEmpty()) {
-                    recycledItems();    // 目标位置被删除队列
-                }
-            }
-            var instant = PlayerUtils.canInstantlyMineBlock(blockState);
-            if (!instant) {
-                PlayerInventoryUtils.autoSwitch(blockState);
-            }
-            PlayerInteractionUtils.updateBlockBreakingProgress(blockPos);
-            if (BlockUtils.isReplaceable(blockState)) {
-                recycledQueue.remove(blockPos);
-                if (!recycledQueue.isEmpty()) {
-                    recycledItems();
-                }
-            }
-            if (instant && !recycledQueue.isEmpty()) {
-                recycledItems();
-            }
+        if (!recycledItems.isEmpty()) {
+            PlayerInteractionUtils.addBlocksToQueue(recycledItems);
+        }
+        debug("任务物品回收已完成");
+        if (retry) {
+            currentState = TaskState.RETRY;
         } else {
-            debug("任务物品回收已完成");
-            if (retry) {
-                currentState = TaskState.RETRY;
-            } else {
-                currentState = TaskState.COMPLETE;
-            }
+            currentState = TaskState.COMPLETE;
         }
     }
 
     private void execute() {
         if (executed || player == null || planItem == null) {
+            return;
+        }
+        this.updateStates();    // 执行前强制再确认一下条件是否充足了
+        if (this.currentState != TaskState.EXECUTE) {
+            debug("条件不充足，等待更新");
+            this.currentState = TaskState.WAIT_GAME_UPDATE;
+            this.tickOccupied();
             return;
         }
         if (!executeModify && planItem.direction.getAxis().isHorizontal()) {
@@ -385,6 +373,7 @@ public class Task {
             if (!PlayerUtils.canInstantlyMineBlock(world.getBlockState(planItem.piston.pos))) {
                 PlayerInventoryUtils.autoSwitch(world.getBlockState(planItem.piston.pos));
                 this.setWait(TaskState.EXECUTE, 1);
+                this.tickOccupied();
                 return;
             }
             // 打掉附近红石火把
@@ -397,20 +386,18 @@ public class Task {
             if (world.getBlockState(planItem.redstoneTorch.pos).getBlock() instanceof RedstoneTorchBlock) {
                 PlayerInteractionUtils.updateBlockBreakingProgress(planItem.redstoneTorch.pos);
             }
-            PlayerInteractionUtils.updateBlockBreakingProgress(planItem.piston.pos);
-            PlayerInteractionUtils.placement(planItem.piston.pos, planItem.direction.getOpposite(), Items.PISTON);
+            PlayerInteractionUtils.updateBlockBreakingProgress(planItem.piston.pos, null, () -> {
+                PlayerInteractionUtils.placement(planItem.piston.pos, planItem.direction.getOpposite(), Items.PISTON);
+            });
+
             this.addRecycled(planItem.piston.pos);
             if (this.executeModify) {
                 this.resetModifyLook();
             }
             this.executed = true;
+            this.tickOccupied();
         }
         this.currentState = TaskState.WAIT_GAME_UPDATE;
-//        if (Config.getInstance().shortTsk) {
-//            this.setWait(TaskState.WAIT_GAME_UPDATE, 1);
-//        } else {
-//            this.setWait(TaskState.WAIT_GAME_UPDATE, 3);
-//        }
     }
 
     private void waitCustom() {
@@ -421,6 +408,7 @@ public class Task {
         } else {
             ++this.ticksTotalMax;
             ++this.ticksTimeoutMax;
+            this.tickOccupied();
             this.debug("剩余等待TICK: %s", tickWaitMax);
         }
     }
@@ -438,6 +426,7 @@ public class Task {
         }
         if (world.getBlockState(planItem.piston.pos).isOf(Blocks.MOVING_PISTON)) {
             this.debugUpdateStates("活塞正在移动");
+            this.tickOccupied();
             return;
         }
         if (!this.executed) {
@@ -495,7 +484,9 @@ public class Task {
                     }
                 }
             }
+            // 无法确认状态, 独占等待更新
             this.debugUpdateStates("？？？");
+            this.tickOccupied();
         }
     }
 
@@ -518,7 +509,7 @@ public class Task {
         this.ticksTimeoutMax = 45;
         this.tickWaitMax = 0;
         this.planItem = null;
-        this.recycledQueue.clear();
+        this.recycledItems.clear();
         this.executed = false;
         this.recycled = false;
         this.timeout = false;
@@ -543,8 +534,8 @@ public class Task {
     }
 
     private void addRecycled(BlockPos pos) {
-        if (!recycledQueue.contains(pos)) {
-            recycledQueue.add(pos);
+        if (!recycledItems.contains(pos)) {
+            recycledItems.add(pos);
         }
     }
 

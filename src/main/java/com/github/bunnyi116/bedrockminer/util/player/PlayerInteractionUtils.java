@@ -168,6 +168,10 @@ public class PlayerInteractionUtils {
         }
     }
 
+    public static void updateBlockBreakingProgress(BlockPos pos, @Nullable Runnable packetSending, @Nullable Runnable packetSent) {
+        updateBlockBreakingProgress(pos, PlayerUtils.getClosestFace(pos), packetSending, packetSent);
+    }
+
     public static void updateBlockBreakingProgress(BlockPos pos) {
         updateBlockBreakingProgress(pos, PlayerUtils.getClosestFace(pos), null, null);
     }

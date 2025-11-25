@@ -2,30 +2,16 @@ package com.github.bunnyi116.bedrockminer.task;
 
 public enum TaskState {
     INITIALIZE,
-    WAIT_GAME_UPDATE(true),
-    WAIT_CUSTOM(true),
+    WAIT_GAME_UPDATE,
+    WAIT_CUSTOM,
     FIND,
     PLACE_PISTON,
     PLACE_REDSTONE_TORCH,
     PLACE_SLIME_BLOCK,
-    EXECUTE(true),
+    EXECUTE,
     RETRY,
     TIMEOUT,
     FAIL,
-    RECYCLED_ITEMS(true),
+    RECYCLED_ITEMS,
     COMPLETE;
-
-    private final boolean exclusiveTICK;
-
-    TaskState() {
-        exclusiveTICK = false;
-    }
-
-    TaskState(boolean exclusiveTICK) {
-        this.exclusiveTICK = exclusiveTICK;
-    }
-
-    public boolean isExclusiveTick() {
-        return exclusiveTICK;
-    }
 }
