@@ -7,6 +7,8 @@
     "MixinPlayerMoveC2SPacket"
   ],
   "client": [
+    "ClientPlayerInteractionManagerAccessor",
+    "MixinClientPlayerInteractionManager",
     "MixinMinecraftClient"
   ],
   "injectors": {
