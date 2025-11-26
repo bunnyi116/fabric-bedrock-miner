@@ -2,14 +2,13 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.github.bunnyi116.bedrockminer.mixin",
-  "compatibilityLevel": "JAVA_17",
+  "compatibilityLevel": "${COMPATIBILITY_LEVEL}",
   "mixins": [
     "MixinPlayerMoveC2SPacket"
   ],
   "client": [
     "ClientPlayerInteractionManagerAccessor",
-    "MixinClientPlayerInteractionManager",
-    "MixinMinecraftClient"
+    "MixinClientPlayerInteractionManager"
   ],
   "injectors": {
     "defaultRequire": 1

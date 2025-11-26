@@ -7,18 +7,18 @@ plugins {
 }
 
 // 这些属性通常从 Gradle 属性文件 (如 gradle.properties) 或 settings.gradle.kts 中传入。
-val mcVersion: Int = project.property("mcVersion") as Int
-val modId: String = project.property("mod_id") as String
-val modWrapperId: String = project.property("mod_wrapper_id") as String
-val modName: String = project.property("mod_name") as String
-val modVersion: String = project.property("mod_version") as String
-val modMavenGroup: String = project.property("mod_maven_group") as String
-val modArchivesBaseName: String = project.property("mod_archives_base_name") as String
-val minecraftDependency: String = project.property("minecraft_dependency") as String
-val minecraftVersion: String = project.property("minecraft_version") as String
-val yarnMappings: String = project.property("yarn_mappings") as String
-val loaderVersion: String = project.property("loader_version") as String
-val fabricApiVersion: String = project.property("fabric_api_version") as String
+val mcVersion = project.property("mcVersion") as Int
+val modId = project.property("mod_id") as String
+val modWrapperId = project.property("mod_wrapper_id") as String
+val modName = project.property("mod_name") as String
+val modVersion = project.property("mod_version") as String
+val modMavenGroup = project.property("mod_maven_group") as String
+val modArchivesBaseName = project.property("mod_archives_base_name") as String
+val minecraftDependency = project.property("minecraft_dependency") as String
+val minecraftVersion = project.property("minecraft_version") as String
+val yarnMappings = project.property("yarn_mappings") as String
+val loaderVersion = project.property("loader_version") as String
+val fabricApiVersion = project.property("fabric_api_version") as String
 
 // 常量
 val mixinConfigPath = "blockminer.mixins.json"
@@ -54,16 +54,24 @@ dependencies {
 }
 
 loom {
+
     // 设置 Access Widener (访问增强器) 文件的路径
     accessWidenerPath.set(file("../../src/main/resources/bedrockminer.accesswidener"))
 
     val commonVmArgs = listOf("-Dmixin.debug.export=true", "-Dmixin.debug.countInjections=true") // 通用 JVM 参数
     runs.configureEach {
-        // 配置 IDE 运行时设置。
-        // 确保它生成所有 "Minecraft Client (:subproject_name)" 应用程序
         runDir = "../../run" // 设置运行目录
         vmArgs(commonVmArgs) // 应用通用的 JVM 参数
+        programArgs(
+            listOf(
+                "--width",
+                "1280",
+                "--height",
+                "720",
+            )
+        )
     }
+
 
     //  // [功能] MIXIN 审计器 (MIXIN_AUDITOR) - 被注释掉的 Mixin 审计配置
     //  runs {
@@ -121,30 +129,19 @@ version = fullProjectVersion // 设置项目的版本号
 // 如果 IDEA 抱怨 "Cannot resolve resource filtering of MatchingCopyAction"，并且你想知道原因
 // 请参阅 https://youtrack.jetbrains.com/issue/IDEA-296490
 tasks.withType<ProcessResources> {
-    // 设置输入属性，以便 Gradle 知道在这些属性变化时需要重新运行任务
-    inputs.property("mod_id", modId)
-    inputs.property("mod_wrapper_id", modWrapperId)
-    inputs.property("mod_name", modName)
-    inputs.property("mod_version", fullModVersion)
-    inputs.property("loader_version", loaderVersion)
-    inputs.property("minecraft_dependency", minecraftDependency)
+    val propertiesMap = project.properties
+        .filterValues { it == null || it is CharSequence || it is Number || it is Boolean }
+        .mapValues { it.value }
+        // 确保包含你手动定义的那些属性（例如 mcVersion 等），但只包含那些在 fabric.mod.json 中需要替换的键。
+        .filterKeys { it in setOf("mod_id", "mod_wrapper_id", "mod_name", "mod_version", "loader_version", "minecraft_dependency", "fullModVersion") }
+        .toMutableMap()
 
-    filesMatching("fabric.mod.json") {
-        // 使用 expand 替换 fabric.mod.json 中的占位符
-        expand(
-            mapOf(
-                "mod_id" to modId,
-                "mod_wrapper_id" to modWrapperId,
-                "mod_name" to modName,
-                "mod_version" to fullModVersion,
-                "loader_version" to loaderVersion,
-                "minecraft_dependency" to minecraftDependency,
-            )
-        )
-    }
-    filesMatching(mixinConfigPath) {
-        // 替换 Mixin 配置中的 COMPATIBILITY_LEVEL 占位符
-        filter { it.replace("{{COMPATIBILITY_LEVEL}}", "JAVA_${mixinCompatibilityLevel.ordinal + 1}") }
+    propertiesMap["COMPATIBILITY_LEVEL"]="JAVA_${mixinCompatibilityLevel.majorVersion}"
+
+    inputs.properties(propertiesMap)
+
+    filesMatching(listOf("*.mixins.json", "*.mod.json", "META-INF/*mods.toml")) {
+        expand(propertiesMap)
     }
 }
 
