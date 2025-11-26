@@ -129,17 +129,12 @@ version = fullProjectVersion // 设置项目的版本号
 // 如果 IDEA 抱怨 "Cannot resolve resource filtering of MatchingCopyAction"，并且你想知道原因
 // 请参阅 https://youtrack.jetbrains.com/issue/IDEA-296490
 tasks.withType<ProcessResources> {
-    val propertiesMap = project.properties
-        .filterValues { it == null || it is CharSequence || it is Number || it is Boolean }
-        .mapValues { it.value }
-        // 确保包含你手动定义的那些属性（例如 mcVersion 等），但只包含那些在 fabric.mod.json 中需要替换的键。
-        .filterKeys { it in setOf("mod_id", "mod_wrapper_id", "mod_name", "mod_version", "loader_version", "minecraft_dependency", "fullModVersion") }
-        .toMutableMap()
-
-    propertiesMap["COMPATIBILITY_LEVEL"]="JAVA_${mixinCompatibilityLevel.majorVersion}"
+    val rootProperties = rootProject.providers.gradlePropertiesPrefixedBy("").get();
+    var subProject = project.providers.gradlePropertiesPrefixedBy("").get();
+    val propertiesMap = (rootProperties + subProject).toMutableMap()
+    propertiesMap["COMPATIBILITY_LEVEL"] = "JAVA_${mixinCompatibilityLevel.majorVersion}"
 
     inputs.properties(propertiesMap)
-
     filesMatching(listOf("*.mixins.json", "*.mod.json", "META-INF/*mods.toml")) {
         expand(propertiesMap)
     }
