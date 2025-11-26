@@ -142,12 +142,6 @@ public class PlayerInteractionUtils {
                 setBreakingBlock(false);
                 return false;
             } else {
-                accessor.setCurrentBreakingProgress(accessor.getCurrentBreakingProgress() + PlayerUtils.calcBlockBreakingDelta(blockState));
-                if (accessor.getBlockBreakingSoundCooldown() % 4.0F == 0.0F) {
-                    BlockSoundGroup blockSoundGroup = blockState.getSoundGroup();
-                    client.getSoundManager().play(new PositionedSoundInstance(blockSoundGroup.getHitSound(), SoundCategory.BLOCKS, (blockSoundGroup.getVolume() + 1.0F) / 8.0F, blockSoundGroup.getPitch() * 0.5F, SoundInstance.createRandom(), pos));
-                }
-                accessor.setBlockBreakingSoundCooldown(accessor.getBlockBreakingSoundCooldown() + 1);
                 setBreakingBlock(true);
                 if (accessor.getCurrentBreakingProgress() >= BREAKING_PROGRESS_MAX) {
                     NetworkUtils.sendSequencedPacket(world, (sequence) -> {
@@ -158,7 +152,6 @@ public class PlayerInteractionUtils {
 
                     accessor.setCurrentBreakingProgress(0.0F);
                     accessor.setBlockBreakingSoundCooldown(0.0F);
-                    accessor.setBlockBreakingCooldown(0);
                 }
                 world.setBlockBreakingInfo(player.getId(), accessor.getCurrentBreakingPos(), accessor.interactGetBlockBreakingProgress());
                 return true;

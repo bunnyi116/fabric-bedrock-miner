@@ -1,9 +1,3 @@
 accessWidener v2 named
 accessible method net/minecraft/client/world/ClientWorld getPendingUpdateManager ()Lnet/minecraft/client/network/PendingUpdateManager;
-accessible field net/minecraft/client/network/ClientPlayerInteractionManager breakingBlock Z
-accessible field net/minecraft/client/network/ClientPlayerInteractionManager currentBreakingPos Lnet/minecraft/util/math/BlockPos;
-accessible field net/minecraft/client/network/ClientPlayerInteractionManager currentBreakingProgress F
-accessible field net/minecraft/client/network/ClientPlayerInteractionManager selectedStack Lnet/minecraft/item/ItemStack;
-accessible method net/minecraft/client/network/ClientPlayerInteractionManager syncSelectedSlot ()V
-accessible method net/minecraft/client/network/ClientPlayerInteractionManager isCurrentlyBreaking (Lnet/minecraft/util/math/BlockPos;)Z
 accessible field net/minecraft/entity/player/PlayerInventory HOTBAR_SIZE I
