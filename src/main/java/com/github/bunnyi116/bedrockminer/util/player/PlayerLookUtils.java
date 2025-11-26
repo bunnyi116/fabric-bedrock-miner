@@ -11,20 +11,17 @@ import org.jetbrains.annotations.Nullable;
 import static com.github.bunnyi116.bedrockminer.BedrockMiner.networkHandler;
 import static com.github.bunnyi116.bedrockminer.BedrockMiner.player;
 
-public class PlayerLookManager {
-    public static PlayerLookManager INSTANCE = new PlayerLookManager();
+public class PlayerLookUtils {
+    private static boolean modifyYaw = false;
+    private static boolean modifyPitch = false;
+    private static float yaw = 0F;
+    private static float pitch = 0F;
+    private static int ticks = 0;
+    private static @Nullable Task task = null;
 
-    private boolean modifyYaw = false;
-    private boolean modifyPitch = false;
-    private float yaw = 0F;
-    private float pitch = 0F;
-    private int ticks = 0;
-    private @Nullable Task task = null;
-
-
-    public Direction getPlacementDirection() {
-        float currentYaw = this.modifyYaw ? this.yaw : (player != null ? player.getYaw() : 0F);
-        float currentPitch = this.modifyPitch ? this.pitch : (player != null ? player.getPitch() : 0F);
+    public static Direction getPlacementDirection() {
+        float currentYaw = PlayerLookUtils.modifyYaw ? PlayerLookUtils.yaw : (player != null ? player.getYaw() : 0F);
+        float currentPitch = PlayerLookUtils.modifyPitch ? PlayerLookUtils.pitch : (player != null ? player.getPitch() : 0F);
         return getDirectionFromYawPitch(currentYaw, currentPitch);
     }
 
@@ -56,8 +53,8 @@ public class PlayerLookManager {
     }
 
     // 获取当前水平方向（忽略上下看）
-    public Direction getPlacementHorizontalDirection() {
-        float currentYaw = this.modifyYaw ? this.yaw : (player != null ? player.getYaw() : 0F);
+    public static Direction getPlacementHorizontalDirection() {
+        float currentYaw = PlayerLookUtils.modifyYaw ? PlayerLookUtils.yaw : (player != null ? player.getYaw() : 0F);
         return getHorizontalDirectionFromYaw(currentYaw);
     }
 
@@ -79,12 +76,12 @@ public class PlayerLookManager {
         }
     }
 
-    public float onModifyLookYaw(float yaw) {
-        return this.modifyYaw ? this.yaw : yaw;
+    public static float onModifyLookYaw(float yaw) {
+        return PlayerLookUtils.modifyYaw ? PlayerLookUtils.yaw : yaw;
     }
 
-    public float onModifyLookPitch(float pitch) {
-        return this.modifyPitch ? this.pitch : pitch;
+    public static float onModifyLookPitch(float pitch) {
+        return PlayerLookUtils.modifyPitch ? PlayerLookUtils.pitch : pitch;
     }
 
     public static PlayerMoveC2SPacket getLookPacket(ClientPlayerEntity player, float yaw, float pitch) {
@@ -102,39 +99,39 @@ public class PlayerLookManager {
     }
 
     public static void sendLookPacket(ClientPlayNetworkHandler networkHandler, float yaw, float pitch) {
-        final PlayerMoveC2SPacket packet = PlayerLookManager.getLookPacket(player, yaw, pitch);
-        PlayerLookManager.sendLookPacket(networkHandler, packet);
+        final PlayerMoveC2SPacket packet = PlayerLookUtils.getLookPacket(player, yaw, pitch);
+        PlayerLookUtils.sendLookPacket(networkHandler, packet);
     }
 
-    private PlayerMoveC2SPacket getLookPacket(ClientPlayerEntity player) {
-        var yaw = this.modifyYaw ? this.yaw : player.getYaw();
-        var pitch = this.modifyPitch ? this.pitch : player.getPitch();
+    private static PlayerMoveC2SPacket getLookPacket(ClientPlayerEntity player) {
+        var yaw = PlayerLookUtils.modifyYaw ? PlayerLookUtils.yaw : player.getYaw();
+        var pitch = PlayerLookUtils.modifyPitch ? PlayerLookUtils.pitch : player.getPitch();
         return getLookPacket(player, yaw, pitch);
     }
 
-    public void sendLookPacket() {
+    public static void sendLookPacket() {
         if (networkHandler != null && player != null) {
-            networkHandler.sendPacket(this.getLookPacket(player));
+            networkHandler.sendPacket(PlayerLookUtils.getLookPacket(player));
         }
     }
 
-    public void setYaw(float yaw) {
-        this.yaw = yaw;
-        this.modifyYaw = true;
+    public static void setYaw(float yaw) {
+        PlayerLookUtils.yaw = yaw;
+        PlayerLookUtils.modifyYaw = true;
     }
 
-    public void setPitch(float pitch) {
-        this.pitch = pitch;
-        this.modifyPitch = true;
+    public static void setPitch(float pitch) {
+        PlayerLookUtils.pitch = pitch;
+        PlayerLookUtils.modifyPitch = true;
     }
 
-    public void set(float yaw, float pitch) {
-        this.setYaw(yaw);
-        this.setPitch(pitch);
+    public static void set(float yaw, float pitch) {
+        PlayerLookUtils.setYaw(yaw);
+        PlayerLookUtils.setPitch(pitch);
     }
 
-    public void set(Direction facing, Task task) {
-        this.task = task;
+    public static void set(Direction facing, Task task) {
+        PlayerLookUtils.task = task;
         final var yaw = switch (facing) {
             case SOUTH -> 180F;
             case EAST -> 90F;
@@ -147,31 +144,31 @@ public class PlayerLookManager {
             case DOWN -> -90F;
             default -> 0F;
         };
-        this.set(yaw, pitch);
-        this.sendLookPacket();
+        PlayerLookUtils.set(yaw, pitch);
+        PlayerLookUtils.sendLookPacket();
     }
 
-    public void reset() {
-        this.modifyYaw = false;
-        this.modifyPitch = false;
-        this.task = null;
-        this.sendLookPacket();
+    public static void reset() {
+        PlayerLookUtils.modifyYaw = false;
+        PlayerLookUtils.modifyPitch = false;
+        PlayerLookUtils.task = null;
+        PlayerLookUtils.sendLookPacket();
     }
 
-    public void tick() {
-        if (this.isModify()) {   // 自动重置视角
-            if (this.ticks++ > 20) {
-                this.ticks = 0;
-                this.reset();
+    public static void tick() {
+        if (PlayerLookUtils.isModify()) {   // 自动重置视角
+            if (PlayerLookUtils.ticks++ > 20) {
+                PlayerLookUtils.ticks = 0;
+                PlayerLookUtils.reset();
             }
         }
     }
 
-    public boolean isModify() {
-        return this.modifyYaw || this.modifyPitch;
+    public static boolean isModify() {
+        return PlayerLookUtils.modifyYaw || PlayerLookUtils.modifyPitch;
     }
 
-    public @Nullable Task getTask() {
-        return this.task;
+    public static @Nullable Task getTask() {
+        return PlayerLookUtils.task;
     }
 }
