@@ -42,9 +42,43 @@ fabricSubprojects.forEach {
 }
 
 tasks {
-    register("copyWrapperIcon") {
-        description = "复制图标到 wrapper 资源目录"
+    // 收集子模块 JAR 文件任务
+    register("collectSubModules") {
+        description = "收集所有子模块的 JAR 文件"
         outputs.upToDateWhen { false }
+
+        // 依赖所有子项目的 remapJar 任务
+        dependsOn(fabricSubprojects.map { it.tasks.named("remapJar") })
+
+        doFirst {
+            // 复制所有重映射后的 JAR 文件
+            copy {
+                from(fabricSubprojects.map { sub ->
+                    sub.tasks.named("remapJar").get().outputs.files
+                })
+                into(layout.buildDirectory.dir("tmp/submods/META-INF/jars"))
+            }
+        }
+    }
+
+    // JAR 打包任务
+    named<Jar>("jar") {
+        outputs.upToDateWhen { false }
+
+        from(rootProject.file("LICENSE"))
+        from(layout.buildDirectory.dir("tmp/submods"))
+    }
+
+    // 资源处理任务
+    named<ProcessResources>("processResources") {
+        outputs.upToDateWhen { false }
+
+        // 清理相关目录
+        delete(layout.buildDirectory.dir("libs"))
+        delete(layout.buildDirectory.dir("resources"))
+        delete(layout.buildDirectory.dir("tmp/submods/META-INF/jars"))
+
+        dependsOn("collectSubModules")
 
         val rootIcon = rootProject.file("src/main/resources/assets/$modId/icon.png")
         val resourcesFile = layout.projectDirectory.file("src/main/resources/assets/$modWrapperId/icon.png").asFile
@@ -62,50 +96,13 @@ tasks {
                 println("⚠ 根项目中未找到图标文件，跳过图标复制")
             }
         }
-    }
-
-    // 收集子模块 JAR 文件任务
-    register("collectSubModules") {
-        description = "收集所有子模块的 JAR 文件"
-        outputs.upToDateWhen { false }
-
-        // 依赖所有子项目的 remapJar 任务
-        dependsOn(fabricSubprojects.map { it.tasks.named("remapJar") })
-
-        doFirst {
-            // 清理相关目录
-            delete(layout.buildDirectory.dir("libs"))
-            delete(layout.buildDirectory.dir("tmp/submods/META-INF/jars"))
-            // 复制所有重映射后的 JAR 文件
-            copy {
-                from(fabricSubprojects.map { sub ->
-                    sub.tasks.named("remapJar").get().outputs.files
-                })
-                into(layout.buildDirectory.dir("tmp/submods/META-INF/jars"))
-            }
-        }
-    }
-
-    // JAR 打包任务
-    named<Jar>("jar") {
-        outputs.upToDateWhen { false }
-        dependsOn("copyWrapperIcon")
-        dependsOn("collectSubModules")
-        from(rootProject.file("LICENSE"))
-        from(layout.buildDirectory.dir("tmp/submods"))
-    }
-
-    // 资源处理任务
-    named<ProcessResources>("processResources") {
-        outputs.upToDateWhen { false }
-        dependsOn("copyWrapperIcon")
 
         filesMatching("fabric.mod.json") {
             expand(
                 mapOf(
                     "mod_id" to modWrapperId,
                     "mod_name" to modName,
-                    "mod_version" to project.version,
+                    "mod_version" to modVersion,
                     "mod_description" to modDescription,
                     "mod_homepage" to modHomepage,
                     "mod_license" to modLicense,
@@ -144,7 +141,6 @@ tasks {
                     println("⚠ 无法从子项目 ${subproject.name} 获取 Minecraft 版本")
                 }
             }
-
 
             // 更新 fabric.mod.json 文件
             val jsonFile = layout.buildDirectory.file("resources/main/fabric.mod.json").get().asFile
