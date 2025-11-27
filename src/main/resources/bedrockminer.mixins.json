@@ -2,7 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.github.bunnyi116.bedrockminer.mixin",
-  "compatibilityLevel": "${COMPATIBILITY_LEVEL}",
+  "compatibilityLevel": "${compatibility_level}",
   "mixins": [
     "MixinPlayerMoveC2SPacket"
   ],

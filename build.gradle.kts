@@ -82,12 +82,9 @@ tasks.register("build") {
     group = "build"
     description = "构建 fabricWrapper 版本包（推荐用于发布）"
 
-    dependsOn(":fabricWrapper:build")
+    dependsOn("buildAndGather")
 
-    doLast {
-        println()
-        println("fabricWrapper 版本包构建完成！位于: fabricWrapper/build/libs/")
-    }
+    println("构建完成！")
 }
 
 tasks.register("buildAndGather") {
@@ -128,18 +125,26 @@ tasks.register("buildAndGather") {
 
         println("构建产物收集完成，文件位于: ${rootLibsDir.absolutePath}")
     }
+
+    println("构建完成！")
 }
 
 tasks.register("buildAll") {
     group = "build"
-    description = "构建所有子项目以及 fabricWrapper 版本包（推荐用于发布）"
+    description = "构建所有子项目以及 fabricWrapper 版本包"
 
     dependsOn(tasks.named("buildAndGather"))
     dependsOn(":fabricWrapper:build")
 
-    doLast {
-        println("完整构建完成！")
-        println("- 各个版本的独立 JAR 文件位于: ${layout.buildDirectory.dir("libs").get().asFile.absolutePath}")
-        println("- fabricWrapper 版本包位于: fabricWrapper/build/libs/")
-    }
+    println("构建完成！")
+}
+
+tasks.register("buildFabricWrapper") {
+    group = "build"
+    description = "构建 fabricWrapper 版本包"
+
+    dependsOn(tasks.named("buildAndGather"))
+    dependsOn(":fabricWrapper:build")
+
+    println("构建完成！")
 }

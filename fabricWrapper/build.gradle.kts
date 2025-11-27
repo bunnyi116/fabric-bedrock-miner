@@ -97,19 +97,19 @@ tasks {
             }
         }
 
-        filesMatching("fabric.mod.json") {
-            expand(
-                mapOf(
-                    "mod_id" to modWrapperId,
-                    "mod_name" to modName,
-                    "mod_version" to modVersion,
-                    "mod_description" to modDescription,
-                    "mod_homepage" to modHomepage,
-                    "mod_license" to modLicense,
-                    "mod_sources" to modSources,
-                    "loader_version" to loaderVersion,
-                )
-            )
+        val propertyMap = mapOf(
+            "mod_id" to modWrapperId,
+            "mod_name" to modName,
+            "mod_version" to modVersion,
+            "mod_description" to modDescription,
+            "mod_homepage" to modHomepage,
+            "mod_license" to modLicense,
+            "mod_sources" to modSources,
+            "loader_version" to loaderVersion,
+        )
+        inputs.properties(propertyMap)
+        filesMatching(listOf("*.mixins.json", "*.mod.json", "META-INF/*mods.toml")) {
+            expand(propertyMap)
         }
 
         doLast {

@@ -3,16 +3,16 @@
   "id": "${mod_id}",
   "version": "${mod_version}",
   "name": "${mod_name}",
-  "description": "Client mod to mine bedrock!",
+  "description": "${mod_description}",
   "authors": [
     "bunnyi116"
   ],
   "contact": {
-    "homepage": "https://github.com/bunnyi116/fabric-bedrock-miner",
-    "sources": "https://github.com/bunnyi116/fabric-bedrock-miner"
+    "homepage": "${mod_homepage}",
+    "sources": "${mod_sources}"
   },
   "license": "",
-  "icon": "assets/bedrockminer/icon.png",
+  "icon": "assets/${mod_id}/icon.png",
   "environment": "client",
   "entrypoints": {
     "main": [

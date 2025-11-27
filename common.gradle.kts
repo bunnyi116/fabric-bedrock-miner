@@ -6,23 +6,25 @@ plugins {
     id("me.fallenbreath.yamlang") // 启用 yamlang 插件 (用于处理语言文件，例如 YAML 格式)
 }
 
-// 这些属性通常从 Gradle 属性文件 (如 gradle.properties) 或 settings.gradle.kts 中传入。
 val mcVersion = project.property("mcVersion") as Int
 val modId = project.property("mod_id") as String
 val modWrapperId = project.property("mod_wrapper_id") as String
 val modName = project.property("mod_name") as String
-val modVersion = project.property("mod_version") as String
 val modMavenGroup = project.property("mod_maven_group") as String
+val modVersion = project.property("mod_version") as String
 val modArchivesBaseName = project.property("mod_archives_base_name") as String
+val modDescription = project.property("mod_description") as String
+val modHomepage = project.property("mod_homepage") as String
+val modLicense = project.property("mod_license") as String
+val modSources = project.property("mod_sources") as String
+val loaderVersion = project.property("loader_version") as String
+
 val minecraftDependency = project.property("minecraft_dependency") as String
 val minecraftVersion = project.property("minecraft_version") as String
 val yarnMappings = project.property("yarn_mappings") as String
-val loaderVersion = project.property("loader_version") as String
 val fabricApiVersion = project.property("fabric_api_version") as String
 
-// 常量
-val mixinConfigPath = "blockminer.mixins.json"
-val langDir = "assets/blockminer/lang"
+val langDir = "assets/${modId}/lang"
 
 // 根据 Minecraft 版本确定所需的 Java 兼容性版本
 val javaCompatibility = when {
@@ -54,7 +56,6 @@ dependencies {
 }
 
 loom {
-
     // 设置 Access Widener (访问增强器) 文件的路径
     accessWidenerPath.set(file("../../src/main/resources/bedrockminer.accesswidener"))
 
@@ -129,14 +130,22 @@ version = fullProjectVersion // 设置项目的版本号
 // 如果 IDEA 抱怨 "Cannot resolve resource filtering of MatchingCopyAction"，并且你想知道原因
 // 请参阅 https://youtrack.jetbrains.com/issue/IDEA-296490
 tasks.withType<ProcessResources> {
-    val rootProperties = rootProject.providers.gradlePropertiesPrefixedBy("").get();
-    var subProject = project.providers.gradlePropertiesPrefixedBy("").get();
-    val propertiesMap = (rootProperties + subProject).toMutableMap()
-    propertiesMap["COMPATIBILITY_LEVEL"] = "JAVA_${mixinCompatibilityLevel.majorVersion}"
-
-    inputs.properties(propertiesMap)
-    filesMatching(listOf("*.mixins.json", "*.mod.json", "META-INF/*mods.toml")) {
-        expand(propertiesMap)
+    val propertyMap = mapOf(
+        "mod_id" to modId,
+        "mod_wrapper_id" to modWrapperId,
+        "mod_name" to modName,
+        "mod_version" to fullModVersion,
+        "mod_description" to modDescription,
+        "mod_homepage" to modHomepage,
+        "mod_license" to modLicense,
+        "mod_sources" to modSources,
+        "loader_version" to loaderVersion,
+        "minecraft_dependency" to minecraftDependency,
+        "compatibility_level" to "JAVA_${mixinCompatibilityLevel.majorVersion}"
+    )
+    inputs.properties(propertyMap)
+    filesMatching(listOf("fabric.mod.json", "*.mixins.json")) {
+        expand(propertyMap)
     }
 }
 
