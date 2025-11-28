@@ -66,12 +66,12 @@ preprocess {
     mc1_19_03.link(mc1_19_02, file("versions/mapping-1.19.2-1.19.3.txt"))
     mc1_19_02.link(mc1_19_01, null)
     mc1_19_01.link(mc1_19_00, null)
-//    mc1_19_00.link(mc1_18_02, null)
+//    mc1_19_00.link(mc1_18_02, file("versions/mapping-1.18.2-1.19.txt"))
 //    mc1_18_02.link(mc1_18_01, null)
 //    mc1_18_01.link(mc1_18_00, null)
 //    mc1_18_00.link(mc1_17_01, null)
 //    mc1_17_01.link(mc1_17_00, null)
-//    mc1_17_00.link(mc1_16_05, null)
+//    mc1_17_00.link(mc1_16_05, file("versions/mapping-1.16.5-1.17.txt"))
 }
 
 
@@ -83,8 +83,6 @@ tasks.register("build") {
     description = "构建 fabricWrapper 版本包（推荐用于发布）"
 
     dependsOn("buildAndGather")
-
-    println("构建完成！")
 }
 
 tasks.register("buildAndGather") {
@@ -125,8 +123,6 @@ tasks.register("buildAndGather") {
 
         println("构建产物收集完成，文件位于: ${rootLibsDir.absolutePath}")
     }
-
-    println("构建完成！")
 }
 
 tasks.register("buildAll") {
@@ -135,8 +131,6 @@ tasks.register("buildAll") {
 
     dependsOn(tasks.named("buildAndGather"))
     dependsOn(":fabricWrapper:build")
-
-    println("构建完成！")
 }
 
 tasks.register("buildFabricWrapper") {
@@ -145,6 +139,4 @@ tasks.register("buildFabricWrapper") {
 
     dependsOn(tasks.named("buildAndGather"))
     dependsOn(":fabricWrapper:build")
-
-    println("构建完成！")
 }

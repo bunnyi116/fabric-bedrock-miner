@@ -21,11 +21,22 @@ public class TaskPlan {
         this.piston = piston;
         this.redstoneTorch = redstoneTorch;
         this.slimeBlock = slimeBlock;
-        this.level = switch (direction) {
-            case UP -> 1;
-            case DOWN -> 2;
-            case NORTH, SOUTH, WEST, EAST -> 4;
-        };
+        switch (direction) {
+            case UP:
+                this.level = 1;
+                break;
+            case DOWN:
+                this.level = 2;
+                break;
+            case NORTH:
+            case SOUTH:
+            case WEST:
+            case EAST:
+                this.level = 4;
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }
     }
 
     public boolean isWorldValid() {
@@ -33,10 +44,10 @@ public class TaskPlan {
     }
 
     public boolean canInteractWithBlockAt() {
-        final var b1 = PlayerUtils.canInteractWithBlockAt(piston.pos, 1.0F);
-        final var b2 = PlayerUtils.canInteractWithBlockAt(redstoneTorch.pos, 1.0F);
+        final boolean b1 = PlayerUtils.canInteractWithBlockAt(piston.pos, 0F);
+        final boolean b2 = PlayerUtils.canInteractWithBlockAt(redstoneTorch.pos, 0F);
         if (b1 && b2) {
-            final var b3 = PlayerUtils.canInteractWithBlockAt(slimeBlock.pos, 1.0F);
+            final boolean b3 = PlayerUtils.canInteractWithBlockAt(slimeBlock.pos, 0F);
             if (b3 && BlockUtils.isReplaceable(world.getBlockState(slimeBlock.pos))) {
                 return true;
             }

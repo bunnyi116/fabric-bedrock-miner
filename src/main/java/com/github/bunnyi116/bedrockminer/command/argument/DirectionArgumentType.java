@@ -22,17 +22,17 @@ public class DirectionArgumentType implements ArgumentType<Direction> {
     }
 
     public Direction parse(StringReader reader) throws CommandSyntaxException {
-        var i = reader.getCursor();
+        int cursor = reader.getCursor();
         while (reader.canRead()) {
             reader.skip();
         }
-        var string = reader.getString().substring(i, reader.getCursor());
+        String string = reader.getString().substring(cursor, reader.getCursor());
         for (Direction direction : Direction.values()) {
             if (string.equalsIgnoreCase(direction.getId())) {
                 return direction;
             }
         }
-        reader.setCursor(i);
+        reader.setCursor(cursor);
         throw INVALID_STRING_EXCEPTION.create(string);
     }
 
@@ -40,11 +40,11 @@ public class DirectionArgumentType implements ArgumentType<Direction> {
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
         StringReader reader = new StringReader(builder.getInput());
         reader.setCursor(builder.getStart());
-        var i = reader.getCursor();
+        int cursor = reader.getCursor();
         while (reader.canRead()) {
             reader.skip();
         }
-        var string = reader.getString().substring(i, reader.getCursor());
+        String string = reader.getString().substring(cursor, reader.getCursor());
         for (Direction direction : Direction.values()) {
             if (direction.getId().contains(string)) {
                 builder.suggest(direction.getId());

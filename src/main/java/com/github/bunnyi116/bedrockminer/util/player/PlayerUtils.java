@@ -2,27 +2,39 @@ package com.github.bunnyi116.bedrockminer.util.player;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
+import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.effect.StatusEffectUtil;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import static com.github.bunnyi116.bedrockminer.BedrockMiner.player;
 
 public class PlayerUtils {
+
+    public static double getHorizontalDistanceToPlayer(BlockPos pos) {
+        double dx = pos.getX() - player.getX();
+        double dz = pos.getZ() - player.getZ();
+        return Math.sqrt(dx * dx + dz * dz);
+    }
+
     /**
      * 获取最近的面
      */
     public static Direction getClosestFace(BlockPos targetPos) {
-        Vec3d playerPos = player.getEyePos();
+        Vec3d playerPos = new Vec3d(player.getX(), player.getEyeY(), player.getZ());
         Vec3d targetCenterPos = Vec3d.ofCenter(targetPos);
         Direction closestFace = null;
         double closestDistanceSquared = Double.MAX_VALUE;
@@ -126,13 +138,13 @@ public class PlayerUtils {
      * @return 当前物品破坏该方块所需的时间（单位为 tick）
      */
     public static float getBlockBreakingSpeed(BlockState blockState, ItemStack itemStack) {
-        var f = itemStack.getMiningSpeedMultiplier(blockState);  // 当前物品的破坏系数速度
+        float f = itemStack.getMiningSpeedMultiplier(blockState);  // 当前物品的破坏系数速度
 
         // 根据工具的"效率"附魔增加破坏速度
         //#if MC > 12006
         if (f > 1.0F) {
-            for (var enchantment : itemStack.getEnchantments().getEnchantments()) {
-                var enchantmentKey = enchantment.getKey();
+            for (RegistryEntry<Enchantment> enchantment : itemStack.getEnchantments().getEnchantments()) {
+                Optional<RegistryKey<Enchantment>> enchantmentKey = enchantment.getKey();
                 if (enchantmentKey.isPresent()) {
                     if (enchantmentKey.get() == Enchantments.EFFICIENCY) {
                         int level = EnchantmentHelper.getLevel(enchantment, itemStack);
@@ -159,12 +171,21 @@ public class PlayerUtils {
 
         // 根据玩家"挖掘疲劳"状态效果减缓破坏速度
         if (player.hasStatusEffect(StatusEffects.MINING_FATIGUE)) {
-            float g = switch (Objects.requireNonNull(player.getStatusEffect(StatusEffects.MINING_FATIGUE)).getAmplifier()) {
-                case 0 -> 0.3F;
-                case 1 -> 0.09F;
-                case 2 -> 0.0027F;
-                default -> 8.1E-4F;
-            };
+            float g;
+            switch (Objects.requireNonNull(player.getStatusEffect(StatusEffects.MINING_FATIGUE)).getAmplifier()) {
+                case 0:
+                    g = 0.3F;
+                    break;
+                case 1:
+                    g = 0.09F;
+                    break;
+                case 2:
+                    g = 0.0027F;
+                    break;
+                default:
+                    g = 8.1E-4F;
+                    break;
+            }
             f *= g;
         }
 
@@ -172,7 +193,7 @@ public class PlayerUtils {
         //#if MC > 12006
         f *= (float) player.getAttributeValue(EntityAttributes.BLOCK_BREAK_SPEED);
         if (player.isSubmergedIn(FluidTags.WATER)) {
-            var submergedMiningSpeed = player.getAttributeInstance(EntityAttributes.SUBMERGED_MINING_SPEED);
+            EntityAttributeInstance submergedMiningSpeed = player.getAttributeInstance(EntityAttributes.SUBMERGED_MINING_SPEED);
             if (submergedMiningSpeed != null) {
                 f *= (float) submergedMiningSpeed.getValue();
             }

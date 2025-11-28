@@ -8,7 +8,7 @@ import com.github.bunnyi116.bedrockminer.util.MessageUtils;
 import com.github.bunnyi116.bedrockminer.util.block.BlockUtils;
 import com.github.bunnyi116.bedrockminer.util.player.PlayerInteractionUtils;
 import com.github.bunnyi116.bedrockminer.util.player.PlayerInventoryUtils;
-import com.github.bunnyi116.bedrockminer.util.player.PlayerLookManager;
+import com.github.bunnyi116.bedrockminer.util.player.PlayerLookUtils;
 import com.github.bunnyi116.bedrockminer.util.player.PlayerUtils;
 import com.google.common.collect.Queues;
 import net.minecraft.block.*;
@@ -20,9 +20,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 import static com.github.bunnyi116.bedrockminer.BedrockMiner.player;
 import static net.minecraft.block.Block.sideCoversSmallSquare;
@@ -35,11 +33,9 @@ public class Task {
     private TaskState currentState;
     private TaskState lastState;
     private @Nullable TaskState nextState;
-
     public final List<TaskPlan> planItems;
     public @Nullable TaskPlan planItem;
-
-    public final List<BlockPos> recycledItems;
+    public final Queue<BlockPos> recycledQueue;
     public boolean executeModify;
     private int tickTotalCount;
     private int tickInternalCount;
@@ -53,13 +49,14 @@ public class Task {
     public boolean recycled;
     public boolean timeout;
     private boolean tickOccupied;   // 当前TICK已被占用
+    private @Nullable LinkedHashMap<Task, Integer> activeBlockTasks;
 
     public Task(ClientWorld world, Block block, BlockPos pos) {
         this.world = world;
         this.block = block;
         this.pos = pos;
         this.planItems = TaskPlanTools.findAllPossible(pos, world);
-        this.recycledItems = new ArrayList<>();
+        this.recycledQueue = Queues.newConcurrentLinkedQueue();
         this.init();
     }
 
@@ -69,7 +66,7 @@ public class Task {
 
     public boolean canInteractWithBlockAt() {
         if (this.world == BedrockMiner.world) {
-            if (PlayerUtils.canInteractWithBlockAt(pos, 1.0F)) {
+            if (PlayerUtils.canInteractWithBlockAt(pos, 0F)) {
                 if (planItem != null) {
                     return planItem.canInteractWithBlockAt();
                 }
@@ -83,6 +80,7 @@ public class Task {
         this.nextState = nextState;
         this.tickWaitMax = Math.max(tickWaitMax, 1);
         this.currentState = TaskState.WAIT_CUSTOM;
+        this.tickOccupied();
     }
 
     private void setModifyLook(TaskPlanItem blockInfo) {
@@ -94,20 +92,20 @@ public class Task {
         }
     }
 
-
     private void setModifyLook(Direction facing) {
-        PlayerLookManager.INSTANCE.set(facing, this);
+        PlayerLookUtils.set(facing, this);
         this.tickOccupied();
     }
 
     private void resetModifyLook() {
-        if (PlayerLookManager.INSTANCE.isModify()) {
-            PlayerLookManager.INSTANCE.reset();
+        if (PlayerLookUtils.isModify()) {
+            PlayerLookUtils.reset();
         }
     }
 
-    public void tick() {
+    public void tick(LinkedHashMap<Task, Integer> activeBlockTasks) {
         debug("开始");
+        this.activeBlockTasks = activeBlockTasks;
         this.tickOccupied = false;  // 重置状态
         if (this.currentState == TaskState.COMPLETE) {
             debug("任务已完成");
@@ -125,38 +123,59 @@ public class Task {
             while (tickInternalCount < 10) {
                 this.lastState = this.currentState;
                 switch (this.currentState) {
-                    case INITIALIZE -> this.init();
-                    case WAIT_GAME_UPDATE -> this.updateStates();
-                    case WAIT_CUSTOM -> this.waitCustom();
-                    case FIND -> this.find();
-                    case PLACE_PISTON -> this.placePiston();
-                    case PLACE_REDSTONE_TORCH -> this.placeRedstoneTorch();
-                    case PLACE_SLIME_BLOCK -> this.placeSlimeBlock();
-                    case EXECUTE -> this.execute();
-                    case RETRY -> {
+                    case INITIALIZE:
+                        this.init();
+                        break;
+                    case WAIT_GAME_UPDATE:
+                        this.updateStates();
+                        break;
+                    case WAIT_CUSTOM:
+                        this.waitCustom();
+                        break;
+                    case FIND:
+                        this.find();
+                        break;
+                    case PLACE_PISTON:
+                        this.placePiston();
+                        break;
+                    case PLACE_REDSTONE_TORCH:
+                        this.placeRedstoneTorch();
+                        break;
+                    case PLACE_SLIME_BLOCK:
+                        this.placeSlimeBlock();
+                        break;
+                    case EXECUTE:
+                        this.execute();
+                        break;
+                    case RETRY:
                         retry = true;
-                        if (!recycledItems.isEmpty()) {
-                            currentState = TaskState.RECYCLED_ITEMS;
+                        if (!this.recycledQueue.isEmpty()) {
+                            this.currentState = TaskState.RECYCLED_ITEMS;
                             return;
                         }
-                        if (retryCount < retryCountMax) {
-                            retryCount++;
-                            debug("任务物品回收已完成, 超时重试: %s", retryCount);
-                            currentState = TaskState.INITIALIZE;
+                        if (this.retryCount < this.retryCountMax) {
+                            this.retryCount++;
+                            this.debug("任务物品回收已完成, 超时重试: %s", retryCount);
+                            this.currentState = TaskState.INITIALIZE;
                         } else {
-                            currentState = TaskState.COMPLETE;
+                            this.currentState = TaskState.COMPLETE;
+                            this.tickOccupied();
                         }
-                    }
-                    case TIMEOUT -> {
+                        break;
+                    case TIMEOUT:
                         debug("任务已超时");
                         currentState = TaskState.RETRY;
-                    }
-                    case FAIL -> {
+                        break;
+                    case FAIL:
                         debug("任务已失败");
                         currentState = TaskState.RETRY;
-                    }
-                    case RECYCLED_ITEMS -> this.recycledItems();
-                    case COMPLETE -> debug("任务已完成");
+                        break;
+                    case RECYCLED_ITEMS:
+                        this.recycledItems();
+                        break;
+                    case COMPLETE:
+                        debug("任务已完成");
+                        break;
                 }
                 if (this.lastState == this.currentState) {  // 开始状态与结束状态一致, 避免无意义的内循环
                     debug("状态一致，无需内部循环");
@@ -211,14 +230,11 @@ public class Task {
                 );
             }
             this.addRecycled(planItem.redstoneTorch.pos);
-            if (planItem.redstoneTorch.isNeedModify()) {
-                if (Config.getInstance().shortTsk) {
-                    this.setWait(TaskState.WAIT_GAME_UPDATE, 1);
-                } else {
-                    this.setWait(TaskState.WAIT_GAME_UPDATE, 3);
-                }
-            } else {
+            if (Config.getInstance().shortTsk) {
                 this.currentState = TaskState.WAIT_GAME_UPDATE;
+                this.tickOccupied();
+            } else {
+                this.setWait(TaskState.WAIT_GAME_UPDATE, 3);
             }
             this.resetModifyLook();
         }
@@ -230,8 +246,8 @@ public class Task {
             return;
         }
         // 打掉附近红石火把(范围处理时候, 不打掉可能会卡主任务失败一直尝试)
-        final var nearbyRedstoneTorch = TaskPlanTools.findPistonNearbyRedstoneTorch(planItem.piston.pos, world);
-        for (final var pos : nearbyRedstoneTorch) {
+        final BlockPos[] nearbyRedstoneTorch = TaskPlanTools.findPistonNearbyRedstoneTorch(planItem.piston.pos, world);
+        for (final BlockPos pos : nearbyRedstoneTorch) {
             if (world.getBlockState(pos).getBlock() instanceof RedstoneTorchBlock) {
                 PlayerInteractionUtils.updateBlockBreakingProgress(pos);
             }
@@ -243,16 +259,17 @@ public class Task {
                 setModifyLook(planItem.piston);
                 return;
             }
-            PlayerInteractionUtils.placement(planItem.piston.pos, planItem.piston.facing, Items.PISTON);
+            PlayerInteractionUtils.placement(planItem.piston.pos, planItem.piston.facing, Items.PISTON, Items.STICKY_PISTON);
             BlockState blockState = world.getBlockState(planItem.piston.pos);
             if (blockState.getBlock() instanceof PistonBlock) {
                 world.setBlockState(planItem.piston.pos, blockState.with(PistonBlock.FACING, planItem.piston.facing), Block.NOTIFY_ALL);
             }
             this.addRecycled(planItem.piston.pos);
-            if (planItem.piston.isNeedModify()) {
-                this.setWait(TaskState.WAIT_GAME_UPDATE, 1);
-            } else {
+            if (Config.getInstance().shortTsk) {
                 this.currentState = TaskState.WAIT_GAME_UPDATE;
+                this.tickOccupied();
+            } else {
+                this.setWait(TaskState.WAIT_GAME_UPDATE, 3);
             }
             this.resetModifyLook();
         } else {
@@ -265,7 +282,7 @@ public class Task {
         if (this.planItem == null) {
             debug("查找方案");
             for (TaskPlan item : planItems) {
-                var slimeBlockState = world.getBlockState(item.slimeBlock.pos);
+                BlockState slimeBlockState = world.getBlockState(item.slimeBlock.pos);
                 if (item.canInteractWithBlockAt()) {
                     item.slimeBlock.level -= 1;
                 } else {
@@ -288,19 +305,19 @@ public class Task {
                 if (!item.isWorldValid()) {
                     continue;
                 }
-                final var pistonPos = item.piston.pos;
-                final var pistonFacing = item.piston.facing;
-                final var pistonHeadPos = pistonPos.offset(pistonFacing);
-                final var pistonState = world.getBlockState(pistonPos);
-                final var pistonHeadState = world.getBlockState(pistonHeadPos);
-                final var pistonDefaultState = Blocks.PISTON.getDefaultState().with(PistonBlock.FACING, pistonFacing);
-                final var pistonHeadDefaultState = Blocks.PISTON_HEAD.getDefaultState().with(PistonHeadBlock.FACING, pistonFacing);
+                final BlockPos pistonPos = item.piston.pos;
+                final Direction pistonFacing = item.piston.facing;
+                final BlockPos pistonHeadPos = pistonPos.offset(pistonFacing);
+                final BlockState pistonState = world.getBlockState(pistonPos);
+                final BlockState pistonHeadState = world.getBlockState(pistonHeadPos);
+                final BlockState pistonDefaultState = Blocks.PISTON.getDefaultState().with(PistonBlock.FACING, pistonFacing);
+                final BlockState pistonHeadDefaultState = Blocks.PISTON_HEAD.getDefaultState().with(PistonHeadBlock.FACING, pistonFacing);
                 if (!PlayerInteractionUtils.canPlace(world, pistonPos, pistonDefaultState) || !PlayerInteractionUtils.canPlace(world, pistonHeadPos, pistonHeadDefaultState)) {
                     if (!(pistonState.isOf(Blocks.PISTON) && pistonHeadState.isOf(Blocks.PISTON_HEAD))) {
                         continue;
                     }
                 }
-                final var redstoneTorchState = world.getBlockState(item.redstoneTorch.pos);
+                final BlockState redstoneTorchState = world.getBlockState(item.redstoneTorch.pos);
                 if (!BlockUtils.isReplaceable(redstoneTorchState)) {  // 如果该位置已存在方块
                     // 当前位置方块类型
                     if (!(redstoneTorchState.getBlock() instanceof RedstoneTorchBlock
@@ -323,8 +340,68 @@ public class Task {
 //                        MessageUtils.setOverlayMessage(FAIL_MISSING_SLIME);
                         continue;
                     }
-                    this.planItem = item;
-                    break;
+                    boolean b = true;
+                    if (this.activeBlockTasks != null) {
+                        for (Map.Entry<Task, Integer> entry : this.activeBlockTasks.entrySet()) {
+                            if (entry == null) continue;
+                            Task task = entry.getKey();
+                            if (task.planItem == null) continue;
+                            if (pos.equals(task.planItem.piston.pos)) {
+                                b = false;
+                                break;
+                            }
+                            if (item.piston.pos.equals(task.planItem.piston.pos)) {
+                                b = false;
+                                break;
+                            }
+                            if (item.piston.pos.equals(task.planItem.redstoneTorch.pos)) {
+                                b = false;
+                                break;
+                            }
+                            if (item.piston.pos.equals(task.planItem.slimeBlock.pos)) {
+                                b = false;
+                                break;
+                            }
+
+                            if (item.redstoneTorch.pos.equals(task.planItem.piston.pos)) {
+                                b = false;
+                                break;
+                            }
+                            if (item.redstoneTorch.pos.equals(task.planItem.redstoneTorch.pos)) {
+                                b = false;
+                                break;
+                            }
+                            if (item.redstoneTorch.pos.equals(task.planItem.slimeBlock.pos)) {
+                                b = false;
+                                break;
+                            }
+                            if (item.slimeBlock.pos.equals(task.planItem.piston.pos)) {
+                                b = false;
+                                break;
+                            }
+                            if (item.slimeBlock.pos.equals(task.planItem.redstoneTorch.pos)) {
+                                b = false;
+                                break;
+                            }
+
+                            if (item.piston.pos.offset(item.piston.facing).equals(task.planItem.piston.pos)) {
+                                b = false;
+                                break;
+                            }
+                            if (item.piston.pos.offset(item.piston.facing).equals(task.planItem.redstoneTorch.pos)) {
+                                b = false;
+                                break;
+                            }
+                            if (item.piston.pos.offset(item.piston.facing).equals(task.planItem.slimeBlock.pos)) {
+                                b = false;
+                                break;
+                            }
+                        }
+                    }
+                    if (b) {
+                        this.planItem = item;
+                        break;
+                    }
                 }
             }
         }
@@ -342,14 +419,37 @@ public class Task {
     }
 
     private void recycledItems() {
-        if (!recycledItems.isEmpty()) {
-            PlayerInteractionUtils.addBlocksToQueue(recycledItems);
-        }
-        debug("任务物品回收已完成");
-        if (retry) {
-            currentState = TaskState.RETRY;
+        if (!recycledQueue.isEmpty()) {
+            var blockPos = recycledQueue.peek();
+            if (blockPos == null) {
+                recycledQueue.remove();
+                return;
+            }
+            var blockState = world.getBlockState(blockPos);
+            debug("任务物品正在回收: (%s) --> %s", blockPos.toShortString(), blockState.getBlock().getName().getString());
+            if (blockState.getBlock().getHardness() < 0) {
+                recycledQueue.remove();
+                return;
+            }
+            var instant = PlayerUtils.canInstantlyMineBlock(blockState);
+            if (!instant) {
+                PlayerInventoryUtils.autoSwitch(blockState);
+            }
+            PlayerInteractionUtils.updateBlockBreakingProgress(blockPos, false);
+            if (BlockUtils.isReplaceable(blockState)) {
+                recycledQueue.remove();
+            }
+            if (!instant && !recycledQueue.isEmpty()) {
+                this.tickOccupied();
+            }
         } else {
-            currentState = TaskState.COMPLETE;
+            debug("任务物品回收已完成");
+            if (retry) {
+                currentState = TaskState.RETRY;
+            } else {
+                currentState = TaskState.COMPLETE;
+            }
+            this.tickOccupied();
         }
     }
 
@@ -373,12 +473,11 @@ public class Task {
             if (!PlayerUtils.canInstantlyMineBlock(world.getBlockState(planItem.piston.pos))) {
                 PlayerInventoryUtils.autoSwitch(world.getBlockState(planItem.piston.pos));
                 this.setWait(TaskState.EXECUTE, 1);
-                this.tickOccupied();
                 return;
             }
             // 打掉附近红石火把
-            final var nearbyRedstoneTorch = TaskPlanTools.findPistonNearbyRedstoneTorch(planItem.piston.pos, world);
-            for (final var pos : nearbyRedstoneTorch) {
+            final BlockPos[] nearbyRedstoneTorch = TaskPlanTools.findPistonNearbyRedstoneTorch(planItem.piston.pos, world);
+            for (final BlockPos pos : nearbyRedstoneTorch) {
                 if (world.getBlockState(pos).getBlock() instanceof RedstoneTorchBlock) {
                     PlayerInteractionUtils.updateBlockBreakingProgress(pos);
                 }
@@ -386,10 +485,8 @@ public class Task {
             if (world.getBlockState(planItem.redstoneTorch.pos).getBlock() instanceof RedstoneTorchBlock) {
                 PlayerInteractionUtils.updateBlockBreakingProgress(planItem.redstoneTorch.pos);
             }
-            PlayerInteractionUtils.updateBlockBreakingProgress(planItem.piston.pos, null, () -> {
-                PlayerInteractionUtils.placement(planItem.piston.pos, planItem.direction.getOpposite(), Items.PISTON);
-            });
-
+            PlayerInteractionUtils.updateBlockBreakingProgress(planItem.piston.pos);
+            PlayerInteractionUtils.placement(planItem.piston.pos, planItem.direction.getOpposite(), Items.PISTON, Items.STICKY_PISTON);
             this.addRecycled(planItem.piston.pos);
             if (this.executeModify) {
                 this.resetModifyLook();
@@ -417,6 +514,7 @@ public class Task {
         if (!world.getBlockState(pos).isOf(block)) {
             this.currentState = TaskState.RECYCLED_ITEMS;
             this.debugUpdateStates("目标不存在");
+            this.tickOccupied();
             return;
         }
         if (this.planItem == null) {
@@ -431,6 +529,14 @@ public class Task {
         }
         if (!this.executed) {
             debugUpdateStates("任务未执行过");
+
+            if (!canInteractWithBlockAt()) {
+                this.debugUpdateStates("当前放置方案不在交互范围内, 准备重新选择任务");
+                this.currentState = TaskState.FIND;
+                this.tickOccupied();
+                return;
+            }
+
             // 活塞
             if (BlockUtils.isReplaceable(world.getBlockState(this.planItem.piston.pos))) {
                 this.debugUpdateStates("[%s] [%s] 活塞未放置且该位置可放置物品,设置放置状态", this.planItem.piston.pos.toShortString(), this.planItem.piston.facing);
@@ -491,25 +597,47 @@ public class Task {
     }
 
     private void init() {
-        for (final var direction : Direction.values()) {
+        for (final Direction direction : Direction.values()) {
             BlockPos pos1 = pos.offset(direction);
             BlockPos pos2 = pos1.up();
             BlockState pistonState = world.getBlockState(pos1);
             if (pistonState.getBlock() instanceof PistonBlock && PlayerUtils.canInstantlyMineBlock(pistonState)) {
-                PlayerInteractionUtils.updateBlockBreakingProgress(pos);
+                if (this.activeBlockTasks != null) {
+                    for (Map.Entry<Task, Integer> entry : this.activeBlockTasks.entrySet()) {
+                        if (entry == null) continue;
+                        Task task = entry.getKey();
+                        if (task.planItem == null) continue;
+                        if (pos1.equals(task.planItem.piston.pos)) {
+                            return;
+                        }
+                    }
+                }
+                PlayerInteractionUtils.updateBlockBreakingProgress(pos1, false);
             }
             BlockState pistonUpState = world.getBlockState(pos2);
             if (pistonUpState.getBlock() instanceof PistonBlock && PlayerUtils.canInstantlyMineBlock(pistonUpState)) {
-                PlayerInteractionUtils.updateBlockBreakingProgress(pos2);
+                if (this.activeBlockTasks != null) {
+                    for (Map.Entry<Task, Integer> entry : this.activeBlockTasks.entrySet()) {
+                        if (entry == null) continue;
+                        Task task = entry.getKey();
+                        if (task.planItem == null) continue;
+                        if (pos2.equals(task.planItem.piston.pos)) {
+                            return;
+                        }
+                    }
+                }
+                PlayerInteractionUtils.updateBlockBreakingProgress(pos2, false);
             }
+
+
         }
         this.nextState = null;
         this.tickTotalCount = 0;
         this.ticksTotalMax = 100;
-        this.ticksTimeoutMax = 45;
+        this.ticksTimeoutMax = 25;
         this.tickWaitMax = 0;
         this.planItem = null;
-        this.recycledItems.clear();
+        this.recycledQueue.clear();
         this.executed = false;
         this.recycled = false;
         this.timeout = false;
@@ -534,8 +662,8 @@ public class Task {
     }
 
     private void addRecycled(BlockPos pos) {
-        if (!recycledItems.contains(pos)) {
-            recycledItems.add(pos);
+        if (!recycledQueue.contains(pos)) {
+            recycledQueue.add(pos);
         }
     }
 

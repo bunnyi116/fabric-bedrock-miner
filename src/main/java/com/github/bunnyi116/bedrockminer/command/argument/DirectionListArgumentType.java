@@ -24,17 +24,17 @@ public class DirectionListArgumentType implements ArgumentType<Direction[]> {
 
 
     public Direction[] parse(StringReader reader) throws CommandSyntaxException {
-        var list = new ArrayList<Direction>();
+        ArrayList<Direction> list = new ArrayList<Direction>();
         while (reader.canRead()) {
             if (reader.peek() == ',') {
                 reader.skip();
                 continue;
             }
-            var i = reader.getCursor();
+            int cursor = reader.getCursor();
             while (reader.peek() != ',') {
                 reader.skip();
             }
-            var string = reader.getString().substring(i, reader.getCursor());
+            String string = reader.getString().substring(cursor, reader.getCursor());
             Direction facing = null;
             for (Direction direction : Direction.values()) {
                 if (string.equalsIgnoreCase(direction.getId())) {
@@ -42,7 +42,7 @@ public class DirectionListArgumentType implements ArgumentType<Direction[]> {
                 }
             }
             if (facing == null) {
-                reader.setCursor(i);
+                reader.setCursor(cursor);
                 throw INVALID_STRING_EXCEPTION.create(string);
             } else {
                 list.add(facing);
@@ -55,11 +55,11 @@ public class DirectionListArgumentType implements ArgumentType<Direction[]> {
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
         StringReader reader = new StringReader(builder.getInput());
         reader.setCursor(builder.getStart());
-        var i = reader.getCursor();
+        int cursor = reader.getCursor();
         while (reader.canRead()) {
             reader.skip();
         }
-        var string = reader.getString().substring(i, reader.getCursor());
+        String string = reader.getString().substring(cursor, reader.getCursor());
         for (Direction direction : Direction.values()) {
             if (direction.getId().contains(string)) {
                 builder.suggest(direction.getId());

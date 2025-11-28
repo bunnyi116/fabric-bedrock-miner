@@ -26,8 +26,8 @@ public class OperatorArgument implements ArgumentType<Operator> {
 
     @Override
     public Operator parse(StringReader reader) throws CommandSyntaxException {
-        var input = reader.readUnquotedString();
-        var operatorType = Operator.fromString(input);
+        String input = reader.readUnquotedString();
+        Operator operatorType = Operator.fromString(input);
         if (operatorType == null) {
             throw INVALID_STRING_EXCEPTION.create(input);
         }
@@ -36,10 +36,10 @@ public class OperatorArgument implements ArgumentType<Operator> {
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        var reader = new StringReader(builder.getInput());
+        StringReader reader = new StringReader(builder.getInput());
         reader.setCursor(builder.getStart());
-        var input = readUnquotedString(reader);
-        for (var operatorString : Operator.getStringValues()) {
+        String input = readUnquotedString(reader);
+        for (String operatorString : Operator.getStringValues()) {
             if (operatorString.contains(input)) {
                 builder.suggest(operatorString);
             }

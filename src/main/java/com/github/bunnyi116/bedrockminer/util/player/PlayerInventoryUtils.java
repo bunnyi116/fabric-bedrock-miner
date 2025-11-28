@@ -48,7 +48,7 @@ public class PlayerInventoryUtils {
         float lastTime = -1;
         int lastSlot = -1;
         for (int i = 0; i < playerInventory.size(); i++) {
-            var itemStack = playerInventory.getStack(i);
+            ItemStack itemStack = playerInventory.getStack(i);
             // 检查耐久是否发起警告(剩余耐久<=检查值)
             if (PlayerInventoryUtils.isItemDamageWarning(itemStack, 5)) {
                 continue;
@@ -88,7 +88,7 @@ public class PlayerInventoryUtils {
             return;
         }
 
-        final var playerInventory = player.getInventory();
+        final PlayerInventory playerInventory = player.getInventory();
         if (player.currentScreenHandler != player.playerScreenHandler) {
             return; // 确保当前不是打开箱子/界面时调用
         }
@@ -100,7 +100,7 @@ public class PlayerInventoryUtils {
         }
 
         for (int i = 0; i < PlayerInventory.HOTBAR_SIZE; i++) {
-            final var itemStack = playerInventory.getStack(i);
+            final ItemStack itemStack = playerInventory.getStack(i);
             if (itemStack.isEmpty()) {
                 swapSlots(player, interactionManager, slot, i);
                 PlayerInventoryUtils.setSelectedSlot(i);

@@ -23,7 +23,7 @@ public enum Operator {
     }
 
     public static @Nullable Operator fromString(String symbol) {
-        for (var op : values()) {
+        for (Operator op : values()) {
             if (op.getSymbol().equals(symbol)) {
                 return op;
             }
@@ -32,8 +32,8 @@ public enum Operator {
     }
 
     public static List<String> getStringValues() {
-        var list = new ArrayList<String>();
-        for (var operator : Operator.values()) {
+        ArrayList<String> list = new ArrayList<>();
+        for (Operator operator : Operator.values()) {
             list.add(operator.symbol);
         }
         return list;

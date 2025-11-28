@@ -41,9 +41,9 @@ public class BlockArgument implements ArgumentType<Block> {
     }
 
     public Block parse(StringReader reader) throws CommandSyntaxException {
-        var input = StringReaderUtils.readUnquotedString(reader);
-        var blockResult = (Block) null;
-        for (var block : Registries.BLOCK) {
+        String input = StringReaderUtils.readUnquotedString(reader);
+        Block blockResult = null;
+        for (Block block : Registries.BLOCK) {
             if (block.getName().getString().equals(input)) {
                 blockResult = block;
                 break;
@@ -60,11 +60,11 @@ public class BlockArgument implements ArgumentType<Block> {
 
 
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        var reader = new StringReader(builder.getInput());
+        StringReader reader = new StringReader(builder.getInput());
         reader.setCursor(builder.getStart());
-        var input = StringReaderUtils.readUnquotedString(reader);
-        for (var block : Registries.BLOCK) {
-            var blockName = block.getName().getString();
+        String input = StringReaderUtils.readUnquotedString(reader);
+        for (Block block : Registries.BLOCK) {
+            String blockName = block.getName().getString();
             if (blockName.contains(input)) {
                 if (filter != null && filter.test(block)) {
                     continue;

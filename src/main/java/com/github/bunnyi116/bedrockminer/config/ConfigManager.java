@@ -1,7 +1,6 @@
 package com.github.bunnyi116.bedrockminer.config;
 
 import com.github.bunnyi116.bedrockminer.Debug;
-import com.github.bunnyi116.bedrockminer.api.IConfigManager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.loader.api.FabricLoader;
@@ -11,7 +10,7 @@ import java.io.*;
 
 import static com.github.bunnyi116.bedrockminer.BedrockMiner.MOD_ID;
 
-public class ConfigManager implements IConfigManager {
+public class ConfigManager {
     private static volatile @Nullable ConfigManager INSTANCE;
 
     public static final File CONFIG_DIR = FabricLoader.getInstance().getConfigDir().toFile();
@@ -73,7 +72,6 @@ public class ConfigManager implements IConfigManager {
         }
     }
 
-    @Override
     public Config getConfig() {
         if (CONFIG == null) {
             synchronized (ConfigManager.class) {

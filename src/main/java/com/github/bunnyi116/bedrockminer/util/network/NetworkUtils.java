@@ -1,21 +1,26 @@
 package com.github.bunnyi116.bedrockminer.util.network;
 
-import net.minecraft.client.network.PendingUpdateManager;
 import net.minecraft.client.network.SequencedPacketCreator;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.network.listener.ServerPlayPacketListener;
 import net.minecraft.network.packet.Packet;
 import org.jetbrains.annotations.Nullable;
 
-import static com.github.bunnyi116.bedrockminer.BedrockMiner.*;
+import static com.github.bunnyi116.bedrockminer.BedrockMiner.networkHandler;
+import static com.github.bunnyi116.bedrockminer.BedrockMiner.world;
 
 public class NetworkUtils {
     public static void sendSequencedPacket(ClientWorld world, SequencedPacketCreator packetCreator, @Nullable Runnable packetSending, @Nullable Runnable packetSent) {
-        try (PendingUpdateManager pendingUpdateManager = world.getPendingUpdateManager().incrementSequence()) {
+        //#if MC >= 11900
+        try (net.minecraft.client.network.PendingUpdateManager pendingUpdateManager = world.getPendingUpdateManager().incrementSequence()) {
             int i = pendingUpdateManager.getSequence();
             Packet<ServerPlayPacketListener> packet = packetCreator.predict(i);
             sendPacket(packet, packetSending, packetSent);
         }
+        //#else
+        //$$ Packet<ServerPlayPacketListener> packet = packetCreator.predict(0);
+        //$$ sendPacket(packet, packetSending, packetSent);
+        //#endif
     }
 
     public static void sendSequencedPacket(ClientWorld world, SequencedPacketCreator packetCreator) {
@@ -34,9 +39,13 @@ public class NetworkUtils {
         if (packetSending != null) {
             packetSending.run();
         }
-        networkHandler.sendPacket(packet);
+        sendPacket(packet);
         if (packetSent != null) {
             packetSent.run();
         }
+    }
+
+    public static void sendPacket(Packet<?> packet) {
+        networkHandler.sendPacket(packet);
     }
 }

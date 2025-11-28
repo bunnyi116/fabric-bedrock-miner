@@ -104,8 +104,8 @@ public class PlayerLookUtils {
     }
 
     private static PlayerMoveC2SPacket getLookPacket(ClientPlayerEntity player) {
-        var yaw = PlayerLookUtils.modifyYaw ? PlayerLookUtils.yaw : player.getYaw();
-        var pitch = PlayerLookUtils.modifyPitch ? PlayerLookUtils.pitch : player.getPitch();
+        float yaw = PlayerLookUtils.modifyYaw ? PlayerLookUtils.yaw : player.getYaw();
+        float pitch = PlayerLookUtils.modifyPitch ? PlayerLookUtils.pitch : player.getPitch();
         return getLookPacket(player, yaw, pitch);
     }
 
@@ -132,18 +132,36 @@ public class PlayerLookUtils {
 
     public static void set(Direction facing, Task task) {
         PlayerLookUtils.task = task;
-        final var yaw = switch (facing) {
-            case SOUTH -> 180F;
-            case EAST -> 90F;
-            case NORTH -> 0F;
-            case WEST -> -90F;
-            default -> player == null ? 0F : player.getYaw();
-        };
-        final var pitch = switch (facing) {
-            case UP -> 90F;
-            case DOWN -> -90F;
-            default -> 0F;
-        };
+        float yaw;
+        switch (facing) {
+            case SOUTH:
+                yaw = 180F;
+                break;
+            case EAST:
+                yaw = 90F;
+                break;
+            case NORTH:
+                yaw = 0F;
+                break;
+            case WEST:
+                yaw = -90F;
+                break;
+            default:
+                yaw = player == null ? 0F : player.getYaw();
+                break;
+        }
+        float pitch;
+        switch (facing) {
+            case UP:
+                pitch = 90F;
+                break;
+            case DOWN:
+                pitch = -90F;
+                break;
+            default:
+                pitch = 0F;
+                break;
+        }
         PlayerLookUtils.set(yaw, pitch);
         PlayerLookUtils.sendLookPacket();
     }

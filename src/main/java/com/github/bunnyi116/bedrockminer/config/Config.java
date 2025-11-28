@@ -18,6 +18,7 @@ public class Config {
     public List<Integer> floorsBlacklist = new ArrayList<>();
     public List<TaskRegion> ranges = new ArrayList<>();
     public List<String> blockWhitelist = getDefaultBlockWhitelist();
+    public int limitMax = 1;
 
     public transient List<String> blockBlacklistServer = getDefaultBlockBlacklistServer();
     public transient Direction[] pistonDirections = new Direction[]{Direction.UP, Direction.DOWN, Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
@@ -26,7 +27,7 @@ public class Config {
     public transient Direction[] redstoneTorchFacings = new Direction[]{Direction.UP, Direction.DOWN, Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
 
     public static List<String> getDefaultBlockWhitelist() {
-        var list = new ArrayList<String>();
+        ArrayList<String> list = new ArrayList<>();
         list.add(BlockUtils.getBlockId(Blocks.BEDROCK));                  // 基岩
         // 防误触，取消以下默认白名单
         // list.addTask(BlockUtils.getId(Blocks.END_PORTAL));               // 末地传送门
@@ -37,7 +38,7 @@ public class Config {
 
     public static List<String> getDefaultBlockBlacklistServer() {
         // 默认方块黑名单 (用于限制的服务器, 与自定义黑名单分离)
-        var list = new ArrayList<String>();
+        ArrayList<String> list = new ArrayList<>();
         list.add(BlockUtils.getBlockId(Blocks.BARRIER));                    // 屏障
         list.add(BlockUtils.getBlockId(Blocks.COMMAND_BLOCK));              // 普通命令方块
         list.add(BlockUtils.getBlockId(Blocks.CHAIN_COMMAND_BLOCK));        // 连锁型命令方块
@@ -50,17 +51,17 @@ public class Config {
 
 
     public boolean isAllowBlock(Block block) {
-        var mc = MinecraftClient.getInstance();
+        MinecraftClient mc = MinecraftClient.getInstance();
         // 方块黑名单检查(服务器)
         if (!mc.isInSingleplayer()) {
-            for (var defaultBlockBlack : blockBlacklistServer) {
+            for (String defaultBlockBlack : blockBlacklistServer) {
                 if (BlockUtils.getBlockId(block).equals(defaultBlockBlack)) {
                     return false;
                 }
             }
         }
         // 方块白名单检查(用户自定义)
-        for (var blockBlack : blockWhitelist) {
+        for (String blockBlack : blockWhitelist) {
             if (BlockUtils.getBlockId(block).equals(blockBlack)) {
                 return true;
             }
