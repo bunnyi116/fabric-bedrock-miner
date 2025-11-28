@@ -46,7 +46,7 @@ public class PlayerInteractionUtils {
         if (player.isBlockBreakingRestricted(world, pos, gameMode)) {
             return false;
         }
-        if (!player.canInteractWithBlockAt(pos, 0F)) {
+        if (!PlayerUtils.canInteractWithBlockAt(pos, 0F)) {
             return false;
         }
         BlockState blockState = world.getBlockState(pos);
