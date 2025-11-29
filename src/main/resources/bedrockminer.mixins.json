@@ -7,7 +7,6 @@
     "MixinPlayerMoveC2SPacket"
   ],
   "client": [
-    "ClientPlayerInteractionManagerAccessor",
     "MixinClientPlayerInteractionManager"
   ],
   "injectors": {
