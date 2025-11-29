@@ -11,7 +11,7 @@ public class MixinPlayerMoveC2SPacket {
     //#if MC > 12101
     @ModifyVariable(method = "<init>(DDDFFZZZZ)V", at = @At("HEAD"), ordinal = 0, argsOnly = true)
     //#else
-    //$$ @ModifyVariable(method = "<register>(DDDFFZZZ)V", at = @At("HEAD"), ordinal = 0, argsOnly = true)
+    //$$ @ModifyVariable(method = "<init>(DDDFFZZZ)V", at = @At("HEAD"), ordinal = 0, argsOnly = true)
     //#endif
     private static float modifyLookYaw(float yaw) {
         return  PlayerLookUtils.onModifyLookYaw(yaw);
@@ -21,7 +21,7 @@ public class MixinPlayerMoveC2SPacket {
     //#if MC > 12101
     @ModifyVariable(method = "<init>(DDDFFZZZZ)V", at = @At("HEAD"), ordinal = 1, argsOnly = true)
     //#else
-    //$$ @ModifyVariable(method = "<register>(DDDFFZZZ)V", at = @At("HEAD"), ordinal = 1, argsOnly = true)
+    //$$ @ModifyVariable(method = "<init>(DDDFFZZZ)V", at = @At("HEAD"), ordinal = 1, argsOnly = true)
     //#endif
     private static float modifyLookPitch(float pitch) {
         return  PlayerLookUtils.onModifyLookPitch(pitch);

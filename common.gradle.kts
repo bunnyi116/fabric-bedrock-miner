@@ -61,7 +61,7 @@ loom {
     // 设置 Access Widener (访问增强器) 文件的路径
     accessWidenerPath.set(file("../../src/main/resources/bedrockminer.accesswidener"))
 
-    val commonVmArgs = listOf(
+    var commonVmArgs = listOf(
         "-Dmixin.debug.export=true",
         "-Dmixin.debug.countInjections=true"
     )
@@ -94,12 +94,15 @@ loom {
             "release"
         )
     }
+//    commonVmArgs = commonVmArgs + "-DmixinAuditor.audit=true"
     runs.configureEach {
         runDir = "../../run"
         vmArgs(commonVmArgs)
         programArgs(programArgs)
     }
 }
+
+
 
 // 示例版本值:
 //   project.mod_version     1.0.3                      (基础 Mod 版本)
