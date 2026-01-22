@@ -2,6 +2,7 @@ name: _step.build
 
 on:
   workflow_call:
+    workflow_dispatch:
     inputs:
       release:
         type: boolean
