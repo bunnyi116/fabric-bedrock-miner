@@ -29,7 +29,7 @@
   "suggests": {
     "another-mod": "*"
   },
-  "accessWidener": "bedrockminer.accesswidener",
+  "accessWidener": "${accessWidener}",
   "custom": {
     "modmenu": {
       "parent": "${mod_wrapper_id}"

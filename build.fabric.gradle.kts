@@ -1,11 +1,11 @@
 import groovy.json.JsonSlurper
 
 plugins {
-    id("java") // 启用 Java 插件
-    id("maven-publish") // 启用 Maven 发布插件 (用于发布构建产物到仓库)
-    id("net.fabricmc.fabric-loom-remap") // 启用 Fabric Loom 插件 (Minecraft Mod 开发工具链)
-    id("com.replaymod.preprocess") // 启用 ReplayMod 预处理器插件 (用于处理跨 Minecraft 版本的代码/资源)
-    id("me.fallenbreath.yamlang") // 启用 yamlang 插件 (用于处理语言文件，例如 YAML 格式)
+    id("java")
+    id("maven-publish")
+    id("net.fabricmc.fabric-loom")
+    id("com.replaymod.preprocess")
+    id("me.fallenbreath.yamlang")
 }
 
 val mcVersion = project.property("mcVersion") as Int
@@ -20,20 +20,19 @@ val modHomepage = project.property("mod_homepage") as String
 val modLicense = project.property("mod_license") as String
 val modSources = project.property("mod_sources") as String
 val loaderVersion = project.property("loader_version") as String
-
 val minecraftDependency = project.property("minecraft_dependency") as String
 val minecraftVersion = project.property("minecraft_version") as String
 val fabricApiVersion = project.property("fabric_api_version") as String
+val accessWidener = "$modId.accesswidener"
 
-// 根据 Minecraft 版本确定所需的 Java 兼容性版本
-val javaCompatibility = when {
+val javaVersion = when {
     mcVersion >= 260000 -> JavaVersion.VERSION_25   // 26+          需要 Java 25
     mcVersion >= 12005 -> JavaVersion.VERSION_21    // 1.20.5+      需要 Java 21
     mcVersion >= 11800 -> JavaVersion.VERSION_17    // 1.18-1.20.4  需要 Java 17
     mcVersion >= 11700 -> JavaVersion.VERSION_16    // 1.17.x       需要 Java 16
     else -> JavaVersion.VERSION_1_8                 // 1.16.x 及以下使用 Java 8
 }
-val mixinCompatibilityLevel = javaCompatibility // Mixin 兼容性级别与 Java 兼容性版本保持一致
+val mixinCompatibilityLevel = "JAVA_${javaVersion.majorVersion.toInt()}"
 
 repositories {
     maven("https://maven.fabricmc.net")
@@ -41,26 +40,21 @@ repositories {
 }
 
 // https://github.com/FabricMC/fabric-loader/issues/783
-configurations {
-    // 将 fabric-loader 从 modRuntimeOnly 配置中排除，避免在运行时包含重复的加载器。
-    named("modRuntimeOnly") {
-        exclude(group = "net.fabricmc", module = "fabric-loader")
+configurations.all {
+    resolutionStrategy {
+        force("net.fabricmc:fabric-loader:$loaderVersion")
     }
 }
 
 dependencies {
     minecraft("com.mojang:minecraft:$minecraftVersion") // Minecraft 客户端依赖
-    // mappings("net.fabricmc:yarn:$yarnMappings:v2") // Yarn 混淆映射
-    mappings(loom.officialMojangMappings())
-    modImplementation("net.fabricmc:fabric-loader:$loaderVersion") // Fabric 加载器依赖
-    modImplementation("net.fabricmc.fabric-api:fabric-api:$fabricApiVersion") // Fabric API 依赖
-
-    // Fabric 包装器（运行时, 正常情况下可以不用, 这里模拟用户环境, 一起加载到游戏）
-    runtimeOnly(project(":fabricWrapper"))
+    implementation("net.fabricmc:fabric-loader:$loaderVersion") // Fabric 加载器依赖
+    implementation("net.fabricmc.fabric-api:fabric-api:$fabricApiVersion") // Fabric API 依赖
+//    runtimeOnly(project(":fabricWrapper"))
 }
 
 loom {
-    accessWidenerPath.set(file("../../src/main/resources/$modId.accesswidener"))
+    accessWidenerPath.set(file("../../src/main/resources/$accessWidener"))
 
     var programArgs = listOf(
         "--width", "1280",
@@ -75,18 +69,12 @@ loom {
         val xuid = profile["xuid"].toString()
         val accessToken = profile["accessToken"].toString()
         programArgs = programArgs + listOf(
-            "--username",
-            username,
-            "--uuid",
-            uuid,
-            "--xuid",
-            xuid,
-            "--accessToken",
-            accessToken,
-            "--userType",
-            "msa",
-            "--versionType",
-            "release"
+            "--username", username,
+            "--uuid", uuid,
+            "--xuid", xuid,
+            "--accessToken", accessToken,
+            "--userType", "msa",
+            "--versionType", "release"
         )
     }
     var commonVmArgs = listOf(
@@ -165,7 +153,8 @@ tasks {
             "mod_sources" to modSources,
             "loader_version" to loaderVersion,
             "minecraft_dependency" to minecraftDependency,
-            "compatibility_level" to "JAVA_${mixinCompatibilityLevel.majorVersion}"
+            "compatibility_level" to mixinCompatibilityLevel,
+            "accessWidener" to accessWidener
         )
         inputs.properties(propertyMap)
         filesMatching(listOf("fabric.mod.json", "*.mixins.json")) {
@@ -181,13 +170,14 @@ tasks {
         options.encoding = "UTF-8"
         // 添加编译器参数以显示弃用和未检查的警告
         options.compilerArgs.addAll(listOf("-Xlint:deprecation", "-Xlint:unchecked"))
-        if (javaCompatibility <= JavaVersion.VERSION_1_8) {
+        if (javaVersion <= JavaVersion.VERSION_1_8) {
             // 如果使用 Java 8 或更低版本，压制 "source/target value 8 is obsolete..." 的警告
             options.compilerArgs.add("-Xlint:-options")
         }
     }
 
     withType<Jar> {
+        exclude("$modId.remap.accesswidener")
         // 将 LICENSE 文件添加到 JAR 包中
         from(rootProject.file("LICENSE")) {
             rename { "${it}_${modArchivesBaseName}" }
@@ -202,15 +192,12 @@ yamlang {
 }
 
 java {
-    sourceCompatibility = javaCompatibility // 设置源码兼容性
-    targetCompatibility = javaCompatibility // 设置目标字节码兼容性
+    sourceCompatibility = javaVersion // 设置源码兼容性
+    targetCompatibility = javaVersion // 设置目标字节码兼容性
 
-    // 如果存在，Loom 会自动将 sourcesJar 附加到 RemapSourcesJar 任务和 "build" 任务
-    // 如果移除此行，则不会生成源码 JAR。
     withSourcesJar()
 }
 
-// --- Maven 发布配置 ---
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {

@@ -1,0 +1,3 @@
+net.fabricmc.fabric.api.client.command.v2.ClientCommands net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
+net.minecraft.client.multiplayer.MultiPlayerGameMode handleContainerInput() handleInventoryMouseClick()
+net.minecraft.world.inventory.ContainerInput net.minecraft.world.inventory.ClickType

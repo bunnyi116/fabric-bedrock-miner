@@ -1,8 +1,8 @@
 plugins {
     id("maven-publish")
     id("com.github.hierynomus.license") version "0.16.1" apply false
-    id("net.fabricmc.fabric-loom") version "1.14-SNAPSHOT" apply false
-    id("net.fabricmc.fabric-loom-remap") version "1.14-SNAPSHOT" apply false
+    id("net.fabricmc.fabric-loom") version "1.15-SNAPSHOT" apply false
+    id("net.fabricmc.fabric-loom-remap") version "1.15-SNAPSHOT" apply false
 
     // https://github.com/ReplayMod/preprocessor
     // https://github.com/Fallen-Breath/preprocessor
@@ -41,7 +41,9 @@ preprocess {
     val mc1_21_09 = createNode("1.21.9", 1_21_09, "")
     val mc1_21_10 = createNode("1.21.10", 1_21_10, "")
     val mc1_21_11 = createNode("1.21.11", 1_21_11, "")
+    val mc26_00_01 = createNode("26.1", 26_00_01, "")
 
+    mc26_00_01.link(mc1_21_11, file("versions/mapping-1.21.11-26.1.txt"))
     mc1_21_11.link(mc1_21_10, null)
     mc1_21_10.link(mc1_21_09, null)
     mc1_21_09.link(mc1_21_08, null)
@@ -67,18 +69,16 @@ preprocess {
     mc1_19_01.link(mc1_19_00, null)
 //    mc1_18_02.link(mc1_18_01, null)
 
+    // See https://github.com/Fallen-Breath/fabric-mod-template/blob/1d72d77a1c5ce0bf060c2501270298a12adab679/build.gradle#L55-L63
+    for (node in getNodes()) {
+        findProject(node.project)
+            ?.ext
+            ?.set("mcVersion", node.mcVersion)
+    }
 }
-
 
 // 获取所有子项目（排除 fabricWrapper）
 val fabricSubprojects = rootProject.subprojects.filter { it.name != "fabricWrapper" }
-
-tasks.register("build") {
-    group = "build"
-    description = "构建 fabricWrapper 版本包（推荐用于发布）"
-
-    dependsOn("buildAndGather")
-}
 
 tasks.register("buildAndGather") {
     group = "build"
@@ -112,20 +112,4 @@ tasks.register("buildAndGather") {
         }
         println("构建产物收集完成，文件位于: ${rootLibsDir.absolutePath}")
     }
-}
-
-tasks.register("buildAll") {
-    group = "build"
-    description = "构建所有子项目以及 fabricWrapper 版本包"
-
-    dependsOn(tasks.named("buildAndGather"))
-    dependsOn(":fabricWrapper:build")
-}
-
-tasks.register("buildFabricWrapper") {
-    group = "build"
-    description = "构建 fabricWrapper 版本包"
-
-    dependsOn(tasks.named("buildAndGather"))
-    dependsOn(":fabricWrapper:build")
 }

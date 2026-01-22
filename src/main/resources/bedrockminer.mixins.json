@@ -2,7 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.github.bunnyi116.bedrockminer.mixin",
-  "compatibilityLevel": "JAVA_17",
+  "compatibilityLevel": "${compatibility_level}",
   "mixins": [
     "MixinServerboundMovePlayerPacket"
   ],

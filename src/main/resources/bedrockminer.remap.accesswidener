@@ -1,4 +1,4 @@
-accessWidener v2 official
+accessWidener v2 named
 accessible method net/minecraft/client/multiplayer/ClientLevel getBlockStatePredictionHandler ()Lnet/minecraft/client/multiplayer/prediction/BlockStatePredictionHandler;
 accessible field net/minecraft/world/entity/player/Inventory SELECTION_SIZE I
 accessible field net/minecraft/client/multiplayer/MultiPlayerGameMode isDestroying Z
