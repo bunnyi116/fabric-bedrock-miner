@@ -2,7 +2,6 @@ name: _step.build
 
 on:
   workflow_call:
-    workflow_dispatch:
     inputs:
       release:
         type: boolean
@@ -13,6 +12,7 @@ on:
         type: string
         required: false
         default: ''
+  workflow_dispatch:
 #      # [FEATURE] MIXIN_AUDITOR
 #      mixin_audit:
 #        description: run mixin audit for Minecraft after build
