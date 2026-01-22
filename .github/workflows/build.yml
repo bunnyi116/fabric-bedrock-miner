@@ -13,6 +13,17 @@ on:
         required: false
         default: ''
   workflow_dispatch:
+    inputs:
+      release:
+        type: boolean
+        required: false
+        default: false
+        description: "Whether to build a release version (default: false)"
+      target_subproject:
+        description: "see release.yml, leave it empty to build all"
+        type: string
+        required: false
+        default: ''
 #      # [FEATURE] MIXIN_AUDITOR
 #      mixin_audit:
 #        description: run mixin audit for Minecraft after build
