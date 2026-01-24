@@ -6,7 +6,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
@@ -75,11 +75,11 @@ public class PlayerInventoryUtils {
             if (sourceSlot == hotbarIndex) {   // 同一个槽位
                 return;
             }
-            interactionManager.handleInventoryMouseClick(
+            interactionManager.handleContainerInput(
                     player.containerMenu.containerId,   // 当前容器ID
                     sourceSlot,                          // 源槽编号
                     hotbarIndex,                         // 目标快捷栏编号（0–8）
-                    ClickType.SWAP,                     // 交换动作
+                    ContainerInput.SWAP,                     // 交换动作
                     player
             );
         }

@@ -12,13 +12,13 @@ public class TaskRegion {
 
     public TaskRegion(String name, Level world, BlockPos pos1, BlockPos pos2) {
         this.name = name;
-        this.dimensionId = world.dimension().location().toString();
+        this.dimensionId = world.dimension().identifier().toString();
         this.pos1 = pos1;
         this.pos2 = pos2;
     }
 
     public boolean isForWorld(Level world) {
-        return this.dimensionId.equals(world.dimension().location().toString());
+        return this.dimensionId.equals(world.dimension().identifier().toString());
     }
 
     public BoundingBox getBlockBox() {

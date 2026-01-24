@@ -3,7 +3,7 @@ package com.github.bunnyi116.bedrockminer.util.block;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +19,7 @@ public class BlockUtils {
         //#endif
     }
 
-    public static @NotNull Block getBlock(ResourceLocation blockId) {
+    public static @NotNull Block getBlock(Identifier blockId) {
         //#if MC > 12101
         return BuiltInRegistries.BLOCK.getValue(blockId);
         //#else
@@ -31,7 +31,7 @@ public class BlockUtils {
         return block.getName().getString();
     }
 
-    public static ResourceLocation getIdentifier(Block block) {
+    public static Identifier getIdentifier(Block block) {
         return BuiltInRegistries.BLOCK.getKey(block);
     }
 
