@@ -30,7 +30,7 @@ public class Config {
 
     public static List<String> getDefaultBlockWhitelist() {
         var list = new ArrayList<String>();
-        list.add(BlockUtils.getIdentifierString(Blocks.BEDROCK));                  // 基岩
+        list.add(BlockUtils.getKeyString(Blocks.BEDROCK));                  // 基岩
         // 防误触，取消以下默认白名单
         // list.addTask(BlockUtils.getId(Blocks.END_PORTAL));               // 末地传送门
         // list.addTask(BlockUtils.getId(Blocks.END_PORTAL_FRAME));         // 末地传送门-框架
@@ -41,13 +41,13 @@ public class Config {
     public static List<String> getDefaultBlockBlacklistServer() {
         // 默认方块黑名单 (用于限制的服务器, 与自定义黑名单分离)
         var list = new ArrayList<String>();
-        list.add(BlockUtils.getIdentifierString(Blocks.BARRIER));                    // 屏障
-        list.add(BlockUtils.getIdentifierString(Blocks.COMMAND_BLOCK));              // 普通命令方块
-        list.add(BlockUtils.getIdentifierString(Blocks.CHAIN_COMMAND_BLOCK));        // 连锁型命令方块
-        list.add(BlockUtils.getIdentifierString(Blocks.REPEATING_COMMAND_BLOCK));    // 循环型命令方块
-        list.add(BlockUtils.getIdentifierString(Blocks.STRUCTURE_VOID));             // 结构空位
-        list.add(BlockUtils.getIdentifierString(Blocks.STRUCTURE_BLOCK));            // 结构方块
-        list.add(BlockUtils.getIdentifierString(Blocks.JIGSAW));                     // 拼图方块
+        list.add(BlockUtils.getKeyString(Blocks.BARRIER));                    // 屏障
+        list.add(BlockUtils.getKeyString(Blocks.COMMAND_BLOCK));              // 普通命令方块
+        list.add(BlockUtils.getKeyString(Blocks.CHAIN_COMMAND_BLOCK));        // 连锁型命令方块
+        list.add(BlockUtils.getKeyString(Blocks.REPEATING_COMMAND_BLOCK));    // 循环型命令方块
+        list.add(BlockUtils.getKeyString(Blocks.STRUCTURE_VOID));             // 结构空位
+        list.add(BlockUtils.getKeyString(Blocks.STRUCTURE_BLOCK));            // 结构方块
+        list.add(BlockUtils.getKeyString(Blocks.JIGSAW));                     // 拼图方块
         return list;
     }
 
@@ -57,14 +57,14 @@ public class Config {
         // 方块黑名单检查(服务器)
         if (!mc.isLocalServer()) {
             for (var defaultBlockBlack : blockBlacklistServer) {
-                if (BlockUtils.getIdentifierString(block).equals(defaultBlockBlack)) {
+                if (BlockUtils.getKeyString(block).equals(defaultBlockBlack)) {
                     return false;
                 }
             }
         }
         // 方块白名单检查(用户自定义)
         for (var blockBlack : blockWhitelist) {
-            if (BlockUtils.getIdentifierString(block).equals(blockBlack)) {
+            if (BlockUtils.getKeyString(block).equals(blockBlack)) {
                 return true;
             }
         }

@@ -2,6 +2,7 @@ package com.github.bunnyi116.bedrockminer.command.argument;
 
 import com.github.bunnyi116.bedrockminer.I18n;
 import com.github.bunnyi116.bedrockminer.util.StringReaderUtils;
+import com.github.bunnyi116.bedrockminer.util.block.BlockUtils;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -15,12 +16,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 
-public class BlockArgument implements ArgumentType<Block> {
+public class BlockArgument implements ArgumentType<Block[]> {
     private static final DynamicCommandExceptionType INVALID_STRING_EXCEPTION = new DynamicCommandExceptionType(input
             -> Component.literal(I18n.COMMAND_EXCEPTION_INVALID_STRING.getString().replace("#input#", input.toString())));
 
@@ -36,26 +36,28 @@ public class BlockArgument implements ArgumentType<Block> {
         this(null);
     }
 
-    public static Block getBlock(CommandContext<FabricClientCommandSource> context, String name) {
-        return context.getArgument(name, Block.class);
+    public static Block[] getBlock(CommandContext<FabricClientCommandSource> context, String name) {
+        return context.getArgument(name, Block[].class);
     }
 
-    public Block parse(StringReader reader) throws CommandSyntaxException {
+    public Block[] parse(StringReader reader) throws CommandSyntaxException {
         String input = StringReaderUtils.readUnquotedString(reader);
-        Block blockResult =null;
+        ArrayList<Block> list = new ArrayList<>();
         for (Block block : BuiltInRegistries.BLOCK) {
+            if (filter != null && !filter.test(block)) {
+                continue;
+            }
             if (block.getName().getString().equals(input)) {
-                blockResult = block;
-                break;
+                list.add(block);
+            } else if (BlockUtils.getKey(block).toString().equals(input)) {
+                list.add(block);
             }
         }
-        if (blockResult != null && filter != null && filter.test(blockResult)) {
-            blockResult = null;
+        Block[] blocks = list.toArray(list.toArray(new Block[0]));
+        if (blocks.length != 0) {
+            return blocks;
         }
-        if (blockResult == null) {
-            throw INVALID_STRING_EXCEPTION.create(input);
-        }
-        return blockResult;
+        throw INVALID_STRING_EXCEPTION.create(input);
     }
 
 
@@ -63,14 +65,22 @@ public class BlockArgument implements ArgumentType<Block> {
         StringReader reader = new StringReader(builder.getInput());
         reader.setCursor(builder.getStart());
         String input = StringReaderUtils.readUnquotedString(reader);
+        Map<Block, String> blocks = new HashMap<>();
         for (var block : BuiltInRegistries.BLOCK) {
-            var blockName = block.getName().getString();
-            if (blockName.contains(input)) {
-                if (filter != null && filter.test(block)) {
-                    continue;
-                }
-                builder.suggest(blockName);
+            String blockId = BlockUtils.getKeyString(block);
+            if (blockId.contains(input)) {
+                blocks.put(block, blockId);
             }
+            String blockName = block.getName().getString();
+            if (blockName.contains(input)) {
+                blocks.put(block, blockName);
+            }
+        }
+        for (Map.Entry<Block, String> entry : blocks.entrySet()) {
+            if (filter != null && !filter.test(entry.getKey())) {
+                continue;
+            }
+            builder.suggest(entry.getValue());
         }
         return builder.buildFuture();
     }

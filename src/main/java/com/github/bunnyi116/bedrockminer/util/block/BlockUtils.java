@@ -31,12 +31,12 @@ public class BlockUtils {
         return block.getName().getString();
     }
 
-    public static Identifier getIdentifier(Block block) {
+    public static Identifier getKey(Block block) {
         return BuiltInRegistries.BLOCK.getKey(block);
     }
 
-    public static String getIdentifierString(Block block) {
-        return getIdentifier(block).toString();
+    public static String getKeyString(Block block) {
+        return getKey(block).toString();
     }
 
     public static boolean sideCoversSmallSquare(BlockPos blockPos, Direction direction) {
