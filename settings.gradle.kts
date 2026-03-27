@@ -34,7 +34,6 @@ for (version in settings["versions"]!!) {
         } else {
             "../../build.fabric.remap.gradle.kts"
         }
-
     }
 }
 
