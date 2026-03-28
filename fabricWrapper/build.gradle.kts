@@ -43,19 +43,14 @@ fabricSubprojects.forEach {
 }
 
 tasks {
-    // 收集子模块 JAR 文件任务
     register("collectSubModules") {
         description = "收集所有子模块的 JAR 文件"
         outputs.upToDateWhen { false }
-
-        // 依赖所有子项目的 remapJar 任务
-        dependsOn(fabricSubprojects.map { it.tasks.named("remapJar") })
-
+        dependsOn(fabricSubprojects.map { it.tasks.named("buildAndCollect") })
         doFirst {
-            // 复制所有重映射后的 JAR 文件
             copy {
                 from(fabricSubprojects.map { sub ->
-                    sub.tasks.named("remapJar").get().outputs.files
+                    sub.tasks.named("buildAndCollect").get().outputs.files
                 })
                 into(layout.buildDirectory.dir("tmp/submods/META-INF/jars"))
             }

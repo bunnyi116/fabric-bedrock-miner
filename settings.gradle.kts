@@ -37,7 +37,7 @@ for (version in settings["versions"]!!) {
     }
 }
 
-//include(":fabricWrapper")
+include(":fabricWrapper")
 
 fun parseMcVersionToNumber(mcVersionStr: String): Int {
     val cleanVersion = mcVersionStr.split("-")[0] // 去掉 -fabric/-pre/-rc 等后缀
