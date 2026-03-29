@@ -1,4 +1,4 @@
-package com.github.bunnyi116.bedrockminer.util.block;
+package com.github.bunnyi116.bedrockminer.util;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

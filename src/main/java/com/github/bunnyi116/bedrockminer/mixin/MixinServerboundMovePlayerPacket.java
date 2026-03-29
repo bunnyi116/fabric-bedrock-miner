@@ -1,6 +1,6 @@
 package com.github.bunnyi116.bedrockminer.mixin;
 
-import com.github.bunnyi116.bedrockminer.util.player.PlayerLookUtils;
+import com.github.bunnyi116.bedrockminer.util.PlayerLookUtils;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

@@ -4,14 +4,22 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 
 public class DirectionUtils {
+    public static float getRequiredYaw(Direction playerShouldBeFacing) {
+        if (playerShouldBeFacing != null && playerShouldBeFacing.getAxis().isHorizontal()) {
+            return playerShouldBeFacing.toYRot();
+        } else {
+            return 0;
+        }
+    }
 
-    /**
-     * 根据指定的偏航角(yaw)和俯仰角(pitch)，返回按最接近视线方向排序的方向数组
-     *
-     * @param yaw 偏航角（角度制），0度为正南，逆时针增加
-     * @param pitch 俯仰角（角度制），-90度为向上看，90度为向下看
-     * @return 按最接近视线方向排序的6个方向数组
-     */
+    public static float getRequiredPitch(Direction playerShouldBeFacing) {
+        if (playerShouldBeFacing != null && playerShouldBeFacing.getAxis().isVertical()) {
+            return playerShouldBeFacing == Direction.DOWN ? 90 : -90;
+        } else {
+            return 0;
+        }
+    }
+
     public static Direction[] orderedByNearest(float yaw, float pitch) {
         // 将角度转换为弧度
         float pitchRad = pitch * (float) (Math.PI / 180.0);

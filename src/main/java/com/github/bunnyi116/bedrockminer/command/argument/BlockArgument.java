@@ -2,7 +2,7 @@ package com.github.bunnyi116.bedrockminer.command.argument;
 
 import com.github.bunnyi116.bedrockminer.I18n;
 import com.github.bunnyi116.bedrockminer.util.StringReaderUtils;
-import com.github.bunnyi116.bedrockminer.util.block.BlockUtils;
+import com.github.bunnyi116.bedrockminer.util.BlockUtils;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContext;

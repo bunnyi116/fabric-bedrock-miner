@@ -5,7 +5,7 @@ import com.github.bunnyi116.bedrockminer.command.CommandBase;
 import com.github.bunnyi116.bedrockminer.command.argument.BlockArgument;
 import com.github.bunnyi116.bedrockminer.config.Config;
 import com.github.bunnyi116.bedrockminer.util.MessageUtils;
-import com.github.bunnyi116.bedrockminer.util.block.BlockUtils;
+import com.github.bunnyi116.bedrockminer.util.BlockUtils;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -14,7 +14,7 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.Block;
 
-import static com.github.bunnyi116.bedrockminer.util.block.BlockUtils.*;
+import static com.github.bunnyi116.bedrockminer.util.BlockUtils.*;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.argument;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal;
 

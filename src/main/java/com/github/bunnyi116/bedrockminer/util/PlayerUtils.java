@@ -1,4 +1,4 @@
-package com.github.bunnyi116.bedrockminer.util.player;
+package com.github.bunnyi116.bedrockminer.util;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -116,7 +116,7 @@ public class PlayerUtils {
     }
 
     public static boolean canInstantlyMineBlock(BlockState state, ItemStack itemStack) {
-        return PlayerUtils.calcBlockBreakingDelta(state, itemStack) >= PlayerInteractionUtils.BREAKING_PROGRESS_MAX;
+        return PlayerUtils.calcBlockBreakingDelta(state, itemStack) >= InteractionUtils.BREAKING_PROGRESS_MAX;
     }
 
     public static boolean canInstantlyMineBlock(BlockState state) {

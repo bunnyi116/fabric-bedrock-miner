@@ -1,7 +1,5 @@
-package com.github.bunnyi116.bedrockminer.util.player;
+package com.github.bunnyi116.bedrockminer.util;
 
-import com.github.bunnyi116.bedrockminer.util.block.BlockUtils;
-import com.github.bunnyi116.bedrockminer.util.network.NetworkUtils;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -25,7 +23,7 @@ import static com.github.bunnyi116.bedrockminer.BedrockMiner.*;
 
 
 @Environment(EnvType.CLIENT)
-public class PlayerInteractionUtils {
+public class InteractionUtils {
     public static final float BREAKING_PROGRESS_MAX = 1.0F;
     private static BlockPos currentBreakingPos = new BlockPos(-1, -1, -1);
     private static float currentBreakingProgress;
@@ -147,7 +145,7 @@ public class PlayerInteractionUtils {
     }
 
     public static void setBreakingBlock(boolean breakingBlock) {
-        PlayerInteractionUtils.breakingBlock = breakingBlock;
+        InteractionUtils.breakingBlock = breakingBlock;
     }
 
     public static void placement(BlockPos blockPos, Direction facing, @Nullable Item... items) {
@@ -161,7 +159,7 @@ public class PlayerInteractionUtils {
             return;
         }
         if (items != null) {
-            PlayerInventoryUtils.switchToItem(items);
+            InventoryUtils.switchToItem(items);
         }
         // 发送修改视角数据包
         if (facing.getAxis().isVertical()) {

@@ -1,6 +1,5 @@
-package com.github.bunnyi116.bedrockminer.util.player;
+package com.github.bunnyi116.bedrockminer.util;
 
-import com.github.bunnyi116.bedrockminer.util.network.NetworkUtils;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.NonNullList;
@@ -15,7 +14,7 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import static com.github.bunnyi116.bedrockminer.BedrockMiner.*;
 
-public class PlayerInventoryUtils {
+public class InventoryUtils {
 
     public static NonNullList<ItemStack> getMainStacks(Inventory playerInventory) {
         //#if MC > 12104
@@ -52,7 +51,7 @@ public class PlayerInventoryUtils {
         for (int i = 0; i < playerInventory.getContainerSize(); i++) {
             ItemStack itemStack = playerInventory.getItem(i);
             // 检查耐久是否发起警告(剩余耐久<=检查值)
-            if (PlayerInventoryUtils.isItemDamageWarning(itemStack, 5)) {
+            if (InventoryUtils.isItemDamageWarning(itemStack, 5)) {
                 continue;
             }
             // 选取最快工具
@@ -63,7 +62,7 @@ public class PlayerInventoryUtils {
             }
         }
         if (lastSlot != -1) {
-            PlayerInventoryUtils.switchToSlot(lastSlot);
+            InventoryUtils.switchToSlot(lastSlot);
         }
     }
 
@@ -98,7 +97,7 @@ public class PlayerInventoryUtils {
 
         // 如果点的是快捷栏内槽位（0–8），直接切换选中即可
         if (Inventory.isHotbarSlot(slot)) {
-            PlayerInventoryUtils.setSelectedSlot(slot);
+            InventoryUtils.setSelectedSlot(slot);
             return;
         }
 
@@ -106,26 +105,26 @@ public class PlayerInventoryUtils {
             final ItemStack itemStack = playerInventory.getItem(i);
             if (itemStack.isEmpty()) {
                 swapSlots(player, interactionManager, slot, i);
-                PlayerInventoryUtils.setSelectedSlot(i);
+                InventoryUtils.setSelectedSlot(i);
                 return;
             }
         }
         swapSlots(player, interactionManager, slot, 6);
-        PlayerInventoryUtils.setSelectedSlot(6);
+        InventoryUtils.setSelectedSlot(6);
     }
 
     public static void switchToSlot(int slot) {
         // 背包中没有指定的物品
         if (Inventory.isHotbarSlot(slot)) {
-            PlayerInventoryUtils.setSelectedSlot(slot);
+            InventoryUtils.setSelectedSlot(slot);
         } else {
             pickFromInventory(player, interactionManager, slot);
         }
-        NetworkUtils.sendPacket(new ServerboundSetCarriedItemPacket(PlayerInventoryUtils.getSelectedSlot())); // 发送更新手持物品的数据包
+        NetworkUtils.sendPacket(new ServerboundSetCarriedItemPacket(InventoryUtils.getSelectedSlot())); // 发送更新手持物品的数据包
     }
 
     public static void switchToItem(int minDamage, Item... items) {
-        NonNullList<ItemStack> MainStacks = PlayerInventoryUtils.getMainStacks(playerInventory);
+        NonNullList<ItemStack> MainStacks = InventoryUtils.getMainStacks(playerInventory);
         for (int i = 0; i < MainStacks.size(); i++) {
             ItemStack stack = MainStacks.get(i);
             if (stack.isEmpty()) {
@@ -134,7 +133,7 @@ public class PlayerInventoryUtils {
             for (Item item : items) {
                 if (stack.is(item)) {
                     // 检查耐久是否发起警告(剩余耐久<=检查值)
-                    if (minDamage > 0 && PlayerInventoryUtils.isItemDamageWarning(stack, minDamage)) {
+                    if (minDamage > 0 && InventoryUtils.isItemDamageWarning(stack, minDamage)) {
                         continue;
                     }
                     switchToSlot(i);
@@ -171,10 +170,10 @@ public class PlayerInventoryUtils {
      * @return 如果可以瞬间破坏活塞方块则返回true，否则返回false
      */
     public static boolean canInstantlyMinePiston() {
-        for (ItemStack stack : PlayerInventoryUtils.getMainStacks(playerInventory)) {
+        for (ItemStack stack : InventoryUtils.getMainStacks(playerInventory)) {
             if (stack.isEmpty()) continue;
             if (PlayerUtils.canInstantlyMineBlock(Blocks.PISTON.defaultBlockState(), stack)
-                    && !PlayerInventoryUtils.isItemDamageWarning(stack, 5)) {
+                    && !InventoryUtils.isItemDamageWarning(stack, 5)) {
                 return true;
             }
         }

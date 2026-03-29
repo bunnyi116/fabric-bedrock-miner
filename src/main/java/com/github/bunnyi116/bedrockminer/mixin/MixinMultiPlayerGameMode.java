@@ -3,7 +3,7 @@ package com.github.bunnyi116.bedrockminer.mixin;
 import com.github.bunnyi116.bedrockminer.BedrockMiner;
 import com.github.bunnyi116.bedrockminer.config.Config;
 import com.github.bunnyi116.bedrockminer.task.TaskManager;
-import com.github.bunnyi116.bedrockminer.util.player.PlayerInteractionUtils;
+import com.github.bunnyi116.bedrockminer.util.InteractionUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.player.LocalPlayer;
@@ -37,7 +37,7 @@ public abstract class MixinMultiPlayerGameMode {
             if (TaskManager.getInstance().isBedrockMinerFeatureEnable()) {
                 TaskManager.getInstance().addBlockTask(world, blockPos, block);
             }
-            if (PlayerInteractionUtils.isBreakingBlock()) {
+            if (InteractionUtils.isBreakingBlock()) {
                 cir.cancel();
             }
         }
@@ -45,7 +45,7 @@ public abstract class MixinMultiPlayerGameMode {
 
     @Inject(at = @At(value = "HEAD"), method = "stopDestroyBlock", cancellable = true)
     public void cancelBlockBreaking(CallbackInfo ci) {
-        if (TaskManager.isWorking() && PlayerInteractionUtils.isBreakingBlock()) {
+        if (TaskManager.isWorking() && InteractionUtils.isBreakingBlock()) {
             ci.cancel();
         }
     }
@@ -61,7 +61,7 @@ public abstract class MixinMultiPlayerGameMode {
         }
         interactBlockCooldown = 1;
         if (TaskManager.getInstance().isBedrockMinerFeatureEnable() && player.getMainHandItem().isEmpty() && !Config.getInstance().disableEmptyHandSwitchToggle) {
-            if (PlayerInteractionUtils.isBreakingBlock()) {
+            if (InteractionUtils.isBreakingBlock()) {
                 cir.setReturnValue(InteractionResult.FAIL);
                 cir.cancel();
             }
@@ -73,12 +73,12 @@ public abstract class MixinMultiPlayerGameMode {
     public void tick(CallbackInfo ci) {
         updateGameVariable();
         if (TaskManager.isWorking()) {
-            if (PlayerInteractionUtils.isBreakingBlock()) {
+            if (InteractionUtils.isBreakingBlock()) {
                 ci.cancel();
             }
             TaskManager.getInstance().tick();
         }
-        PlayerInteractionUtils.autoResetBreaking();    // 自动解除拦截玩家破坏机制，避免任务阻塞或玩家离开任务方块破坏范围
+        InteractionUtils.autoResetBreaking();    // 自动解除拦截玩家破坏机制，避免任务阻塞或玩家离开任务方块破坏范围
     }
 
     @Unique

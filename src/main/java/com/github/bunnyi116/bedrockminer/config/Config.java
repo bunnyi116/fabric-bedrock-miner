@@ -1,7 +1,7 @@
 package com.github.bunnyi116.bedrockminer.config;
 
 import com.github.bunnyi116.bedrockminer.task.TaskRegion;
-import com.github.bunnyi116.bedrockminer.util.block.BlockUtils;
+import com.github.bunnyi116.bedrockminer.util.BlockUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

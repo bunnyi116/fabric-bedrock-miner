@@ -1,7 +1,7 @@
 package com.github.bunnyi116.bedrockminer.task;
 
-import com.github.bunnyi116.bedrockminer.util.block.BlockUtils;
-import com.github.bunnyi116.bedrockminer.util.player.PlayerUtils;
+import com.github.bunnyi116.bedrockminer.util.BlockUtils;
+import com.github.bunnyi116.bedrockminer.util.PlayerUtils;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;

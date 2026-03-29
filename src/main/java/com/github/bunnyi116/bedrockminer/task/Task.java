@@ -5,11 +5,11 @@ import com.github.bunnyi116.bedrockminer.Debug;
 import com.github.bunnyi116.bedrockminer.I18n;
 import com.github.bunnyi116.bedrockminer.config.Config;
 import com.github.bunnyi116.bedrockminer.util.MessageUtils;
-import com.github.bunnyi116.bedrockminer.util.block.BlockUtils;
-import com.github.bunnyi116.bedrockminer.util.player.PlayerInteractionUtils;
-import com.github.bunnyi116.bedrockminer.util.player.PlayerInventoryUtils;
-import com.github.bunnyi116.bedrockminer.util.player.PlayerLookUtils;
-import com.github.bunnyi116.bedrockminer.util.player.PlayerUtils;
+import com.github.bunnyi116.bedrockminer.util.BlockUtils;
+import com.github.bunnyi116.bedrockminer.util.InteractionUtils;
+import com.github.bunnyi116.bedrockminer.util.InventoryUtils;
+import com.github.bunnyi116.bedrockminer.util.PlayerLookUtils;
+import com.github.bunnyi116.bedrockminer.util.PlayerUtils;
 import com.google.common.collect.Queues;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -204,7 +204,7 @@ public class Task {
             this.currentState = TaskState.FIND;
             return;
         }
-        PlayerInteractionUtils.placement(planItem.slimeBlock.pos, planItem.slimeBlock.facing, Items.SLIME_BLOCK);
+        InteractionUtils.placement(planItem.slimeBlock.pos, planItem.slimeBlock.facing, Items.SLIME_BLOCK);
         this.addRecycled(planItem.slimeBlock.pos);
         this.resetModifyLook();
         this.currentState = TaskState.WAIT_GAME_UPDATE;
@@ -222,12 +222,12 @@ public class Task {
         } else {
             placeBlockState = Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(RedstoneWallTorchBlock.FACING, planItem.redstoneTorch.facing);
         }
-        if (PlayerInteractionUtils.canPlace(world, planItem.redstoneTorch.pos, placeBlockState)) {
+        if (InteractionUtils.canPlace(world, planItem.redstoneTorch.pos, placeBlockState)) {
             if (planItem.redstoneTorch.isNeedModify() && !planItem.redstoneTorch.modify) {
                 setModifyLook(planItem.redstoneTorch);
                 return;
             }
-            PlayerInteractionUtils.placement(planItem.redstoneTorch.pos, planItem.redstoneTorch.facing, Items.REDSTONE_TORCH);
+            InteractionUtils.placement(planItem.redstoneTorch.pos, planItem.redstoneTorch.facing, Items.REDSTONE_TORCH);
 
             BlockState blockState = world.getBlockState(planItem.redstoneTorch.pos);
             if (planItem.redstoneTorch.facing.getAxis().isHorizontal() && blockState.getBlock() instanceof RedstoneWallTorchBlock) {
@@ -256,17 +256,17 @@ public class Task {
         final BlockPos[] nearbyRedstoneTorch = TaskPlanTools.findPistonNearbyRedstoneTorch(planItem.piston.pos, world);
         for (final BlockPos pos : nearbyRedstoneTorch) {
             if (world.getBlockState(pos).getBlock() instanceof RedstoneTorchBlock) {
-                PlayerInteractionUtils.updateBlockBreakingProgress(pos);
+                InteractionUtils.updateBlockBreakingProgress(pos);
             }
         }
         debug("放置活塞");
         BlockState placeBlockState = Blocks.PISTON.defaultBlockState().setValue(PistonBaseBlock.FACING, planItem.piston.facing);
-        if (PlayerInteractionUtils.canPlace(world, planItem.piston.pos, placeBlockState)) {
+        if (InteractionUtils.canPlace(world, planItem.piston.pos, placeBlockState)) {
             if (planItem.piston.isNeedModify() && !planItem.piston.modify) {
                 setModifyLook(planItem.piston);
                 return;
             }
-            PlayerInteractionUtils.placement(planItem.piston.pos, planItem.piston.facing, Items.PISTON, Items.STICKY_PISTON);
+            InteractionUtils.placement(planItem.piston.pos, planItem.piston.facing, Items.PISTON, Items.STICKY_PISTON);
             BlockState blockState = world.getBlockState(planItem.piston.pos);
             if (blockState.getBlock() instanceof PistonBaseBlock) {
                 world.setBlock(planItem.piston.pos, blockState.setValue(PistonBaseBlock.FACING, planItem.piston.facing), Block.UPDATE_ALL);
@@ -295,7 +295,7 @@ public class Task {
                 } else {
                     item.slimeBlock.level += 1000;
                 }
-                if (PlayerInventoryUtils.getInventoryItemCount(Items.SLIME_BLOCK) < 1) {
+                if (InventoryUtils.getInventoryItemCount(Items.SLIME_BLOCK) < 1) {
                     item.slimeBlock.level += 1000;
                 } else if (BlockUtils.isReplaceable(slimeBlockState)) {
                     item.slimeBlock.level += 1;
@@ -319,7 +319,7 @@ public class Task {
                 final BlockState pistonHeadState = world.getBlockState(pistonHeadPos);
                 final BlockState pistonDefaultState = Blocks.PISTON.defaultBlockState().setValue(PistonBaseBlock.FACING, pistonFacing);
                 final BlockState pistonHeadDefaultState = Blocks.PISTON_HEAD.defaultBlockState().setValue(PistonHeadBlock.FACING, pistonFacing);
-                if (!PlayerInteractionUtils.canPlace(world, pistonPos, pistonDefaultState) || !PlayerInteractionUtils.canPlace(world, pistonHeadPos, pistonHeadDefaultState)) {
+                if (!InteractionUtils.canPlace(world, pistonPos, pistonDefaultState) || !InteractionUtils.canPlace(world, pistonHeadPos, pistonHeadDefaultState)) {
                     if (!(pistonState.is(Blocks.PISTON) && pistonHeadState.is(Blocks.PISTON_HEAD))) {
                         continue;
                     }
@@ -336,14 +336,14 @@ public class Task {
                 if (world.getFluidState(item.redstoneTorch.pos).is(FluidTags.WATER)) {
                     continue;
                 }
-                if (PlayerInteractionUtils.canPlace(world, item.slimeBlock.pos, Blocks.SLIME_BLOCK.defaultBlockState())
+                if (InteractionUtils.canPlace(world, item.slimeBlock.pos, Blocks.SLIME_BLOCK.defaultBlockState())
                         || BlockUtils.sideCoversSmallSquare(item.slimeBlock.pos, item.slimeBlock.facing)) {// 特殊放置方案类型1, 需要检查目标方块是否能能被……充
                     if (item.redstoneTorch.type == 1 && !world.getBlockState(pos).isRedstoneConductor(world, pos)) {
                         continue;
                     }
                     // 如果需要放置底座, 检查粘液块是否充足
                     if (BlockUtils.isReplaceable(world.getBlockState(item.slimeBlock.pos))
-                            && PlayerInventoryUtils.getInventoryItemCount(Items.SLIME_BLOCK) < 1) {
+                            && InventoryUtils.getInventoryItemCount(Items.SLIME_BLOCK) < 1) {
 //                        MessageUtils.setOverlayMessage(FAIL_MISSING_SLIME);
                         continue;
                     }
@@ -457,11 +457,11 @@ public class Task {
             var instant = PlayerUtils.canInstantlyMineBlock(blockState);
             if (!instant) {
                 this.requestPickaxe = true;
-                PlayerInventoryUtils.autoSwitch(blockState);
+                InventoryUtils.autoSwitch(blockState);
             } else {
                 this.requestPickaxe = false;
             }
-            PlayerInteractionUtils.updateBlockBreakingProgress(blockPos, false);
+            InteractionUtils.updateBlockBreakingProgress(blockPos, false);
             if (BlockUtils.isReplaceable(blockState)) {
                 recycledQueue.remove();
             }
@@ -497,7 +497,7 @@ public class Task {
         } else {
             // 切换到工具
             if (!PlayerUtils.canInstantlyMineBlock(world.getBlockState(planItem.piston.pos))) {
-                PlayerInventoryUtils.autoSwitch(world.getBlockState(planItem.piston.pos));
+                InventoryUtils.autoSwitch(world.getBlockState(planItem.piston.pos));
                 this.requestPickaxe = true;
                 this.setWait(TaskState.EXECUTE, 1);
                 return;
@@ -508,14 +508,14 @@ public class Task {
             final BlockPos[] nearbyRedstoneTorch = TaskPlanTools.findPistonNearbyRedstoneTorch(planItem.piston.pos, world);
             for (final BlockPos pos : nearbyRedstoneTorch) {
                 if (world.getBlockState(pos).getBlock() instanceof RedstoneTorchBlock) {
-                    PlayerInteractionUtils.updateBlockBreakingProgress(pos);
+                    InteractionUtils.updateBlockBreakingProgress(pos);
                 }
             }
             if (world.getBlockState(planItem.redstoneTorch.pos).getBlock() instanceof RedstoneTorchBlock) {
-                PlayerInteractionUtils.updateBlockBreakingProgress(planItem.redstoneTorch.pos);
+                InteractionUtils.updateBlockBreakingProgress(planItem.redstoneTorch.pos);
             }
-            PlayerInteractionUtils.updateBlockBreakingProgress(planItem.piston.pos);
-            PlayerInteractionUtils.placement(planItem.piston.pos, planItem.direction.getOpposite(), Items.PISTON, Items.STICKY_PISTON);
+            InteractionUtils.updateBlockBreakingProgress(planItem.piston.pos);
+            InteractionUtils.placement(planItem.piston.pos, planItem.direction.getOpposite(), Items.PISTON, Items.STICKY_PISTON);
             this.addRecycled(planItem.piston.pos);
             if (this.executeModify) {
                 this.resetModifyLook();
@@ -649,7 +649,7 @@ public class Task {
                         }
                     }
                 }
-                PlayerInteractionUtils.updateBlockBreakingProgress(pos1, false);
+                InteractionUtils.updateBlockBreakingProgress(pos1, false);
             }
             BlockState pistonUpState = world.getBlockState(pos2);
             if (pistonUpState.getBlock() instanceof PistonBaseBlock && PlayerUtils.canInstantlyMineBlock(pistonUpState)) {
@@ -662,7 +662,7 @@ public class Task {
                         }
                     }
                 }
-                PlayerInteractionUtils.updateBlockBreakingProgress(pos2, false);
+                InteractionUtils.updateBlockBreakingProgress(pos2, false);
             }
         }
         if (TaskManager.getInstance().isBedrockMinerFeatureEnable()) {

@@ -1,4 +1,4 @@
-package com.github.bunnyi116.bedrockminer.util.network;
+package com.github.bunnyi116.bedrockminer.util;
 
 import net.minecraft.client.multiplayer.prediction.BlockStatePredictionHandler;
 import net.minecraft.client.multiplayer.prediction.PredictiveAction;

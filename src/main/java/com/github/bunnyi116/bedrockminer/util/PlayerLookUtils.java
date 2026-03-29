@@ -1,8 +1,6 @@
-package com.github.bunnyi116.bedrockminer.util.player;
+package com.github.bunnyi116.bedrockminer.util;
 
 import com.github.bunnyi116.bedrockminer.task.Task;
-import com.github.bunnyi116.bedrockminer.util.DirectionUtils;
-import com.github.bunnyi116.bedrockminer.util.network.NetworkUtils;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
