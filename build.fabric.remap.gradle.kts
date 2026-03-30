@@ -6,7 +6,6 @@ plugins {
     id("maven-publish")
     id("net.fabricmc.fabric-loom-remap")
     id("com.replaymod.preprocess")
-    id("me.fallenbreath.yamlang")
 }
 
 val mcVersion = project.property("mcVersion") as Int
@@ -194,12 +193,6 @@ tasks {
         into(rootProject.layout.buildDirectory.file("libs/${project.property("mod_version")}"))
         dependsOn("build")
     }
-}
-
-// https://github.com/Fallen-Breath/yamlang
-yamlang {
-    targetSourceSets.set(setOf(sourceSets.main.get())) // 指定要处理的源集
-    inputDir.set("assets/${modId}/lang") // 指定语言文件目录
 }
 
 java {
