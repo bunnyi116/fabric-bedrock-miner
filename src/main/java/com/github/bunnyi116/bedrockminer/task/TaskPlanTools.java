@@ -14,17 +14,9 @@ import java.util.List;
  * 任务方案查找器
  */
 public class TaskPlanTools {
-
-    public static boolean isApiTask() {
-        return !TaskManager.getInstance().isBedrockMinerFeatureEnable();
-    }
-
     public static List<TaskPlan> findAllPossible(BlockPos targetPos) {
         final var schemes = new ArrayList<TaskPlan>();
         for (Direction direction : ConfigManager.getInstance().getConfig().pistonDirections) {
-            if (isApiTask() && direction.getAxis().isHorizontal()) {
-                continue;
-            }
             final var pistons = findPistonPossible(direction, targetPos);
             for (TaskPlanItem piston : pistons) {
                 final var redstoneTorches = findRedstoneTorchPossible(direction, targetPos, piston);
@@ -42,7 +34,7 @@ public class TaskPlanTools {
         final var list = new ArrayList<TaskPlanItem>();
         final var pistonPos = targetPos.relative(direction);
         for (Direction pistonFacing : ConfigManager.getInstance().getConfig().pistonFacings) {
-            if (isApiTask() && pistonFacing.getAxis().isHorizontal()) {
+            if (pistonFacing.getAxis().isHorizontal()) {
                 continue;
             }
             // 活塞臂在目标方块位置
@@ -67,9 +59,6 @@ public class TaskPlanTools {
         if (direction == Direction.UP) {
             final var redstoneTorchPos = targetPos.relative(direction.getOpposite());
             for (Direction redstoneTorchFacing : ConfigManager.getInstance().getConfig().redstoneTorchFacings) {
-                if (isApiTask() && redstoneTorchFacing.getAxis().isHorizontal()) {
-                    continue;
-                }
                 final var basePos = redstoneTorchPos.relative(redstoneTorchFacing.getOpposite());
                 if (basePos.equals(pistonInfo.pos) || basePos.equals(pistonHeadPos))
                     continue;
@@ -90,9 +79,6 @@ public class TaskPlanTools {
         }
 
         for (Direction redstoneTorchDirection : ConfigManager.getInstance().getConfig().redstoneTorchDirections) {
-            if (isApiTask() && redstoneTorchDirection.getAxis().isHorizontal()) {
-                continue;
-            }
             final var redstoneTorchPos = pistonInfo.pos.relative(redstoneTorchDirection);
             // 红石火把位置与活塞臂伸出的位置重叠
             if (pistonHeadPos.equals(redstoneTorchPos))
@@ -100,9 +86,6 @@ public class TaskPlanTools {
 
             // 常规位置
             for (Direction redstoneTorchFacing : ConfigManager.getInstance().getConfig().redstoneTorchFacings) {
-                if (isApiTask() && redstoneTorchFacing.getAxis().isHorizontal()) {
-                    continue;
-                }
                 final var basePos = redstoneTorchPos.relative(redstoneTorchFacing.getOpposite());
 
                 // 过滤红石火把附在活塞上位置
