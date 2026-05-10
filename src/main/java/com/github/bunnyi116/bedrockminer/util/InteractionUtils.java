@@ -1,5 +1,6 @@
 package com.github.bunnyi116.bedrockminer.util;
 
+import lombok.Getter;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -20,13 +21,16 @@ import java.util.ArrayDeque;
 import java.util.Queue;
 
 import static com.github.bunnyi116.bedrockminer.BedrockMiner.*;
+import static net.minecraft.network.protocol.game.ServerboundPlayerActionPacket.*;
 
 
+@SuppressWarnings("UnusedReturnValue")
 @Environment(EnvType.CLIENT)
 public class InteractionUtils {
     public static final float BREAKING_PROGRESS_MAX = 1.0F;
     private static BlockPos currentBreakingPos = new BlockPos(-1, -1, -1);
     private static float currentBreakingProgress;
+    @Getter
     private static boolean breakingBlock;
     private static int breakingTicks;
     private static int breakingTickMax;
@@ -45,7 +49,7 @@ public class InteractionUtils {
         if (player.blockActionRestricted(world, pos, gameMode)) {
             return false;
         }
-        if (!PlayerUtils.canInteractWithBlockAt(pos, 0F)) {
+        if (!PlayerUtils.canInteractWithBlockAt(pos, 1F)) {
             return false;
         }
         BlockState blockState = world.getBlockState(pos);
@@ -55,7 +59,7 @@ public class InteractionUtils {
                 if (!blockState.isAir() && localPrediction) {
                     interactionManager.destroyBlock(pos);
                 }
-                return new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, direction, sequence);
+                return new ServerboundPlayerActionPacket(Action.START_DESTROY_BLOCK, pos, direction, sequence);
             });
             setBreakingBlock(false);
             return true;
@@ -71,7 +75,7 @@ public class InteractionUtils {
                     if (!blockState.isAir() && localPrediction) {
                         interactionManager.destroyBlock(pos);
                     }
-                    return new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, pos, direction, sequence);
+                    return new ServerboundPlayerActionPacket(Action.STOP_DESTROY_BLOCK, pos, direction, sequence);
                 });
                 currentBreakingProgress = 0.0F;
                 world.destroyBlockProgress(player.getId(), currentBreakingPos, -1);
@@ -83,7 +87,7 @@ public class InteractionUtils {
             ++breakingTickMax;
         } else {
             if (breakingBlock && !pos.equals(currentBreakingPos)) {
-                NetworkUtils.sendPacket(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, currentBreakingPos, direction));
+                NetworkUtils.sendPacket(new ServerboundPlayerActionPacket(Action.ABORT_DESTROY_BLOCK, currentBreakingPos, direction));
                 setBreakingBlock(false);
             }
             currentBreakingProgress += PlayerUtils.calcBlockBreakingDelta(blockState);
@@ -93,7 +97,7 @@ public class InteractionUtils {
                     if (!blockState.isAir() && localPrediction) {
                         interactionManager.destroyBlock(pos);
                     }
-                    return new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, direction, sequence);
+                    return new ServerboundPlayerActionPacket(Action.START_DESTROY_BLOCK, pos, direction, sequence);
                 });
                 setBreakingBlock(false);
                 return true;
@@ -106,7 +110,7 @@ public class InteractionUtils {
                     currentBreakingPos = pos;
                     currentBreakingProgress = 0.0F;
                     world.destroyBlockProgress(player.getId(), currentBreakingPos, getBlockBreakingProgress());
-                    return new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, direction, sequence);
+                    return new ServerboundPlayerActionPacket(Action.START_DESTROY_BLOCK, pos, direction, sequence);
                 });
             }
         }
@@ -138,10 +142,6 @@ public class InteractionUtils {
         if (breakingBlock && breakingTicks++ > breakingTickMax) {
             resetBreaking();
         }
-    }
-
-    public static boolean isBreakingBlock() {
-        return breakingBlock;
     }
 
     public static void setBreakingBlock(boolean breakingBlock) {
