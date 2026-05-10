@@ -46,6 +46,9 @@ configurations.all {
 }
 
 dependencies {
+    compileOnly("org.projectlombok:lombok:${properties["lombok_version"]}")
+    annotationProcessor("org.projectlombok:lombok:${properties["lombok_version"]}")
+
     minecraft("com.mojang:minecraft:$minecraftVersion") // Minecraft 客户端依赖
     implementation("net.fabricmc:fabric-loader:$loaderVersion") // Fabric 加载器依赖
     implementation("net.fabricmc.fabric-api:fabric-api:$fabricApiVersion") // Fabric API 依赖

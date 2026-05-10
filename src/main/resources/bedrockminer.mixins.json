@@ -4,10 +4,12 @@
   "package": "com.github.bunnyi116.bedrockminer.mixin",
   "compatibilityLevel": "${compatibility_level}",
   "mixins": [
-    "MixinServerboundMovePlayerPacket"
+    "ServerboundMovePlayerPacketMixin"
   ],
   "client": [
-    "MixinMultiPlayerGameMode"
+    "ClientLevelMixin",
+    "LocalPlayerMixin",
+    "MultiPlayerGameModeMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -47,6 +47,9 @@ configurations.all {
 }
 
 dependencies {
+    compileOnly("org.projectlombok:lombok:${properties["lombok_version"]}")
+    annotationProcessor("org.projectlombok:lombok:${properties["lombok_version"]}")
+
     minecraft("com.mojang:minecraft:$minecraftVersion") // Minecraft 客户端依赖
     mappings(loom.officialMojangMappings())
     modImplementation("net.fabricmc:fabric-loader:$loaderVersion") // Fabric 加载器依赖

@@ -1,39 +1,49 @@
 package com.github.bunnyi116.bedrockminer.util;
 
-import net.minecraft.client.multiplayer.prediction.BlockStatePredictionHandler;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.prediction.PredictiveAction;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ServerGamePacketListener;
-import org.jetbrains.annotations.Nullable;
-
-import static com.github.bunnyi116.bedrockminer.BedrockMiner.networkHandler;
-import static com.github.bunnyi116.bedrockminer.BedrockMiner.world;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 
 public class NetworkUtils {
+    private static final Minecraft mc = Minecraft.getInstance();
 
     public static void sendPacket(Packet<?> packet) {
-        networkHandler.send(packet);
-    }
-
-    public static void sendPacket(Packet<?> packet, @Nullable Runnable beforeSending, @Nullable Runnable afterSending) {
-        if (beforeSending != null) beforeSending.run();
-        NetworkUtils.sendPacket(packet);
-        if (afterSending != null) afterSending.run();
-    }
-
-    public static void sendSequencedPacket(PredictiveAction packetCreator, @Nullable Runnable beforeSending, @Nullable Runnable afterSending) {
-        try (BlockStatePredictionHandler pendingUpdateManager = world.getBlockStatePredictionHandler()) {
-            int i = pendingUpdateManager.currentSequence();
-            Packet<ServerGamePacketListener> packet = packetCreator.predict(i);
-            NetworkUtils.sendPacket(packet, beforeSending, afterSending);
+        ClientPacketListener connection = mc.getConnection();
+        if (connection != null) {
+            connection.send(packet);
         }
     }
 
-    public static void sendSequencedPacket(PredictiveAction packetCreator) {
-        try (BlockStatePredictionHandler pendingUpdateManager = world.getBlockStatePredictionHandler()) {
-            int i = pendingUpdateManager.currentSequence();
-            Packet<ServerGamePacketListener> packet = packetCreator.predict(i);
+    public static void sendPacket(PredictiveAction packetCreator) {
+        if (mc.level instanceof SequenceExtension sequenceExtension) {
+            int currentSequence = sequenceExtension.fabric_bedrock_miner$getSequence();
+            Packet<ServerGamePacketListener> packet = packetCreator.predict(currentSequence);
             NetworkUtils.sendPacket(packet);
+        }
+    }
+
+    public static void sendLookPacket(LocalPlayer playerEntity, float lookYaw, float lookPitch) {
+        playerEntity.connection.send(new ServerboundMovePlayerPacket.Rot(
+                lookYaw,
+                lookPitch,
+                playerEntity.onGround()
+                //#if MC > 12101
+                , playerEntity.horizontalCollision
+                //#endif
+        ));
+    }
+
+    public static void sendLookPacket(LocalPlayer playerEntity, PlayerLook playerLook) {
+        sendLookPacket(playerEntity, playerLook.getYaw(), playerLook.getPitch());
+    }
+
+    public interface SequenceExtension {
+        default int fabric_bedrock_miner$getSequence() {
+            return 0;
         }
     }
 }

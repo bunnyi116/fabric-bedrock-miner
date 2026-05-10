@@ -51,7 +51,7 @@ public class InteractionUtils {
         BlockState blockState = world.getBlockState(pos);
         if (gameMode.isCreative()) {    // 创造模式下
             setBreakingBlock(true);
-            NetworkUtils.sendSequencedPacket((sequence) -> { // 只需要发送START包，因为它是瞬间破坏的
+            NetworkUtils.sendPacket((sequence) -> { // 只需要发送START包，因为它是瞬间破坏的
                 if (!blockState.isAir() && localPrediction) {
                     interactionManager.destroyBlock(pos);
                 }
@@ -67,7 +67,7 @@ public class InteractionUtils {
             }
             currentBreakingProgress += PlayerUtils.calcBlockBreakingDelta(blockState);
             if (currentBreakingProgress >= BREAKING_PROGRESS_MAX) {
-                NetworkUtils.sendSequencedPacket((sequence) -> {
+                NetworkUtils.sendPacket((sequence) -> {
                     if (!blockState.isAir() && localPrediction) {
                         interactionManager.destroyBlock(pos);
                     }
@@ -89,7 +89,7 @@ public class InteractionUtils {
             currentBreakingProgress += PlayerUtils.calcBlockBreakingDelta(blockState);
             if (currentBreakingProgress >= BREAKING_PROGRESS_MAX) {
                 setBreakingBlock(true);
-                NetworkUtils.sendSequencedPacket((sequence) -> {
+                NetworkUtils.sendPacket((sequence) -> {
                     if (!blockState.isAir() && localPrediction) {
                         interactionManager.destroyBlock(pos);
                     }
@@ -98,7 +98,7 @@ public class InteractionUtils {
                 setBreakingBlock(false);
                 return true;
             } else {
-                NetworkUtils.sendSequencedPacket((sequence) -> {
+                NetworkUtils.sendPacket((sequence) -> {
                     if (!blockState.isAir() && currentBreakingProgress == 0.0F) {
                         blockState.attack(world, pos, player);
                     }
