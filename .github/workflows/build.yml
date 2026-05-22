@@ -44,12 +44,13 @@ jobs:
           java-version: 25
 
       - name: Cache Gradle dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: |
-            ~/.gradle/caches/fabric-loom 
-            ~/.gradle/wrapper            
+            ~/.gradle/caches/fabric-loom
+            ~/.gradle/wrapper
             ./.gradle/loom-cache
+            ./libs
           key: ${{ runner.os }}-gradle-common
           restore-keys: |
             ${{ runner.os }}-gradle-common
