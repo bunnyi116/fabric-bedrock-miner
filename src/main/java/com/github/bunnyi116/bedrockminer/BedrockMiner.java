@@ -23,13 +23,13 @@ public class BedrockMiner implements ModInitializer  {
 
     // 常用游戏变量(通过 mixin 从 MultiPlayerGameMode 更新)
     public static Minecraft client;
-    public static ClientLevel world;
+    public static ClientLevel level;
     public static LocalPlayer player;
     public static Inventory playerInventory;
-    public static @Nullable HitResult crosshairTarget;
-    public static ClientPacketListener networkHandler;
-    public static MultiPlayerGameMode interactionManager;
-    public static GameType gameMode;
+    public static @Nullable HitResult hitResult;
+    public static ClientPacketListener connection;
+    public static MultiPlayerGameMode gameMode;
+    public static GameType gameType;
 
     @Override
     public void onInitialize() {
@@ -41,24 +41,24 @@ public class BedrockMiner implements ModInitializer  {
     public static void initGameVariable() {
         var mc = Minecraft.getInstance();
         BedrockMiner.client = mc;
-        BedrockMiner.world = mc.level;
+        BedrockMiner.level = mc.level;
         BedrockMiner.player = mc.player;
         if (mc.player != null) {
             BedrockMiner.playerInventory = mc.player.getInventory();
         }
-        BedrockMiner.crosshairTarget = mc.hitResult;
-        BedrockMiner.networkHandler = mc.getConnection();
-        BedrockMiner.interactionManager = mc.gameMode;
+        BedrockMiner.hitResult = mc.hitResult;
+        BedrockMiner.connection = mc.getConnection();
+        BedrockMiner.gameMode = mc.gameMode;
         if (mc.gameMode!= null) {
-            BedrockMiner.gameMode = mc.gameMode.getPlayerMode();
+            BedrockMiner.gameType = mc.gameMode.getPlayerMode();
         }
     }
 
     public static boolean gameVariableIsValid() {
         return client != null
-                && world != null
+                && level != null
                 && player != null
-                && networkHandler != null
-                && interactionManager != null;
+                && connection != null
+                && gameMode != null;
     }
 }

@@ -1,12 +1,11 @@
 package com.github.bunnyi116.bedrockminer.task;
 
+import com.github.bunnyi116.bedrockminer.BedrockMiner;
 import com.github.bunnyi116.bedrockminer.util.BlockUtils;
 import com.github.bunnyi116.bedrockminer.util.PlayerUtils;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-
-import static com.github.bunnyi116.bedrockminer.BedrockMiner.world;
 
 
 public class TaskPlan {
@@ -37,10 +36,10 @@ public class TaskPlan {
         final var b2 = PlayerUtils.canInteractWithBlockAt(redstoneTorch.pos, 0F);
         if (b1 && b2) {
             final var b3 = PlayerUtils.canInteractWithBlockAt(slimeBlock.pos, 0F);
-            if (b3 && BlockUtils.isReplaceable(world.getBlockState(slimeBlock.pos))) {
+            if (b3 && BlockUtils.isReplaceable(BedrockMiner.level.getBlockState(slimeBlock.pos))) {
                 return true;
             }
-            return  Block.canSupportCenter(world, slimeBlock.pos, slimeBlock.facing);
+            return  Block.canSupportCenter(BedrockMiner.level, slimeBlock.pos, slimeBlock.facing);
         }
         return false;
     }

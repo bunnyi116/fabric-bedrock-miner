@@ -7,6 +7,7 @@ import com.github.bunnyi116.bedrockminer.util.BlockUtils;
 import com.github.bunnyi116.bedrockminer.util.InventoryUtils;
 import com.github.bunnyi116.bedrockminer.util.PlayerLookUtils;
 import com.github.bunnyi116.bedrockminer.util.PlayerUtils;
+import lombok.Getter;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -29,6 +30,7 @@ public class TaskManager {
     private final ArrayList<Task> activeBlockTasks = new ArrayList<>();
     private final ArrayList<Task> cacheBlockTasks = new ArrayList<>();
     private final List<TaskRegion> pendingRegionTasks = new ArrayList<>();
+    @Getter
     private boolean running;
     private boolean processing;
     private boolean bedrockMinerFeatureEnable = true;
@@ -97,7 +99,7 @@ public class TaskManager {
             while (iterator.hasNext()) {
                 Task currentTask = iterator.next();
                 if (currentTask == null) continue;
-                if (currentTask.world != world || !currentTask.canInteractWithBlockAt()) {
+                if (currentTask.world != level || !currentTask.canInteractWithBlockAt()) {
                     MessageUtils.setOverlayMessage(Component.literal("远离当前正在处理的方块位置, 冷却时间剩余: " + (resetCountMax - currentTask.active)));
                     continue;
                 }
@@ -163,11 +165,11 @@ public class TaskManager {
             while (iterator.hasNext()) {
                 Task task = iterator.next();
                 if (task == null) continue;
-                BlockState blockState = world.getBlockState(task.pos);
+                BlockState blockState = level.getBlockState(task.pos);
                 if (blockState.isAir() || BlockUtils.isReplaceable(blockState)) {
                     continue;
                 }
-                if (task.world != world) {
+                if (task.world != level) {
                     continue;
                 }
                 if (!task.canInteractWithBlockAt()) {
@@ -193,7 +195,7 @@ public class TaskManager {
         while (iterator.hasNext() && this.activeBlockTasks.size() < Config.getInstance().limitMax) {
             Task task = iterator.next();
             if (task == null) continue;
-            BlockState blockState = world.getBlockState(task.pos);
+            BlockState blockState = level.getBlockState(task.pos);
             Block block = blockState.getBlock();
             if (blockState.isAir() || BlockUtils.isReplaceable(blockState)) {
                 continue;
@@ -207,7 +209,7 @@ public class TaskManager {
             if (!task.canInteractWithBlockAt()) {
                 continue;
             }
-            if (task.world != world) {
+            if (task.world != level) {
                 iterator.remove();
             }
             if (!this.activeBlockTasks.contains(task)) {
@@ -224,7 +226,7 @@ public class TaskManager {
             final CombinedIterator<TaskRegion> iterator2 = new CombinedIterator<>(Config.getInstance().ranges, pendingRegionTasks);
             while (iterator2.hasNext()) {
                 TaskRegion range = iterator2.next();
-                if (!range.isForWorld(world)) continue;
+                if (!range.isForWorld(level)) continue;
                 BoundingBox rangeBox = BoundingBox.fromCorners(range.pos1, range.pos2);
                 BoundingBox playerBox = new BoundingBox(player.blockPosition());
                 BoundingBox playerExpandBox = playerBox.inflatedBy(radius);
@@ -237,7 +239,7 @@ public class TaskManager {
                             if (!PlayerUtils.canInteractWithBlockAt(blockPos, 1.0F)) {
                                 continue;
                             }
-                            final BlockState blockState = world.getBlockState(blockPos);
+                            final BlockState blockState = level.getBlockState(blockPos);
                             final Block block = blockState.getBlock();
                             if (blockState.isAir() || BlockUtils.isReplaceable(blockState)) {
                                 continue;
@@ -248,14 +250,14 @@ public class TaskManager {
                             if (Config.getInstance().isFloorsBlacklist(blockPos)) {
                                 continue;
                             }
-                            final Task task = new Task(world, block, blockPos);
+                            final Task task = new Task(level, block, blockPos);
                             if (!task.canInteractWithBlockAt()) {
                                 continue;
                             }
                             if (PlayerLookUtils.isModify() && PlayerLookUtils.getTask() != task) {
                                 continue;
                             }
-                            if (task.world != world) {
+                            if (task.world != level) {
                                 iterator2.remove();
                                 continue;
                             }
@@ -274,10 +276,10 @@ public class TaskManager {
 
     public boolean isAllowExecutionEnvironment(boolean setOverlayMessage) {
         Component msg = null;
-        if (gameMode.isCreative()) {
+        if (gameType.isCreative()) {
             msg = FAIL_MISSING_SURVIVAL;
         }
-        if (interactionManager != null && !interactionManager.getPlayerMode().isSurvival()) {
+        if (gameMode != null && !gameMode.getPlayerMode().isSurvival()) {
             msg = FAIL_MISSING_SURVIVAL;
         }
         if (InventoryUtils.getInventoryItemCount(Items.PISTON) < 2) {
@@ -305,7 +307,7 @@ public class TaskManager {
         if (!isAllowExecutionEnvironment(true)) {
             return;
         }
-        if (!gameMode.isSurvival()) {
+        if (!gameType.isSurvival()) {
             return;
         }
         if (!Config.getInstance().isAllowBlock(block)) {
@@ -388,7 +390,7 @@ public class TaskManager {
             this.removeAll();
             this.setRunning(false);
         } else {
-            if (gameMode.isCreative()) { // 仅生存模式开启
+            if (gameType.isCreative()) { // 仅生存模式开启
                 MessageUtils.addMessage(FAIL_MISSING_SURVIVAL);
                 return;
             }
@@ -412,10 +414,6 @@ public class TaskManager {
             }
         }
         this.running = running;
-    }
-
-    public boolean isRunning() {
-        return running;
     }
 
     public boolean isProcessing() {

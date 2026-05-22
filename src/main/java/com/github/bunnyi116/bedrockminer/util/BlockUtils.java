@@ -8,7 +8,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 
-import static com.github.bunnyi116.bedrockminer.BedrockMiner.world;
+import static com.github.bunnyi116.bedrockminer.BedrockMiner.level;
 
 public class BlockUtils {
     public static boolean isReplaceable(BlockState blockState) {
@@ -40,6 +40,6 @@ public class BlockUtils {
     }
 
     public static boolean sideCoversSmallSquare(BlockPos blockPos, Direction direction) {
-        return Block.canSupportCenter(world, blockPos, direction);
+        return Block.canSupportCenter(level, blockPos, direction);
     }
 }

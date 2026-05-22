@@ -118,7 +118,7 @@ public class InventoryUtils {
         if (Inventory.isHotbarSlot(slot)) {
             InventoryUtils.setSelectedSlot(slot);
         } else {
-            pickFromInventory(player, interactionManager, slot);
+            pickFromInventory(player, gameMode, slot);
         }
         NetworkUtils.sendPacket(new ServerboundSetCarriedItemPacket(InventoryUtils.getSelectedSlot())); // 发送更新手持物品的数据包
     }

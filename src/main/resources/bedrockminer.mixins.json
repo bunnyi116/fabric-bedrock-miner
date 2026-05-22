@@ -9,6 +9,8 @@
   "client": [
     "ClientLevelMixin",
     "LocalPlayerMixin",
+    "MinecraftAccessor",
+    "MultiPlayerGameModeAccessor",
     "MultiPlayerGameModeMixin"
   ],
   "injectors": {

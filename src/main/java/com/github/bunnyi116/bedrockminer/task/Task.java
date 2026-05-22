@@ -73,7 +73,7 @@ public class Task {
     }
 
     public boolean canInteractWithBlockAt() {
-        if (this.world == BedrockMiner.world) {
+        if (this.world == BedrockMiner.level) {
             if (PlayerUtils.canInteractWithBlockAt(pos, 1F)) {
                 if (planItem != null) {
                     return planItem.canInteractWithBlockAt();

@@ -1,5 +1,8 @@
 package com.github.bunnyi116.bedrockminer.util;
 
+import com.github.bunnyi116.bedrockminer.mixin.MultiPlayerGameModeAccessor;
+import com.github.bunnyi116.bedrockminer.mixin_extension.BlockBreakResult;
+import com.github.bunnyi116.bedrockminer.mixin_extension.MultiPlayerGameModeExtension;
 import lombok.Getter;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -27,132 +30,122 @@ import static net.minecraft.network.protocol.game.ServerboundPlayerActionPacket.
 @SuppressWarnings("UnusedReturnValue")
 @Environment(EnvType.CLIENT)
 public class InteractionUtils {
-    public static final float BREAKING_PROGRESS_MAX = 1.0F;
-    private static BlockPos currentBreakingPos = new BlockPos(-1, -1, -1);
-    private static float currentBreakingProgress;
-    @Getter
-    private static boolean breakingBlock;
-    private static int breakingTicks;
-    private static int breakingTickMax;
-
     private static final Queue<BlockPos> blockQueue = new ArrayDeque<>();
 
-    private static int getBlockBreakingProgress() {
-        float breakingProgress = currentBreakingProgress >= BREAKING_PROGRESS_MAX ? 1.0F : currentBreakingProgress;
-        return breakingProgress > 0.0F ? (int) (breakingProgress * 10.0F) : -1;
+    public static boolean isCurrentBreaking() {
+        MultiPlayerGameModeAccessor accessor = (MultiPlayerGameModeAccessor) gameMode;
+        return accessor.isDestroying();
     }
 
-    public static boolean updateBlockBreakingProgress(BlockPos pos, Direction direction, boolean localPrediction) {
-        if (!world.getWorldBorder().isWithinBounds(pos)) {
-            return false;
+    private static int getBlockBreakingProgress() {
+        MultiPlayerGameModeAccessor accessor = (MultiPlayerGameModeAccessor) gameMode;
+        return accessor.getDestroyProgress() > 0.0F ? (int) (accessor.getDestroyProgress() * 10.0F) : -1;
+    }
+
+    public static BlockBreakResult updateBlockBreakingProgress(BlockPos pos, Direction direction, boolean localPrediction) {
+        if (!level.getWorldBorder().isWithinBounds(pos)) {
+            return BlockBreakResult.FAILED;
         }
-        if (player.blockActionRestricted(world, pos, gameMode)) {
-            return false;
+        if (player.blockActionRestricted(level, pos, gameType)) {
+            return BlockBreakResult.FAILED;
         }
         if (!PlayerUtils.canInteractWithBlockAt(pos, 1F)) {
-            return false;
+            return BlockBreakResult.FAILED;
         }
-        BlockState blockState = world.getBlockState(pos);
-        if (gameMode.isCreative()) {    // 创造模式下
-            setBreakingBlock(true);
-            NetworkUtils.sendPacket((sequence) -> { // 只需要发送START包，因为它是瞬间破坏的
+
+        BlockState blockState = level.getBlockState(pos);
+        // 创造直接破坏
+        if (player.getAbilities().instabuild) {
+            NetworkUtils.sendPacket((sequence) -> {
                 if (!blockState.isAir() && localPrediction) {
-                    interactionManager.destroyBlock(pos);
+                    gameMode.destroyBlock(pos);
                 }
                 return new ServerboundPlayerActionPacket(Action.START_DESTROY_BLOCK, pos, direction, sequence);
             });
-            setBreakingBlock(false);
-            return true;
+            return BlockBreakResult.COMPLETED;
         }
-        if (breakingBlock && pos.equals(currentBreakingPos)) {
+        MultiPlayerGameModeExtension extension = (MultiPlayerGameModeExtension) gameMode;
+        extension.bedrockminer$ensureHasSentCarriedItem();
+        MultiPlayerGameModeAccessor accessor = (MultiPlayerGameModeAccessor) gameMode;
+        if (accessor.isDestroying() && pos.equals(accessor.getDestroyBlockPos())) {
             if (blockState.isAir()) {
-                setBreakingBlock(false);
-                return true;
+                accessor.setDestroying(false);
+                return BlockBreakResult.COMPLETED;
             }
-            currentBreakingProgress += PlayerUtils.calcBlockBreakingDelta(blockState);
-            if (currentBreakingProgress >= BREAKING_PROGRESS_MAX) {
+//            float progress = accessor.getDestroyProgress() + blockState.getDestroyProgress(player, level, pos);
+            float progress = accessor.getDestroyProgress() + PlayerUtils.calcBlockBreakingDelta(blockState);
+            accessor.setDestroyProgress(progress);
+            if (progress >= 1.0F) {
                 NetworkUtils.sendPacket((sequence) -> {
                     if (!blockState.isAir() && localPrediction) {
-                        interactionManager.destroyBlock(pos);
+                        gameMode.destroyBlock(pos);
                     }
                     return new ServerboundPlayerActionPacket(Action.STOP_DESTROY_BLOCK, pos, direction, sequence);
                 });
-                currentBreakingProgress = 0.0F;
-                world.destroyBlockProgress(player.getId(), currentBreakingPos, -1);
-                setBreakingBlock(false);
-                return true;
+                accessor.setDestroyProgress(-1);
+                level.destroyBlockProgress(player.getId(), pos, -1);
+                return BlockBreakResult.COMPLETED;
             } else {
-                world.destroyBlockProgress(player.getId(), currentBreakingPos, getBlockBreakingProgress());
+                level.destroyBlockProgress(player.getId(), pos, getBlockBreakingProgress());
             }
-            ++breakingTickMax;
         } else {
-            if (breakingBlock && !pos.equals(currentBreakingPos)) {
-                NetworkUtils.sendPacket(new ServerboundPlayerActionPacket(Action.ABORT_DESTROY_BLOCK, currentBreakingPos, direction));
-                setBreakingBlock(false);
+            if (accessor.isDestroying() && !pos.equals(accessor.getDestroyBlockPos())) {
+                NetworkUtils.sendPacket(new ServerboundPlayerActionPacket(Action.ABORT_DESTROY_BLOCK, accessor.getDestroyBlockPos(), direction));
+                accessor.setDestroying(false);
             }
-            currentBreakingProgress += PlayerUtils.calcBlockBreakingDelta(blockState);
-            if (currentBreakingProgress >= BREAKING_PROGRESS_MAX) {
-                setBreakingBlock(true);
+            float progress = PlayerUtils.calcBlockBreakingDelta(blockState);
+            if (progress >= 1.0F) {
                 NetworkUtils.sendPacket((sequence) -> {
                     if (!blockState.isAir() && localPrediction) {
-                        interactionManager.destroyBlock(pos);
+                        gameMode.destroyBlock(pos);
                     }
                     return new ServerboundPlayerActionPacket(Action.START_DESTROY_BLOCK, pos, direction, sequence);
                 });
-                setBreakingBlock(false);
-                return true;
-            } else {
-                NetworkUtils.sendPacket((sequence) -> {
-                    if (!blockState.isAir() && currentBreakingProgress == 0.0F) {
-                        blockState.attack(world, pos, player);
-                    }
-                    setBreakingBlock(true);
-                    currentBreakingPos = pos;
-                    currentBreakingProgress = 0.0F;
-                    world.destroyBlockProgress(player.getId(), currentBreakingPos, getBlockBreakingProgress());
-                    return new ServerboundPlayerActionPacket(Action.START_DESTROY_BLOCK, pos, direction, sequence);
-                });
+                return BlockBreakResult.COMPLETED;
             }
+            // 仅对70%做瞬间破坏, 双位持续破坏比较麻烦，暂时不使用
+            if (progress >= 0.7F) {
+                NetworkUtils.sendPacket((sequence) -> new ServerboundPlayerActionPacket(Action.START_DESTROY_BLOCK, pos, direction, sequence));
+                NetworkUtils.sendPacket((sequence) -> {
+                    if (!blockState.isAir() && localPrediction) {
+                        gameMode.destroyBlock(pos);
+                    }
+                    return new ServerboundPlayerActionPacket(Action.STOP_DESTROY_BLOCK, pos, direction, sequence);
+                });
+                return BlockBreakResult.COMPLETED;
+            }
+            NetworkUtils.sendPacket((sequence) -> {
+                if (!blockState.isAir() && accessor.getDestroyProgress() == 0.0F) {
+                    blockState.attack(level, pos, player);
+                }
+                accessor.setDestroying(true);
+                accessor.setDestroyProgress(0);
+                accessor.setDestroyBlockPos(pos);
+                level.destroyBlockProgress(player.getId(), pos, getBlockBreakingProgress());
+                return new ServerboundPlayerActionPacket(Action.START_DESTROY_BLOCK, pos, direction, sequence);
+            });
+            return BlockBreakResult.IN_PROGRESS;
         }
-        return false;
+        return BlockBreakResult.FAILED;
     }
 
-    public static void updateBlockBreakingProgress(BlockPos pos, Direction direction) {
-        updateBlockBreakingProgress(pos, direction, true);
+    public static BlockBreakResult updateBlockBreakingProgress(BlockPos pos, Direction direction) {
+        return updateBlockBreakingProgress(pos, direction, true);
     }
 
-    public static void updateBlockBreakingProgress(BlockPos pos, boolean localPrediction) {
-        updateBlockBreakingProgress(pos, PlayerUtils.getClosestFace(pos), localPrediction);
+    public static BlockBreakResult updateBlockBreakingProgress(BlockPos pos, boolean localPrediction) {
+        return updateBlockBreakingProgress(pos, PlayerUtils.getClosestFace(pos), localPrediction);
     }
 
-    public static void updateBlockBreakingProgress(BlockPos pos) {
-        updateBlockBreakingProgress(pos, true);
-    }
-
-    public static void resetBreaking() {
-        breakingTicks = 0;
-        breakingTickMax = 20;
-        setBreakingBlock(false);
-    }
-
-    public static void autoResetBreaking() {
-        if (!breakingBlock && breakingTicks > 0) {  // 如果未在破坏, 但是破坏TICK已有累计, 先进行初始化
-            resetBreaking();
-        }
-        if (breakingBlock && breakingTicks++ > breakingTickMax) {
-            resetBreaking();
-        }
-    }
-
-    public static void setBreakingBlock(boolean breakingBlock) {
-        InteractionUtils.breakingBlock = breakingBlock;
+    public static BlockBreakResult updateBlockBreakingProgress(BlockPos pos) {
+        return updateBlockBreakingProgress(pos, true);
     }
 
     public static void placement(BlockPos blockPos, Direction facing, @Nullable Item... items) {
         if (blockPos == null || facing == null)
             return;
 
-        if (!BlockUtils.isReplaceable(world.getBlockState(blockPos)))
+        if (!BlockUtils.isReplaceable(level.getBlockState(blockPos)))
             return;
 
         if (!PlayerUtils.canInteractWithBlockAt(blockPos, 0F)) {
@@ -181,7 +174,7 @@ public class InteractionUtils {
         var hitPos = blockPos.relative(facing.getOpposite());
         Vec3 hitVec3d = Vec3.atCenterOf(hitPos).relative(facing, 0.5F);   // 放置面中心坐标
         var hitResult = new BlockHitResult(hitVec3d, facing, blockPos, false);
-        interactionManager.useItemOn(player, InteractionHand.MAIN_HAND, hitResult);
+        gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hitResult);
     }
 
     public static void placement(BlockPos blockPos, Direction facing) {

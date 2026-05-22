@@ -116,7 +116,7 @@ public class PlayerUtils {
     }
 
     public static boolean canInstantlyMineBlock(BlockState state, ItemStack itemStack) {
-        return PlayerUtils.calcBlockBreakingDelta(state, itemStack) >= InteractionUtils.BREAKING_PROGRESS_MAX;
+        return PlayerUtils.calcBlockBreakingDelta(state, itemStack) >= 0.7F;
     }
 
     public static boolean canInstantlyMineBlock(BlockState state) {

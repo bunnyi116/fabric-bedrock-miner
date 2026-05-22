@@ -144,7 +144,7 @@ public class TaskCommand extends CommandBase {
                 }
             }
             if (b) {
-                TaskRegion range = new TaskRegion(name, BedrockMiner.world, blockPos1, blockPos2);
+                TaskRegion range = new TaskRegion(name, BedrockMiner.level, blockPos1, blockPos2);
                 ConfigManager.getInstance().getConfig().ranges.add(range);
                 ConfigManager.getInstance().getConfig().save();
                 MessageUtils.addMessage(Component.literal("已成功添加到配置文件: " + name));
@@ -157,7 +157,7 @@ public class TaskCommand extends CommandBase {
                 }
             }
             if (b) {
-                TaskRegion range = new TaskRegion(name, BedrockMiner.world, blockPos1, blockPos2);
+                TaskRegion range = new TaskRegion(name, BedrockMiner.level, blockPos1, blockPos2);
                 TaskManager.getInstance().getPendingRegionTasks().add(range);
                 MessageUtils.addMessage(Component.literal("已成功添加: " + name));
             }
