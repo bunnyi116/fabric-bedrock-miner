@@ -91,8 +91,8 @@ public class PlayerUtils {
             return Minecraft.getInstance().player.blockInteractionRange();
         }
         //#else
-        //$$ if (interactionManager != null) {
-        //$$    return interactionManager.getPickRange();
+        //$$ if (gameMode != null) {
+        //$$    return gameMode.getPickRange();
         //$$ }
         //#endif
         return 4.5F;

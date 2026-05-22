@@ -66,15 +66,15 @@ public class InventoryUtils {
         }
     }
 
-    public static void swapSlots(LocalPlayer player, MultiPlayerGameMode interactionManager, int sourceSlot, int hotbarIndex) {
-        if (player == null || interactionManager == null) {
+    public static void swapSlots(LocalPlayer player, MultiPlayerGameMode gameMode, int sourceSlot, int hotbarIndex) {
+        if (player == null || gameMode == null) {
             return;
         }
         if (player.containerMenu == player.inventoryMenu) {
             if (sourceSlot == hotbarIndex) {   // 同一个槽位
                 return;
             }
-            interactionManager.handleContainerInput(
+            gameMode.handleContainerInput(
                     player.containerMenu.containerId,   // 当前容器ID
                     sourceSlot,                          // 源槽编号
                     hotbarIndex,                         // 目标快捷栏编号（0–8）
@@ -84,8 +84,8 @@ public class InventoryUtils {
         }
     }
 
-    public static void pickFromInventory(LocalPlayer player, MultiPlayerGameMode interactionManager, int slot) {
-        if (player == null || interactionManager == null) {
+    public static void pickFromInventory(LocalPlayer player, MultiPlayerGameMode gameMode, int slot) {
+        if (player == null || gameMode == null) {
             return;
         }
 
@@ -104,12 +104,12 @@ public class InventoryUtils {
         for (int i = 0; i < Inventory.SELECTION_SIZE; i++) {
             final ItemStack itemStack = playerInventory.getItem(i);
             if (itemStack.isEmpty()) {
-                swapSlots(player, interactionManager, slot, i);
+                swapSlots(player, gameMode, slot, i);
                 InventoryUtils.setSelectedSlot(i);
                 return;
             }
         }
-        swapSlots(player, interactionManager, slot, 6);
+        swapSlots(player, gameMode, slot, 6);
         InventoryUtils.setSelectedSlot(6);
     }
 
