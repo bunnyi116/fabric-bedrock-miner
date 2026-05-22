@@ -8,6 +8,7 @@ import com.github.bunnyi116.bedrockminer.util.InventoryUtils;
 import com.github.bunnyi116.bedrockminer.util.PlayerLookUtils;
 import com.github.bunnyi116.bedrockminer.util.PlayerUtils;
 import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -27,12 +28,18 @@ import static com.github.bunnyi116.bedrockminer.I18n.*;
 public class TaskManager {
     private static volatile @Nullable TaskManager INSTANCE;
     private final ArrayList<Task> pendingBlockTasks = new ArrayList<>();
+    @Getter
     private final ArrayList<Task> activeBlockTasks = new ArrayList<>();
+    @Getter
     private final ArrayList<Task> cacheBlockTasks = new ArrayList<>();
+    @Getter
     private final List<TaskRegion> pendingRegionTasks = new ArrayList<>();
     @Getter
     private boolean running;
+    @Getter
     private boolean processing;
+    @Setter
+    @Getter
     private boolean bedrockMinerFeatureEnable = true;
     private int sortCount;
 
@@ -230,12 +237,14 @@ public class TaskManager {
                 BoundingBox rangeBox = BoundingBox.fromCorners(range.pos1, range.pos2);
                 BoundingBox playerBox = new BoundingBox(player.blockPosition());
                 BoundingBox playerExpandBox = playerBox.inflatedBy(radius);
-                if (!rangeBox.intersects(playerExpandBox)) continue;
-
-                for (int dy = radius; dy > -radius; dy--) {
-                    for (int dx = -radius; dx <= radius; dx++) {
-                        for (int dz = -radius; dz <= radius; dz++) {
-                            BlockPos blockPos = player.blockPosition().offset(dx, dy, dz);
+                // 提前判断：如果完全不相交，直接跳过整个循环
+                if (!rangeBox.intersects(playerExpandBox)) {
+                    continue;
+                }
+                for (int y = rangeBox.maxY(); y >= rangeBox.minY(); y--) {
+                    for (int z = rangeBox.minZ(); z <= rangeBox.maxZ(); z++) {
+                        for (int x = rangeBox.minX(); x <= rangeBox.maxX(); x++) {
+                            BlockPos blockPos = new BlockPos(x, y, z);
                             if (!PlayerUtils.canInteractWithBlockAt(blockPos, 1.0F)) {
                                 continue;
                             }
@@ -416,10 +425,6 @@ public class TaskManager {
         this.running = running;
     }
 
-    public boolean isProcessing() {
-        return processing;
-    }
-
     public boolean isInTasks(ClientLevel world, BlockPos pos) {
         for (Task targetBlock : pendingBlockTasks) {
             if (targetBlock.pos.equals(pos)) {
@@ -429,28 +434,8 @@ public class TaskManager {
         return false;
     }
 
-    public boolean isBedrockMinerFeatureEnable() {
-        return bedrockMinerFeatureEnable;
-    }
-
-    public void setBedrockMinerFeatureEnable(boolean bedrockMinerFeatureEnable) {
-        this.bedrockMinerFeatureEnable = bedrockMinerFeatureEnable;
-    }
-
     public List<Task> getPendingBlockTasks() {
         return pendingBlockTasks;
-    }
-
-    public List<TaskRegion> getPendingRegionTasks() {
-        return pendingRegionTasks;
-    }
-
-    public ArrayList<Task> getActiveBlockTasks() {
-        return activeBlockTasks;
-    }
-
-    public ArrayList<Task> getCacheBlockTasks() {
-        return cacheBlockTasks;
     }
 
     public static TaskManager getInstance() {
@@ -480,6 +465,6 @@ public class TaskManager {
     public static void clearTask() {
         TaskManager.getInstance().removeAll();
     }
-//endregion
+    //endregion
 
 }
