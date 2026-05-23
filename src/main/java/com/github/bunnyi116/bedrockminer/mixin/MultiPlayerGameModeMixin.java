@@ -48,16 +48,6 @@ public abstract class MultiPlayerGameModeMixin implements MultiPlayerGameModeExt
             if (TaskManager.getInstance().isBedrockMinerFeatureEnable()) {
                 TaskManager.getInstance().addBlockTask(level, blockPos, block);
             }
-            if (InteractionUtils.isCurrentBreaking()) {
-                cir.cancel();
-            }
-        }
-    }
-
-    @Inject(at = @At(value = "HEAD"), method = "stopDestroyBlock", cancellable = true)
-    public void cancelBlockBreaking(CallbackInfo ci) {
-        if (TaskManager.isWorking() && InteractionUtils.isCurrentBreaking()) {
-            ci.cancel();
         }
     }
 
@@ -72,10 +62,6 @@ public abstract class MultiPlayerGameModeMixin implements MultiPlayerGameModeExt
         }
         interactBlockCooldown = 1;
         if (TaskManager.getInstance().isBedrockMinerFeatureEnable() && player.getMainHandItem().isEmpty() && !Config.getInstance().disableEmptyHandSwitchToggle) {
-            if (InteractionUtils.isCurrentBreaking()) {
-                cir.setReturnValue(InteractionResult.FAIL);
-                cir.cancel();
-            }
             TaskManager.getInstance().switchToggle(block);
         }
     }
