@@ -101,7 +101,7 @@ public class InventoryUtils {
             return;
         }
 
-        for (int i = 0; i < Inventory.SELECTION_SIZE; i++) {
+        for (int i = 0; i < 9; i++) {
             final ItemStack itemStack = playerInventory.getItem(i);
             if (itemStack.isEmpty()) {
                 swapSlots(player, gameMode, slot, i);

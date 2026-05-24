@@ -29,7 +29,6 @@
   "suggests": {
     "another-mod": "*"
   },
-  "accessWidener": "${accessWidener}",
   "custom": {
     "modmenu": {
       "parent": "${mod_wrapper_id}"

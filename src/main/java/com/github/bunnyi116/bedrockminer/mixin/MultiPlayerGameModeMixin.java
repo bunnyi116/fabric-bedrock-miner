@@ -1,9 +1,9 @@
 package com.github.bunnyi116.bedrockminer.mixin;
 
+import com.github.bunnyi116.bedrockminer.BedrockMiner;
 import com.github.bunnyi116.bedrockminer.config.Config;
 import com.github.bunnyi116.bedrockminer.mixin_extension.MultiPlayerGameModeExtension;
 import com.github.bunnyi116.bedrockminer.task.TaskManager;
-import com.github.bunnyi116.bedrockminer.util.InteractionUtils;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
@@ -19,10 +19,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import static com.github.bunnyi116.bedrockminer.BedrockMiner.player;
 import static com.github.bunnyi116.bedrockminer.BedrockMiner.level;
 
 @Mixin(value = MultiPlayerGameMode.class, priority = 1010)
@@ -40,20 +38,20 @@ public abstract class MultiPlayerGameModeMixin implements MultiPlayerGameModeExt
     @Unique
     private int interactBlockCooldown = 0;
 
-    @Inject(at = @At(value = "HEAD"), method = "startDestroyBlock", cancellable = true)
-    private void attackBlock(BlockPos blockPos, Direction direction, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(at = @At(value = "HEAD"), method = "startDestroyBlock")
+    private void attackBlock(BlockPos pos, Direction direction, CallbackInfoReturnable<Boolean> cir) {
         if (TaskManager.isWorking()) {
-            BlockState blockState = level.getBlockState(blockPos);
+            BlockState blockState = level.getBlockState(pos);
             Block block = blockState.getBlock();
             if (TaskManager.getInstance().isBedrockMinerFeatureEnable()) {
-                TaskManager.getInstance().addBlockTask(level, blockPos, block);
+                TaskManager.getInstance().addBlockTask(level, pos, block);
             }
         }
     }
 
-    @Inject(at = @At(value = "HEAD"), method = "useItemOn", cancellable = true)
-    private void interactBlock(LocalPlayer localPlayer, InteractionHand interactionHand, BlockHitResult blockHitResult, CallbackInfoReturnable<InteractionResult> cir) {
-        BlockPos blockPos = blockHitResult.getBlockPos();
+    @Inject(at = @At(value = "HEAD"), method = "useItemOn")
+    private void interactBlock(LocalPlayer player, InteractionHand hand, BlockHitResult blockHit, CallbackInfoReturnable<InteractionResult> cir) {
+        BlockPos blockPos = blockHit.getBlockPos();
         BlockState blockState = level.getBlockState(blockPos);
         Block block = blockState.getBlock();
         if (interactBlockCooldown > 0) {
@@ -61,7 +59,7 @@ public abstract class MultiPlayerGameModeMixin implements MultiPlayerGameModeExt
             return;
         }
         interactBlockCooldown = 1;
-        if (TaskManager.getInstance().isBedrockMinerFeatureEnable() && player.getMainHandItem().isEmpty() && !Config.getInstance().disableEmptyHandSwitchToggle) {
+        if (TaskManager.getInstance().isBedrockMinerFeatureEnable() && BedrockMiner.player.getMainHandItem().isEmpty() && !Config.getInstance().disableEmptyHandSwitchToggle) {
             TaskManager.getInstance().switchToggle(block);
         }
     }

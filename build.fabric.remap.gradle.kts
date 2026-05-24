@@ -23,7 +23,6 @@ val loaderVersion = project.property("loader_version") as String
 val minecraftDependency = project.property("minecraft_dependency") as String
 val minecraftVersion = project.property("minecraft_version") as String
 val fabricApiVersion = project.property("fabric_api_version") as String
-val accessWidener = "$modId.remap.accesswidener"
 
 val javaVersion = when {
     mcVersion >= 260000 -> JavaVersion.VERSION_25   // 26+          需要 Java 25
@@ -59,9 +58,6 @@ dependencies {
 }
 
 loom {
-
-    accessWidenerPath.set(file("../../src/main/resources/$accessWidener"))
-
     var programArgs = listOf(
         "--width", "1280",
         "--height", "720"
@@ -159,8 +155,7 @@ tasks {
             "mod_sources" to modSources,
             "loader_version" to loaderVersion,
             "minecraft_dependency" to minecraftDependency,
-            "compatibility_level" to mixinCompatibilityLevel,
-            "accessWidener" to accessWidener
+            "compatibility_level" to mixinCompatibilityLevel
         )
         inputs.properties(propertyMap)
         filesMatching(listOf("fabric.mod.json", "*.mixins.json")) {
@@ -183,7 +178,6 @@ tasks {
     }
 
     withType<Jar> {
-        exclude("$modId.accesswidener")
         // 将 LICENSE 文件添加到 JAR 包中
         from(rootProject.file("LICENSE")) {
             rename { "${it}_${modArchivesBaseName}" }
