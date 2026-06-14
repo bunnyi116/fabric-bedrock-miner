@@ -19,10 +19,8 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import static com.github.bunnyi116.bedrockminer.BedrockMiner.*;
 import static com.github.bunnyi116.bedrockminer.I18n.*;
@@ -43,42 +41,9 @@ public class TaskManager {
     @Setter
     @Getter
     private boolean bedrockMinerFeatureEnable = true;
-    // 位置冷却（防止同一位置频繁重试，参考 litematica-printer）
-    private final Map<BlockPos, Integer> positionCooldowns = new HashMap<>();
-    private static final int RETRY_COOLDOWN_TICKS = 6;
-    private static final int MAX_ACTIVE_TARGETS = 3; // 最大同时活跃任务数
-    private static final int EXECUTE_BUDGET_PER_TICK = 2; // 每tick最多执行次数
     private int sortCount;
-    private int executeBudget;
-
-    /** 检查位置是否处于冷却中 */
-    private boolean isOnCooldown(BlockPos pos) {
-        return positionCooldowns.containsKey(pos.immutable());
-    }
-
-    /** 设置位置冷却 */
-    private void setCooldown(BlockPos pos) {
-        setCooldown(pos, RETRY_COOLDOWN_TICKS);
-    }
-
-    private void setCooldown(BlockPos pos, int ticks) {
-        positionCooldowns.put(pos.immutable(), ticks);
-    }
-
-    /** 逐tick减少冷却计时 */
-    private void tickCooldowns() {
-        if (positionCooldowns.isEmpty()) return;
-        positionCooldowns.entrySet().removeIf(entry -> {
-            int remaining = entry.getValue() - 1;
-            if (remaining <= 0) return true;
-            entry.setValue(remaining);
-            return false;
-        });
-    }
 
     public void tick() {
-        tickCooldowns();
-
         if (!gameVariableIsValid()) {
             return;
         }
@@ -119,7 +84,6 @@ public class TaskManager {
 
             }
         }
-        executeBudget = EXECUTE_BUDGET_PER_TICK;
         boolean execute = false;
         boolean requestPickaxe = false;
         boolean modifyLook = false;
@@ -142,8 +106,10 @@ public class TaskManager {
             while (iterator.hasNext()) {
                 Task currentTask = iterator.next();
                 if (currentTask == null) continue;
-                currentTask.active++;
-                // 超出冷却上限时优先处理（避免溢出，必须在可交互检查之前）
+                if (currentTask.world != level || !currentTask.canInteractWithBlockAt()) {
+                    MessageUtils.setOverlayMessage(Component.literal("远离当前正在处理的方块位置, 冷却时间剩余: " + (resetCountMax - currentTask.active)));
+                    continue;
+                }
                 if (currentTask.active >= resetCountMax) {
                     if (this.pendingBlockTasks.size() > 1 || !this.pendingRegionTasks.isEmpty() || !Config.getInstance().ranges.isEmpty()) {
                         this.cacheBlockTasks.add(currentTask);
@@ -151,12 +117,8 @@ public class TaskManager {
                         currentTask.active = 0;
                         continue;
                     }
-                    // 无其他待处理任务时，保持在上限不溢出
-                    currentTask.active = resetCountMax;
-                }
-                if (currentTask.world != level || !currentTask.canInteractWithBlockAt()) {
-                    MessageUtils.setOverlayMessage(Component.literal("远离当前正在处理的方块位置, 冷却时间剩余: " + (resetCountMax - currentTask.active)));
-                    continue;
+                } else {
+                    currentTask.active++;
                 }
                 processing = true;
                 if (PlayerLookUtils.getTask() != null && !activeBlockTasks.contains(PlayerLookUtils.getTask())) {
@@ -178,14 +140,11 @@ public class TaskManager {
                 currentTask.active = 0;
                 switch (currentTask.getCurrentState()) {
                     case EXECUTE -> {
-                        executeBudget--;
-                        if (currentTask.activeScheme != null && !currentTask.activeScheme.piston.isNeedModify()) {
+                        if (currentTask.planItem != null && !currentTask.planItem.piston.isNeedModify()) {
                             execute = true;
                         } else {
                             return;
                         }
-                        // 消耗完预算则结束本tick处理
-                        if (executeBudget <= 0) return;
                     }
                     case RECYCLED_ITEMS -> {
                         return;
@@ -193,10 +152,6 @@ public class TaskManager {
                 }
                 processing = false;
                 if (currentTask.isComplete()) {
-                    // 基岩未破则设置冷却，防止立即重试浪费资源
-                    if (level.getBlockState(currentTask.pos).is(currentTask.block)) {
-                        setCooldown(currentTask.pos);
-                    }
                     iterator.remove();
                     this.pendingBlockTasks.remove(currentTask);
                     currentTask.active = 0;
@@ -367,13 +322,9 @@ public class TaskManager {
         if (!Config.getInstance().isAllowBlock(block)) {
             return;
         }
-        if (Config.getInstance().isFloorsBlacklist(pos)) {
+        if (Config.getInstance().isFloorsBlacklist(pos)) {  // 楼层限制
             String msg = FLOOR_BLACK_LIST_WARN.getString().replace("(#floor#)", String.valueOf(pos.getY()));
             MessageUtils.setOverlayMessage(Component.literal(msg));
-            return;
-        }
-        // 冷却检查：刚处理完的位置需要等待
-        if (isOnCooldown(pos)) {
             return;
         }
         for (Task targetBlock : pendingBlockTasks) {

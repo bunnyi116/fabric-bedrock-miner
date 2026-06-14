@@ -8,14 +8,14 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 
 
-public class Scheme {
+public class TaskPlan {
     public final Direction direction;
-    public final SchemeBlock piston;
-    public final SchemeBlock redstoneTorch;
-    public final SchemeBlock slimeBlock;
+    public final TaskPlanItem piston;
+    public final TaskPlanItem redstoneTorch;
+    public final TaskPlanItem slimeBlock;
     public int level;
 
-    public Scheme(Direction direction, SchemeBlock piston, SchemeBlock redstoneTorch, SchemeBlock slimeBlock) {
+    public TaskPlan(Direction direction, TaskPlanItem piston, TaskPlanItem redstoneTorch, TaskPlanItem slimeBlock) {
         this.direction = direction;
         this.piston = piston;
         this.redstoneTorch = redstoneTorch;

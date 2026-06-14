@@ -3,14 +3,14 @@ package com.github.bunnyi116.bedrockminer.task;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 
-public class SchemeBlock {
+public class TaskPlanItem {
     public final int type;
     public final BlockPos pos;
     public final Direction facing;
     public boolean modify;
     public int level;
 
-    public SchemeBlock(int type, BlockPos pos, Direction facing, int level) {
+    public TaskPlanItem(int type, BlockPos pos, Direction facing, int level) {
         this.type = type;
         this.pos = pos;
         this.facing = facing;
@@ -18,16 +18,16 @@ public class SchemeBlock {
         this.level = level;
     }
 
-    public SchemeBlock(int type, BlockPos pos, Direction facing) {
+    public TaskPlanItem(int type, BlockPos pos, Direction facing) {
         this(type, pos, facing, 0);
     }
 
 
-    public SchemeBlock(BlockPos pos, Direction facing, int level) {
+    public TaskPlanItem(BlockPos pos, Direction facing, int level) {
         this(0, pos, facing, level);
     }
 
-    public SchemeBlock(BlockPos pos, Direction facing) {
+    public TaskPlanItem(BlockPos pos, Direction facing) {
         this(0, pos, facing, 0);
     }
 
