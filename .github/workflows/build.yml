@@ -54,7 +54,6 @@ jobs:
           key: ${{ runner.os }}-gradle-common
           restore-keys: |
             ${{ runner.os }}-gradle-common
-            ${{ runner.os }}-gradle-
 
       - name: Build with gradle
         run: |
