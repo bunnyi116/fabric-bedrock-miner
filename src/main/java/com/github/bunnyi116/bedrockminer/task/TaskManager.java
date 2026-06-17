@@ -1,5 +1,6 @@
 package com.github.bunnyi116.bedrockminer.task;
 
+import com.github.bunnyi116.bedrockminer.Debug;
 import com.github.bunnyi116.bedrockminer.config.Config;
 import com.github.bunnyi116.bedrockminer.util.CombinedIterator;
 import com.github.bunnyi116.bedrockminer.util.MessageUtils;
@@ -355,32 +356,41 @@ public class TaskManager {
     }
 
     public void addBlockTask(ClientLevel world, BlockPos pos, Block block) {
+        Debug.write("addBlockTask called at {} block={} running={}", pos, BlockUtils.getKeyString(block), this.isRunning());
         if (Config.getInstance().disable || !isRunning()) {
+            Debug.write("addBlockTask skipped: disable={} running={}", Config.getInstance().disable, this.isRunning());
             return;
         }
         if (!isAllowExecutionEnvironment(true)) {
+            Debug.write("addBlockTask skipped: execution environment not allowed");
             return;
         }
         if (!gameType.isSurvival()) {
+            Debug.write("addBlockTask skipped: not survival");
             return;
         }
         if (!Config.getInstance().isAllowBlock(block)) {
+            Debug.write("addBlockTask skipped: block not allowed");
             return;
         }
         if (Config.getInstance().isFloorsBlacklist(pos)) {
             String msg = FLOOR_BLACK_LIST_WARN.getString().replace("(#floor#)", String.valueOf(pos.getY()));
             MessageUtils.setOverlayMessage(Component.literal(msg));
+            Debug.write("addBlockTask skipped: floor blacklist");
             return;
         }
         // 冷却检查：刚处理完的位置需要等待
         if (isOnCooldown(pos)) {
+            Debug.write("addBlockTask skipped: on cooldown");
             return;
         }
         for (Task targetBlock : pendingBlockTasks) {
             if (targetBlock.pos.equals(pos)) {
+                Debug.write("addBlockTask skipped: already in pending");
                 return;
             }
         }
+        Debug.write("addBlockTask added {}", pos);
         pendingBlockTasks.add(new Task(world, block, pos));
     }
 
@@ -438,18 +448,23 @@ public class TaskManager {
     }
 
     public void switchToggle(@Nullable Block block) {
-        if (Config.getInstance().disable || !Config.getInstance().isAllowBlock(block))
+        if (Config.getInstance().disable || !Config.getInstance().isAllowBlock(block)) {
+            Debug.write("switchToggle(block) skipped: disable={} isAllowBlock={}", Config.getInstance().disable, Config.getInstance().isAllowBlock(block));
             return;
+        }
+        Debug.write("switchToggle(block) proceeding for {}", BlockUtils.getKeyString(block));
         this.switchToggle();
     }
 
     public void switchToggle() {
+        Debug.write("switchToggle() called, current running={}", this.isRunning());
         if (this.isRunning()) {
             this.removeAll();
             this.setRunning(false);
         } else {
             if (gameType.isCreative()) { // 仅生存模式开启
                 MessageUtils.addMessage(FAIL_MISSING_SURVIVAL);
+                Debug.write("switchToggle() rejected: creative mode");
                 return;
             }
             this.setRunning(true);
@@ -464,11 +479,14 @@ public class TaskManager {
     }
 
     public void setRunning(boolean running, boolean showMessage) {
+        Debug.write("setRunning running={} showMessage={} current={}", running, showMessage, this.running);
         if (showMessage) {
             if (running) {
                 MessageUtils.addMessage(TOGGLE_ON);
+                Debug.write("TOGGLE_ON message sent");
             } else {
                 MessageUtils.addMessage(TOGGLE_OFF);
+                Debug.write("TOGGLE_OFF message sent");
             }
         }
         this.running = running;
