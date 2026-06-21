@@ -1,8 +1,8 @@
 plugins {
     id("maven-publish")
     id("com.github.hierynomus.license") version "0.16.1" apply false
-    id("net.fabricmc.fabric-loom") version "1.15-SNAPSHOT" apply false
-    id("net.fabricmc.fabric-loom-remap") version "1.15-SNAPSHOT" apply false
+    id("net.fabricmc.fabric-loom") version "1.17-SNAPSHOT" apply false
+    id("net.fabricmc.fabric-loom-remap") version "1.17-SNAPSHOT" apply false
 
     // https://github.com/ReplayMod/preprocessor
     // https://github.com/Fallen-Breath/preprocessor
@@ -39,7 +39,9 @@ preprocess {
     val mc1_21_10 = createNode("1.21.10", 1_21_10, "")
     val mc1_21_11 = createNode("1.21.11", 1_21_11, "")
     val mc26_01_00 = createNode("26.1", 26_01_00, "")
+    val mc26_02_00 = createNode("26.2", 26_02_00, "")
 
+    mc26_02_00.link(mc26_01_00, null)
     mc26_01_00.link(mc1_21_11, file("versions/mapping-1.21.11-26.1.txt"))
     mc1_21_11.link(mc1_21_10, file("versions/mapping-1.21.10-1.21.11.txt"))
     mc1_21_10.link(mc1_21_09, null)

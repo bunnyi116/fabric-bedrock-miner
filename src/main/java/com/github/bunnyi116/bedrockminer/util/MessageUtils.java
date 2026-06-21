@@ -6,14 +6,20 @@ import static com.github.bunnyi116.bedrockminer.BedrockMiner.client;
 
 public class MessageUtils {
     public static void setOverlayMessage(Component message) {
-        client.gui.setOverlayMessage(message, false);
+        //#if MC>=260200
+        client.gui.hud.setOverlayMessage(message, false);
+        //$$ client.gui.setOverlayMessage(message, false);
+        //#endif
     }
 
     public static void addMessage(Component message) {
-        //#if MC>=260000
-        client.gui.getChat().addClientSystemMessage(message);
+        //#if MC>=260200
+        client.gui.hud.getChat().addClientSystemMessage(message);
+        //#elseif MC>=260100 && MC<260200
+        //$$ client.gui.getChat().addClientSystemMessage(message);
         //#else
         //$$ client.gui.getChat().addMessage(message);
         //#endif
     }
 }
+
