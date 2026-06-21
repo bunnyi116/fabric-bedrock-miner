@@ -59,39 +59,20 @@ loom {
         "--width", "1280",
         "--height", "720"
     )
-    val profileFile = file("../../profile.json")
-    if (profileFile.exists()) {
-        @Suppress("UNCHECKED_CAST")
-        val profile = JsonSlurper().parseText(profileFile.readText()) as Map<String, List<String>>
-        val username = profile["username"].toString()
-        val uuid = profile["uuid"].toString()
-        val xuid = profile["xuid"].toString()
-        val accessToken = profile["accessToken"].toString()
-        programArgs = programArgs + listOf(
-            "--username", username,
-            "--uuid", uuid,
-            "--xuid", xuid,
-            "--accessToken", accessToken,
-            "--userType", "msa",
-            "--versionType", "release"
-        )
-    }
-    var commonVmArgs = listOf(
-        "-Dmixin.debug.export=true",
-        "-Dmixin.debug.countInjections=true",
-//        "-DmixinAuditor.audit=true"
-    )
+
     runs {
         named("client") {
             client()
-            runDir = "../../run/client"
-            vmArgs(commonVmArgs)
-            programArgs(programArgs)
-            ideConfigGenerated(true);
+            runDirectory.set(file("../../run/client"))
+            jvmArguments.addAll("--width", "1280")
+            jvmArguments.addAll("--height", "720")
+            jvmArguments.add("-Dmixin.debug.export=true")
+            jvmArguments.add("-Dmixin.debug.countInjections=true")
+            generateRunConfig.set(true)
         }
         named("server") {
             server()
-            runDir = "../../run/server"
+            runDirectory.set(file("../../run/server"))
         }
     }
 }
