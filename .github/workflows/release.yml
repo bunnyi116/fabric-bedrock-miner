@@ -1,4 +1,4 @@
-﻿name: 发布
+﻿name: release
 
 # release: <默认>（发布标题）
 # dispatch（全部）: 手动发布 $target_release_tag
@@ -38,7 +38,7 @@ jobs:
           EOF
 
   matrix_prep:
-    uses: ./.github/workflows/matrix_prep.yml
+    uses: ./.github/workflows/_step.matrix_prepare.yml
     with:
       target_subproject: ${{ github.event.inputs.target_subproject }}
 
@@ -54,7 +54,7 @@ jobs:
           tag: ${{ github.event.inputs.target_release_tag }}
 
   build:
-    uses: ./.github/workflows/build.yml
+    uses: ./.github/workflows/_step.build.yml
     secrets: inherit
     needs:
       - validate_release

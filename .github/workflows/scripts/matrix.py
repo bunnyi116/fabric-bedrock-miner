@@ -34,8 +34,8 @@ def main():
     with open(os.environ['GITHUB_OUTPUT'], 'w') as f:
         f.write(f'matrix={matrix_json}\n')
 
-	print('matrix:')
-	print(json.dumps(matrix, indent=2))
+    print('matrix:')
+    print(json.dumps(matrix, indent=2))
 
 
 if __name__ == '__main__':
