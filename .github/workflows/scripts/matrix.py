@@ -1,7 +1,4 @@
-"""
-A script to scan through the versions directory and collect all folder names as the subproject list,
-then output a json as the github action include matrix
-"""
+﻿"""扫描 versions 目录生成构建矩阵 JSON，输出到 GitHub Actions matrix。"""
 __author__ = 'Fallen_Breath'
 
 import json
@@ -10,37 +7,36 @@ import sys
 
 
 def main():
-	target_subproject_env = os.environ.get('TARGET_SUBPROJECT', '')
-	target_subprojects = list(filter(None, target_subproject_env.split(',') if target_subproject_env != '' else []))
-	print('target_subprojects: {}'.format(target_subprojects))
+    target_subproject_env = os.environ.get('TARGET_SUBPROJECT', '')
+    target_subprojects = set(filter(None, target_subproject_env.split(',')))
+    print(f'目标子项目: {target_subprojects}')
 
-	with open('settings.json') as f:
-		settings: dict = json.load(f)
+    with open('settings.json') as f:
+        settings: dict = json.load(f)
 
-	if len(target_subprojects) == 0:
-		subprojects = settings['versions']
-	else:
-		subprojects = []
-		for subproject in settings['versions']:
-			if subproject in target_subprojects:
-				subprojects.append(subproject)
-				target_subprojects.remove(subproject)
-		if len(target_subprojects) > 0:
-			print('Unexpected subprojects: {}'.format(target_subprojects), file=sys.stderr)
-			sys.exit(1)
+    all_versions = set(settings['versions'])
 
-	matrix_entries = []
-	for subproject in subprojects:
-		matrix_entries.append({
-			'subproject': subproject,
-		})
-	matrix = {'include': matrix_entries}
-	with open(os.environ['GITHUB_OUTPUT'], 'w') as f:
-		f.write('matrix={}\n'.format(json.dumps(matrix)))
+    if not target_subprojects:
+        subprojects = list(settings['versions'])
+    else:
+        # 用集合差集一次性检测非法输入
+        unknown = target_subprojects - all_versions
+        if unknown:
+            print(f'未知子项目: {unknown}', file=sys.stderr)
+            sys.exit(1)
+        subprojects = [v for v in settings['versions'] if v in target_subprojects]
+
+    matrix = {
+        'include': [{'subproject': s} for s in subprojects],
+    }
+
+    matrix_json = json.dumps(matrix)
+    with open(os.environ['GITHUB_OUTPUT'], 'w') as f:
+        f.write(f'matrix={matrix_json}\n')
 
 	print('matrix:')
 	print(json.dumps(matrix, indent=2))
 
 
 if __name__ == '__main__':
-	main()
+    main()

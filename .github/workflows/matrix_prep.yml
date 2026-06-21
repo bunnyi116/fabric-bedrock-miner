@@ -1,16 +1,16 @@
-name: _step.matrix_prepare
+﻿name: _step.matrix_prepare
 
 on:
   workflow_call:
     inputs:
       target_subproject:
-        description: see release.yml, for generating matrix entries
+        description: 参见 release.yml，用于生成矩阵条目
         type: string
         required: false
         default: ''
     outputs:
       matrix:
-        description: The generated run matrix
+        description: 生成运行矩阵
         value: ${{ jobs.matrix_prep.outputs.matrix }}
 
 
@@ -18,8 +18,8 @@ jobs:
   matrix_prep:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: 3.12
 

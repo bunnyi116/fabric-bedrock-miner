@@ -1,4 +1,4 @@
-name: _step.build
+﻿name: _step.build
 
 on:
   workflow_call:
@@ -8,7 +8,7 @@ on:
         required: false
         default: false
       target_subproject:
-        description: see release.yml, leave it empty to build all
+        description: 参见 release.yml，留空构建全部
         type: string
         required: false
         default: ''
@@ -18,15 +18,15 @@ on:
         type: boolean
         required: false
         default: false
-        description: "Whether to build a release version (default: false)"
+        description: "是否构建发布版本（默认: false）"
       target_subproject:
-        description: "see release.yml, leave it empty to build all"
+        description: "参见 release.yml，留空构建全部"
         type: string
         required: false
         default: ''
-#      # [FEATURE] MIXIN_AUDITOR
+#      # [特性] MIXIN_AUDITOR
 #      mixin_audit:
-#        description: run mixin audit for Minecraft after build
+#        description: 构建后运行 Mixin 审计
 #        type: boolean
 #        required: false
 #        default: false
@@ -37,13 +37,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-      - name: Set up JDK 25
+      - name: 安装 JDK 25
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: 25
 
-      - name: Cache Gradle dependencies
+      - name: 缓存 Gradle 依赖
         uses: actions/cache@v5
         with:
           path: |
@@ -55,37 +55,37 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-common
 
-      - name: Build with gradle
+      - name: 使用 Gradle 构建
         run: |
           chmod +x gradlew
           if [ -z "${{ inputs.target_subproject }}" ]; then
-              echo "Building all subprojects"
+              echo "构建所有子项目"
               ./gradlew build --stacktrace
           else
               args=$(echo "${{ inputs.target_subproject }}" | tr ',' '\n' | sed 's/$/:build/' | paste -sd ' ')
-              echo "Building with arguments=$args"
+              echo "构建参数=$args"
               ./gradlew $args --stacktrace
           fi
         env:
           BUILD_ID: ${{ github.run_number }}
           BUILD_RELEASE: ${{ inputs.release }}
 
-      #      # [FEATURE] MIXIN_AUDITOR
-      #      - name: Run mixin audit check for Minecraft client
+      #      # [特性] MIXIN_AUDITOR
+      #      - name: 运行 Minecraft 客户端 Mixin 审计
       #        if: ${{ inputs.mixin_audit }}
       #        timeout-minutes: 10
       #        run: |
       #          mkdir -p ./run
-      #          echo eula=true > ./run/eula.txt  # server needs this
+      #          echo eula=true > ./run/eula.txt  # 服务端需要此文件
       #          ./gradlew runClientMixinAudit
 
-      - name: Upload artifacts
+      - name: 上传构建产物
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: versions/*/build/libs/
 
-      - name: Collect mod jars
+      - name: 收集模组 jar
         run: |
           shopt -s extglob
           mkdir mod-jars
@@ -94,23 +94,23 @@ jobs:
           done
           ls -l mod-jars
 
-      # This is the artifact recommended for users to download
-      - name: Upload mod jars
+      # 这是推荐用户下载的构建产物
+      - name: 上传模组 jar
         uses: actions/upload-artifact@v4
         with:
           name: mod-jars
           path: mod-jars/*.jar
 
-  #      # [FEATURE] FALLENS_MAVEN
-  #      - name: Publish with gradle
+  #      # [特性] FALLENS_MAVEN
+  #      - name: 使用 Gradle 发布
   #        if: inputs.release || github.ref == 'refs/heads/dev'
   #        run: |
   #          if [ -z "${{ inputs.target_subproject }}" ]; then
-  #              echo "Publishing all subprojects"
+  #              echo "发布所有子项目"
   #              ./gradlew publish
   #          else
   #              args=$(echo "${{ inputs.target_subproject }}" | tr ',' '\n' | sed 's/$/:publish/' | paste -sd ' ')
-  #              echo "Publishing with arguments=$args"
+  #              echo "发布参数=$args"
   #              ./gradlew $args
   #          fi
   #        env:
@@ -129,15 +129,14 @@ jobs:
         with:
           python-version: 3.14
 
-      - name: Download build artifacts
+      - name: 下载构建产物
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
           path: build-artifacts
 
-      - name: Make build summary
+      - name: 生成构建摘要
         run: |
-          pip install jproperties
           python .github/workflows/scripts/summary.py
         env:
           TARGET_SUBPROJECT: ${{ inputs.target_subproject }}

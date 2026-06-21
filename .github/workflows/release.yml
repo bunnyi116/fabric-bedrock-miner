@@ -1,10 +1,10 @@
-name: Release
+﻿name: 发布
 
-# release: <default> (release title)
-# dispatch (all): Manual release for $target_release_tag
-# dispatch (specified): Manual release for $target_release_tag (subproject: $target_subproject)
+# release: <默认>（发布标题）
+# dispatch（全部）: 手动发布 $target_release_tag
+# dispatch（指定）: 手动发布 $target_release_tag（子项目: $target_subproject）
 run-name: |-
-  ${{ github.event_name == 'workflow_dispatch' && format('Manual release for {0}{1}', inputs.target_release_tag, inputs.target_subproject && format(' (subproject: {0})', inputs.target_subproject) || '') || '' }}
+  ${{ github.event_name == 'workflow_dispatch' && format('手动发布 {0}{1}', inputs.target_release_tag, inputs.target_subproject && format('（子项目: {0}）', inputs.target_subproject) || '') || '' }}
 
 on:
   release:
@@ -14,13 +14,13 @@ on:
     inputs:
       target_subproject:
         description: |-
-          The subproject name(s) of the specified Minecraft version to be released, seperated with ",".
-          By default all subprojects will be released
+          要发布的指定 Minecraft 版本的子项目名称，用 "," 分隔
+          默认将发布全部子项目
         type: string
         required: false
         default: ''
       target_release_tag:
-        description: The tag of the release you want to append the artifact to
+        description: 要附加构建产物的发布标签
         type: string
         required: true
 
@@ -29,10 +29,10 @@ jobs:
   show_action_parameters:
     runs-on: ubuntu-latest
     steps:
-      - name: Show action parameters
+      - name: 显示操作参数
         run: |
           cat <<EOF > $GITHUB_STEP_SUMMARY
-          ## Action Parameters
+          ## 操作参数
           - target_subproject: \`${{ github.event.inputs.target_subproject }}\`
           - target_release_tag: \`${{ github.event.inputs.target_release_tag }}\`
           EOF
@@ -42,11 +42,11 @@ jobs:
     with:
       target_subproject: ${{ github.event.inputs.target_subproject }}
 
-  # ensure the input release tag is valid
+  # 确保输入的发布标签有效
   validate_release:
     runs-on: ubuntu-latest
     steps:
-      - name: Get github release information
+      - name: 获取 GitHub 发布信息
         uses: cardinalby/git-get-release-action@1.2.5
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -68,7 +68,7 @@ jobs:
       - build
     runs-on: ubuntu-latest
 
-    # allow the mod publish step to add asserts to release
+    # 允许模组发布步骤向发布添加资产
     # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
       contents: write
@@ -77,21 +77,21 @@ jobs:
       matrix: ${{ fromJson(needs.matrix_prep.outputs.matrix) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - name: Display context
+      - name: 显示上下文
         run: |
           echo ref_name = ${{ github.ref_name }}
           echo target_subproject = ${{ github.event.inputs.target_subproject }}
           echo target_release_tag = ${{ github.event.inputs.target_release_tag }}
 
-      - name: Download build artifacts
+      - name: 下载构建产物
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
           path: build-artifacts
 
-      - name: Get github release information
+      - name: 获取 GitHub 发布信息
         id: get_release
         uses: cardinalby/git-get-release-action@1.2.5
         env:
@@ -99,42 +99,42 @@ jobs:
         with:
           tag: ${{ github.event.inputs.target_release_tag }}
 
-      - name: Generate publish related information
+      - name: 生成发布相关信息
         id: release_info
         run: |
           if [ $GITHUB_EVENT_NAME == 'release' ]
           then
-              # Leave an empty value here, so Kir-Antipov/mc-publish will infer the tag from the action context
+              # 此处留空，使 mc-publish 从 Action 上下文推断标签
               echo "tag_name=" >> $GITHUB_OUTPUT
           elif [ $GITHUB_EVENT_NAME == 'workflow_dispatch' ]
           then
               echo "tag_name=${{ github.event.inputs.target_release_tag }}" >> $GITHUB_OUTPUT
           else
-              echo Unknown github event name $GITHUB_EVENT_NAME
+              echo 未知的 GitHub 事件名称 $GITHUB_EVENT_NAME
               exit 1
           fi
 
-      - name: Read common properties
+      - name: 读取通用属性
         id: properties_g
         uses: BrycensRanch/read-properties-action@v1
         with:
           file: gradle.properties
           all: true
 
-      - name: Read version-specific properties
+      - name: 读取版本专属属性
         id: properties_v
         uses: BrycensRanch/read-properties-action@v1
         with:
           file: ${{ format('versions/{0}/gradle.properties', matrix.subproject) }}
           all: true
 
-      - name: Prepare file information
+      - name: 准备文件信息
         id: file_info
         run: |
           shopt -s extglob
           FILE_PATHS=$(ls ${{ format('build-artifacts/{0}/build/libs/!(*-@(dev|sources|shadow)).jar', matrix.subproject) }})
           if (( ${#FILE_PATHS[@]} != 1 )); then
-              echo "Error: Found ${#FILE_PATHS[@]} files, expected exactly 1"
+              echo "错误: 发现 ${#FILE_PATHS[@]} 个文件，期望恰好 1 个"
               exit 1
           else
               FILE_PATH=${FILE_PATHS[0]}
@@ -147,7 +147,7 @@ jobs:
           echo "hash=$FILE_HASH" >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
 
-      - name: Prepare changelog
+      - name: 准备更新日志
         uses: actions/github-script@v7
         id: changelog
         with:
@@ -159,13 +159,13 @@ jobs:
             
             -------
             
-            Build Information
+            构建信息
             
-            - File name: `${{ steps.file_info.outputs.name }}`
+            - 文件名: `${{ steps.file_info.outputs.name }}`
             - SHA-256: `${{ steps.file_info.outputs.hash }}`
-            - Built from: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            - 构建来源: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
-      - name: Publish Minecraft Mods
+      - name: 发布 Minecraft 模组
         uses: Kira-NT/mc-publish@v3.3
         with:
           # https://modrinth.com/settings/pats
@@ -188,7 +188,7 @@ jobs:
           loaders: fabric
           game-versions: ${{ steps.properties_v.outputs.game_versions }}
           game-version-filter: any
-          dependencies: ''  # declare the dependencies explicitly, so mc-publish won't try to load from fabric.mod.json
+          dependencies: ''  # 显式声明依赖，避免 mc-publish 尝试从 fabric.mod.json 加载
 
           github-changelog: ${{ steps.get_release.outputs.body }}
           modrinth-changelog: ${{ steps.changelog.outputs.result }}
