@@ -55,24 +55,16 @@ dependencies {
 }
 
 loom {
-    var programArgs = listOf(
-        "--width", "1280",
-        "--height", "720"
-    )
-
     runs {
         named("client") {
             client()
             runDirectory.set(file("../../run/client"))
-            jvmArguments.addAll("--width", "1280")
-            jvmArguments.addAll("--height", "720")
             jvmArguments.add("-Dmixin.debug.export=true")
             jvmArguments.add("-Dmixin.debug.countInjections=true")
+            programArguments.addAll("--width", "1280")
+            programArguments.addAll("--height", "720")
+            programArguments.addAll("--username", "bedrockminer")
             generateRunConfig.set(true)
-        }
-        named("server") {
-            server()
-            runDirectory.set(file("../../run/server"))
         }
     }
 }
