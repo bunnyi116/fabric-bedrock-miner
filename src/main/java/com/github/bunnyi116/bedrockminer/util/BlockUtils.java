@@ -6,9 +6,11 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import org.jetbrains.annotations.NotNull;
 
 import static com.github.bunnyi116.bedrockminer.BedrockMiner.level;
+import static com.github.bunnyi116.bedrockminer.BedrockMiner.player;
 
 public class BlockUtils {
     public static boolean isReplaceable(BlockState blockState) {
@@ -39,7 +41,25 @@ public class BlockUtils {
         return getKey(block).toString();
     }
 
-    public static boolean sideCoversSmallSquare(BlockPos blockPos, Direction direction) {
+    public static boolean canSupportCenter(BlockPos blockPos, Direction direction) {
         return Block.canSupportCenter(level, blockPos, direction);
+    }
+
+    public static boolean canPlace(BlockPos placePos, BlockState stateToPlace, boolean checkSurvive) {
+        if (!isReplaceable(level.getBlockState(placePos))) {
+            //TODO: 因为破基岩没有台阶(Slabs)需求, 所以没进一步对双层方块检查
+            return false;
+        }
+        if (checkSurvive && !stateToPlace.canSurvive(level, placePos)) {
+            return false;
+        }
+        CollisionContext collisionContext = player != null
+                ? CollisionContext.placementContext(player)
+                : CollisionContext.empty();
+        return level.isUnobstructed(stateToPlace, placePos, collisionContext);
+    }
+
+    public static boolean canPlace(BlockPos placePos, BlockState stateToPlace) {
+        return canPlace(placePos, stateToPlace, false);
     }
 }

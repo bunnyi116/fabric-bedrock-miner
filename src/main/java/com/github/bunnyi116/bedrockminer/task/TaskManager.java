@@ -139,16 +139,15 @@ public class TaskManager {
                 currentTask.tick();
                 currentTask.active = 0;
                 switch (currentTask.getCurrentState()) {
-                    case EXECUTE -> {
+                    case EXECUTE:
                         if (currentTask.planItem != null && !currentTask.planItem.piston.isNeedModify()) {
                             execute = true;
                         } else {
                             return;
                         }
-                    }
-                    case RECYCLED_ITEMS -> {
+                        break;
+                    case RECYCLED_ITEMS:
                         return;
-                    }
                 }
                 processing = false;
                 if (currentTask.isComplete()) {

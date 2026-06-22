@@ -11,13 +11,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayDeque;
@@ -179,26 +176,5 @@ public class InteractionUtils {
 
     public static void placement(BlockPos blockPos, Direction facing) {
         placement(blockPos, facing, (Item) null);
-    }
-
-    public static boolean canPlace(ClientLevel world, BlockPos blockPos, BlockState placeBlockState) {
-        // 目标位置的方块是否可以被替换
-        if (!BlockUtils.isReplaceable(world.getBlockState(blockPos))) {
-            return false;
-        }
-        // 检查放置方块的碰撞体积
-        VoxelShape collisionShape = placeBlockState.getCollisionShape(world, blockPos);
-        if (collisionShape.isEmpty()) {
-            return true; // 放置的方块是没有没有碰撞体积，可以放置
-        }
-        for (Entity entity : world.entitiesForRendering()) {
-            if (entity instanceof ItemEntity) {
-                return true;
-            }
-            if (entity.isColliding(blockPos, placeBlockState)) {
-                return false;
-            }
-        }
-        return true;
     }
 }

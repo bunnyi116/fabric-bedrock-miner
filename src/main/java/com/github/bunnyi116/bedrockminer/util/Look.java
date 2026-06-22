@@ -5,16 +5,16 @@ import net.minecraft.core.Direction;
 
 @Data
 @SuppressWarnings("ClassCanBeRecord")
-public class PlayerLook {
+public class Look {
     public final float yaw;
     public final float pitch;
 
-    public PlayerLook(float yaw, float pitch) {
+    public Look(float yaw, float pitch) {
         this.yaw = yaw;
         this.pitch = pitch;
     }
 
-    public PlayerLook(Direction lookDirection) {
+    public Look(Direction lookDirection) {
         this(DirectionUtils.getRequiredYaw(lookDirection), DirectionUtils.getRequiredPitch(lookDirection));
     }
 }

@@ -20,11 +20,22 @@ public class TaskPlan {
         this.piston = piston;
         this.redstoneTorch = redstoneTorch;
         this.slimeBlock = slimeBlock;
-        this.level = switch (direction) {
-            case UP -> 1;
-            case DOWN -> 2;
-            case NORTH, SOUTH, WEST, EAST -> 4;
-        };
+        switch (direction) {
+            case UP:
+                this.level = 1;
+                break;
+            case DOWN:
+                this.level = 2;
+                break;
+            case NORTH:
+            case SOUTH:
+            case WEST:
+            case EAST:
+                this.level = 4;
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }
     }
 
     public boolean isWorldValid() {

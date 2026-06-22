@@ -37,8 +37,8 @@ public class NetworkUtils {
         ));
     }
 
-    public static void sendLookPacket(LocalPlayer playerEntity, PlayerLook playerLook) {
-        sendLookPacket(playerEntity, playerLook.getYaw(), playerLook.getPitch());
+    public static void sendLookPacket(LocalPlayer playerEntity, Look look) {
+        sendLookPacket(playerEntity, look.getYaw(), look.getPitch());
     }
 
     public interface SequenceExtension {

@@ -37,12 +37,18 @@ public class Task {
     public final Block block;
     public final BlockPos pos;
 
+
+
+
     private TaskState currentState;
     private TaskState lastState;
     private @Nullable TaskState nextState;
+
     public final List<TaskPlan> planItems;
     public @Nullable TaskPlan planItem;
     public final Queue<BlockPos> recycledQueue;
+
+
     public boolean executeModify;
     private int tickTotalCount;
     private int tickInternalCount;
@@ -222,7 +228,7 @@ public class Task {
         } else {
             placeBlockState = Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(RedstoneWallTorchBlock.FACING, planItem.redstoneTorch.facing);
         }
-        if (InteractionUtils.canPlace(world, planItem.redstoneTorch.pos, placeBlockState)) {
+        if (BlockUtils.canPlace(planItem.redstoneTorch.pos, placeBlockState)) {
             if (planItem.redstoneTorch.isNeedModify() && !planItem.redstoneTorch.modify) {
                 setModifyLook(planItem.redstoneTorch);
                 return;
@@ -261,7 +267,7 @@ public class Task {
         }
         debug("放置活塞");
         BlockState placeBlockState = Blocks.PISTON.defaultBlockState().setValue(PistonBaseBlock.FACING, planItem.piston.facing);
-        if (InteractionUtils.canPlace(world, planItem.piston.pos, placeBlockState)) {
+        if (BlockUtils.canPlace(planItem.piston.pos, placeBlockState)) {
             if (planItem.piston.isNeedModify() && !planItem.piston.modify) {
                 setModifyLook(planItem.piston);
                 return;
@@ -299,7 +305,7 @@ public class Task {
                     item.slimeBlock.level += 1000;
                 } else if (BlockUtils.isReplaceable(slimeBlockState)) {
                     item.slimeBlock.level += 1;
-                } else if (BlockUtils.sideCoversSmallSquare(item.slimeBlock.pos, item.slimeBlock.facing)) {
+                } else if (BlockUtils.canSupportCenter(item.slimeBlock.pos, item.slimeBlock.facing)) {
                     item.slimeBlock.level -= 1;
                 } else {
                     item.slimeBlock.level += 1000;
@@ -319,7 +325,7 @@ public class Task {
                 final BlockState pistonHeadState = world.getBlockState(pistonHeadPos);
                 final BlockState pistonDefaultState = Blocks.PISTON.defaultBlockState().setValue(PistonBaseBlock.FACING, pistonFacing);
                 final BlockState pistonHeadDefaultState = Blocks.PISTON_HEAD.defaultBlockState().setValue(PistonHeadBlock.FACING, pistonFacing);
-                if (!InteractionUtils.canPlace(world, pistonPos, pistonDefaultState) || !InteractionUtils.canPlace(world, pistonHeadPos, pistonHeadDefaultState)) {
+                if (!BlockUtils.canPlace(pistonPos, pistonDefaultState) || !BlockUtils.canPlace(pistonHeadPos, pistonHeadDefaultState)) {
                     if (!(pistonState.is(Blocks.PISTON) && pistonHeadState.is(Blocks.PISTON_HEAD))) {
                         continue;
                     }
@@ -336,8 +342,8 @@ public class Task {
                 if (world.getFluidState(item.redstoneTorch.pos).is(FluidTags.WATER)) {
                     continue;
                 }
-                if (InteractionUtils.canPlace(world, item.slimeBlock.pos, Blocks.SLIME_BLOCK.defaultBlockState())
-                        || BlockUtils.sideCoversSmallSquare(item.slimeBlock.pos, item.slimeBlock.facing)) {// 特殊放置方案类型1, 需要检查目标方块是否能能被……充
+                if (BlockUtils.canPlace(item.slimeBlock.pos, Blocks.SLIME_BLOCK.defaultBlockState())
+                        || BlockUtils.canSupportCenter(item.slimeBlock.pos, item.slimeBlock.facing)) {// 特殊放置方案类型1, 需要检查目标方块是否能能被……充
                     if (item.redstoneTorch.type == 1 && !world.getBlockState(pos).isRedstoneConductor(world, pos)) {
                         continue;
                     }
@@ -596,7 +602,7 @@ public class Task {
                 this.currentState = TaskState.PLACE_SLIME_BLOCK;
                 return;
             }
-            if (!BlockUtils.sideCoversSmallSquare(this.planItem.slimeBlock.pos, this.planItem.slimeBlock.facing)) {
+            if (!BlockUtils.canSupportCenter(this.planItem.slimeBlock.pos, this.planItem.slimeBlock.facing)) {
                 this.debugUpdateStates("[%s] [%s] 底座已放置, 但不是完整的方块", this.planItem.slimeBlock.pos.toShortString(), this.planItem.slimeBlock.facing);
                 this.currentState = TaskState.FAIL;
                 return;
