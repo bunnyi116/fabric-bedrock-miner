@@ -43,10 +43,10 @@ public class TaskPlan {
     }
 
     public boolean canInteractWithBlockAt() {
-        final var b1 = PlayerUtils.canInteractWithBlockAt(piston.pos, 0F);
-        final var b2 = PlayerUtils.canInteractWithBlockAt(redstoneTorch.pos, 0F);
+        final var b1 = PlayerUtils.isWithinBlockInteractionRange(piston.pos, 0F);
+        final var b2 = PlayerUtils.isWithinBlockInteractionRange(redstoneTorch.pos, 0F);
         if (b1 && b2) {
-            final var b3 = PlayerUtils.canInteractWithBlockAt(slimeBlock.pos, 0F);
+            final var b3 = PlayerUtils.isWithinBlockInteractionRange(slimeBlock.pos, 0F);
             if (b3 && BlockUtils.isReplaceable(BedrockMiner.level.getBlockState(slimeBlock.pos))) {
                 return true;
             }

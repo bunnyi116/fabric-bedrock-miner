@@ -40,7 +40,7 @@ public abstract class MultiPlayerGameModeMixin implements MultiPlayerGameModeExt
 
     @Inject(at = @At(value = "HEAD"), method = "startDestroyBlock")
     private void attackBlock(BlockPos pos, Direction direction, CallbackInfoReturnable<Boolean> cir) {
-        if (TaskManager.isWorking()) {
+        if (TaskManager.getInstance().isRunning()) {
             BlockState blockState = level.getBlockState(pos);
             Block block = blockState.getBlock();
             if (TaskManager.getInstance().isBedrockMinerFeatureEnable()) {

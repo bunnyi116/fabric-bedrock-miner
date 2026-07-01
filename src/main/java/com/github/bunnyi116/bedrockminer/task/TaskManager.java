@@ -1,12 +1,7 @@
 package com.github.bunnyi116.bedrockminer.task;
 
 import com.github.bunnyi116.bedrockminer.config.Config;
-import com.github.bunnyi116.bedrockminer.util.CombinedIterator;
-import com.github.bunnyi116.bedrockminer.util.MessageUtils;
-import com.github.bunnyi116.bedrockminer.util.BlockUtils;
-import com.github.bunnyi116.bedrockminer.util.InventoryUtils;
-import com.github.bunnyi116.bedrockminer.util.PlayerLookUtils;
-import com.github.bunnyi116.bedrockminer.util.PlayerUtils;
+import com.github.bunnyi116.bedrockminer.util.*;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -25,7 +20,9 @@ import java.util.List;
 import static com.github.bunnyi116.bedrockminer.BedrockMiner.*;
 import static com.github.bunnyi116.bedrockminer.I18n.*;
 
+@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 public class TaskManager {
+
     private static volatile @Nullable TaskManager INSTANCE;
     private final ArrayList<Task> pendingBlockTasks = new ArrayList<>();
     @Getter
@@ -43,12 +40,18 @@ public class TaskManager {
     private boolean bedrockMinerFeatureEnable = true;
     private int sortCount;
 
+    @Getter
+    private long ticks;
+
+
+
     public void tick() {
+        this.ticks++;
         if (!gameVariableIsValid()) {
             return;
         }
         if (Config.getInstance().disable || !this.isRunning()) {
-            PlayerLookUtils.tick();
+            this.tick();
             return;
         }
         if (this.pendingBlockTasks.isEmpty() && this.pendingRegionTasks.isEmpty() && Config.getInstance().ranges.isEmpty()) {
@@ -81,12 +84,12 @@ public class TaskManager {
                 if (this.activeBlockTasks.size() > 1) {
                     this.activeBlockTasks.sort((a1, a2) -> Boolean.compare(a1.isNeedModify(), a2.isNeedModify()));
                 }
-
             }
         }
         boolean execute = false;
         boolean requestPickaxe = false;
         boolean modifyLook = false;
+
         if (!this.activeBlockTasks.isEmpty()) {
             if (this.activeBlockTasks.size() > 1) {
                 for (Task entry : this.activeBlockTasks) {
@@ -121,11 +124,11 @@ public class TaskManager {
                     currentTask.active++;
                 }
                 processing = true;
-                if (PlayerLookUtils.getTask() != null && !activeBlockTasks.contains(PlayerLookUtils.getTask())) {
-                    PlayerLookUtils.reset();
+                if (TaskLookManager.INSTANCE.getTask() != null && !activeBlockTasks.contains(TaskLookManager.INSTANCE.getTask())) {
+                    TaskLookManager.INSTANCE.reset();
                 }
-                if (PlayerLookUtils.isModify()) {
-                    if (PlayerLookUtils.getTask() != currentTask) {
+                if (TaskLookManager.INSTANCE.isModify()) {
+                    if (TaskLookManager.INSTANCE.getTask() != currentTask) {
                         continue;
                     }
                     modifyLook = true;
@@ -181,7 +184,7 @@ public class TaskManager {
                 if (!task.canInteractWithBlockAt()) {
                     continue;
                 }
-                if (PlayerLookUtils.isModify() && PlayerLookUtils.getTask() != task) {
+                if (TaskLookManager.INSTANCE.isModify() && TaskLookManager.INSTANCE.getTask() != task) {
                     continue;
                 }
                 iterator.remove();
@@ -244,7 +247,7 @@ public class TaskManager {
                     for (int z = rangeBox.minZ(); z <= rangeBox.maxZ(); z++) {
                         for (int x = rangeBox.minX(); x <= rangeBox.maxX(); x++) {
                             BlockPos blockPos = new BlockPos(x, y, z);
-                            if (!PlayerUtils.canInteractWithBlockAt(blockPos, 1.0F)) {
+                            if (!PlayerUtils.isWithinBlockInteractionRange(blockPos, 1.0F)) {
                                 continue;
                             }
                             final BlockState blockState = level.getBlockState(blockPos);
@@ -262,7 +265,7 @@ public class TaskManager {
                             if (!task.canInteractWithBlockAt()) {
                                 continue;
                             }
-                            if (PlayerLookUtils.isModify() && PlayerLookUtils.getTask() != task) {
+                            if (TaskLookManager.INSTANCE.isModify() && TaskLookManager.INSTANCE.getTask() != task) {
                                 continue;
                             }
                             if (task.world != level) {
@@ -282,7 +285,7 @@ public class TaskManager {
         }
     }
 
-    public boolean isAllowExecutionEnvironment(boolean setOverlayMessage) {
+    private boolean isAllowExecutionEnvironment(boolean setOverlayMessage) {
         Component msg = null;
         if (gameType.isCreative()) {
             msg = FAIL_MISSING_SURVIVAL;
@@ -403,7 +406,7 @@ public class TaskManager {
                 return;
             }
             this.setRunning(true);
-            if (!client.isLocalServer()) {   // 服务器开启时发送警告提示
+            if (!minecraft.isLocalServer()) {   // 服务器开启时发送警告提示
                 MessageUtils.addMessage(WARN_MULTIPLAYER);
             }
         }

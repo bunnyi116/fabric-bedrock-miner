@@ -1,5 +1,7 @@
 package com.github.bunnyi116.bedrockminer.util;
 
+import lombok.Getter;
+
 import java.util.Iterator;
 import java.util.List;
 
@@ -38,11 +40,4 @@ public class CombinedIterator<T> implements Iterator<T> {
         }
     }
 
-    public Iterator<T> getIterator1() {
-        return iterator1;
-    }
-
-    public Iterator<T> getIterator2() {
-        return iterator2;
-    }
 }

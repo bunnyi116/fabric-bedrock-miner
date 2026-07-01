@@ -55,7 +55,7 @@ public class InventoryUtils {
                 continue;
             }
             // 选取最快工具
-            float blockBreakingTotalTime = PlayerUtils.getBlockBreakingSpeed(blockState, itemStack);
+            float blockBreakingTotalTime = BlockUtils.getDestroySpeed(blockState, itemStack);
             if (lastTime == -1 || lastTime < blockBreakingTotalTime) {
                 lastTime = blockBreakingTotalTime;
                 lastSlot = i;
@@ -172,7 +172,7 @@ public class InventoryUtils {
     public static boolean canInstantlyMinePiston() {
         for (ItemStack stack : InventoryUtils.getMainStacks(playerInventory)) {
             if (stack.isEmpty()) continue;
-            if (PlayerUtils.canInstantlyMineBlock(Blocks.PISTON.defaultBlockState(), stack)
+            if (BlockUtils.canInstantlyMineBlock(Blocks.PISTON.defaultBlockState(), stack)
                     && !InventoryUtils.isItemDamageWarning(stack, 5)) {
                 return true;
             }

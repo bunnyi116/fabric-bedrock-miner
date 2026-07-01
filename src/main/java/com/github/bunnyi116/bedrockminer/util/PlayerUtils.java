@@ -24,9 +24,6 @@ public class PlayerUtils {
         return Math.sqrt(dx * dx + dz * dz);
     }
 
-    /**
-     * 获取最近的面
-     */
     public static Direction getClosestFace(BlockPos targetPos) {
         Vec3 playerPos = player.getEyePosition();
         Vec3 targetCenterPos = Vec3.atCenterOf(targetPos);
@@ -46,11 +43,7 @@ public class PlayerUtils {
         return closestFace;
     }
 
-    /**
-     * 判断玩家是否位于可与指定方块交互的距离范围内。
-     * 用于检测破坏、放置或右键交互是否有效。
-     */
-    public static boolean canInteractWithBlockAt(BlockPos blockPos, double additionalRange) {
+    public static boolean isWithinBlockInteractionRange(BlockPos blockPos, double additionalRange) {
         double blockPosX = blockPos.getX();
         double blockPosY = blockPos.getY();
         double blockPosZ = blockPos.getZ();
@@ -82,9 +75,6 @@ public class PlayerUtils {
         //#endif
     }
 
-    /**
-     * 获取方块交互范围
-     */
     public static double getBlockInteractionRange() {
         //#if MC>=12005
         if (Minecraft.getInstance().player != null) {
@@ -97,103 +87,4 @@ public class PlayerUtils {
         //#endif
         return 4.5F;
     }
-
-    /**
-     * 计算当前TICK方块破坏增量
-     */
-    public static float calcBlockBreakingDelta(BlockState state, ItemStack itemStack) {
-        float hardness = state.getBlock().defaultDestroyTime();
-        if (hardness == -1.0F) {
-            return 0.0F;
-        } else {
-            int i = player.hasCorrectToolForDrops(state) ? 30 : 100;
-            return getBlockBreakingSpeed(state, itemStack) / hardness / (float) i;
-        }
-    }
-
-    public static float calcBlockBreakingDelta(BlockState state) {
-        return calcBlockBreakingDelta(state, player.getMainHandItem());
-    }
-
-    public static boolean canInstantlyMineBlock(BlockState state, ItemStack itemStack) {
-        return PlayerUtils.calcBlockBreakingDelta(state, itemStack) >= 0.7F;
-    }
-
-    public static boolean canInstantlyMineBlock(BlockState state) {
-        return canInstantlyMineBlock(state, player.getMainHandItem());
-    }
-
-    /**
-     * 获取当前物品能够破坏指定方块的破坏速度.
-     *
-     * @param blockState 要破坏的方块状态
-     * @param itemStack  使用工具/物品破坏方块
-     * @return 当前物品破坏该方块所需的时间（单位为 tick）
-     */
-    public static float getBlockBreakingSpeed(BlockState blockState, ItemStack itemStack) {
-        var f = itemStack.getDestroySpeed(blockState);  // 当前物品的破坏系数速度
-
-
-        // 根据工具的"效率"附魔增加破坏速度
-        //#if MC > 12006
-        if (f > 1.0F) {
-            for (var enchantment : itemStack.getEnchantments().keySet()) {
-                var enchantmentKey = enchantment.unwrapKey();
-                if (enchantmentKey.isPresent()) {
-                    if (enchantmentKey.get() == Enchantments.EFFICIENCY) {
-                        int level = EnchantmentHelper.getItemEnchantmentLevel(enchantment, itemStack);
-                        if (level > 0 && !itemStack.isEmpty()) {
-                            f += (float) (level * level + 1);
-                        }
-                    }
-                }
-            }
-        }
-        //#else
-        //$$ if (f > 1.0F) {
-        //$$     int level = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.EFFICIENCY, itemStack);
-        //$$     if (level > 0 && !itemStack.isEmpty()) {
-        //$$         f += (float)(level * level + 1);
-        //$$     }
-        //$$ }
-        //#endif
-
-        // 根据玩家"急迫"状态效果增加破坏速度
-        if (MobEffectUtil.hasDigSpeed(player)) {
-            f *= 1.0F + (float)(MobEffectUtil.getDigSpeedAmplification(player) + 1) * 0.2F;
-        }
-
-        // 根据玩家"挖掘疲劳"状态效果减缓破坏速度
-        if (player.hasEffect(MobEffects.MINING_FATIGUE)) {
-            float g = switch (Objects.requireNonNull(player.getEffect(MobEffects.MINING_FATIGUE)).getAmplifier()) {
-                case 0 -> 0.3F;
-                case 1 -> 0.09F;
-                case 2 -> 0.0027F;
-                default -> 8.1E-4F;
-            };
-            f *= g;
-        }
-
-        // 如果玩家在水中并且没有"水下速掘"附魔，则减缓破坏速度
-        //#if MC > 12006
-        f *= (float) player.getAttributeValue(Attributes.BLOCK_BREAK_SPEED);
-        if (player.isEyeInFluid(FluidTags.WATER)) {
-            var submergedMiningSpeed = player.getAttribute(Attributes.SUBMERGED_MINING_SPEED);
-            if (submergedMiningSpeed != null) {
-                f *= (float) submergedMiningSpeed.getValue();
-            }
-        }
-        //#else
-        //$$ if (player.isEyeInFluid(FluidTags.WATER) && !EnchantmentHelper.hasAquaAffinity(player)) {
-        //$$     f /= 5.0F;
-        //$$ }
-        //#endif
-
-        // 如果玩家不在地面上，则减缓破坏速度
-        if (!player.onGround()) {
-            f /= 5.0F;
-        }
-        return f;
-    }
-
 }

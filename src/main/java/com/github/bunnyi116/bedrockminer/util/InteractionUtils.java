@@ -3,10 +3,9 @@ package com.github.bunnyi116.bedrockminer.util;
 import com.github.bunnyi116.bedrockminer.mixin.MultiPlayerGameModeAccessor;
 import com.github.bunnyi116.bedrockminer.mixin_extension.BlockBreakResult;
 import com.github.bunnyi116.bedrockminer.mixin_extension.MultiPlayerGameModeExtension;
-import lombok.Getter;
+import com.github.bunnyi116.bedrockminer.task.TaskLookManager;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
@@ -46,7 +45,7 @@ public class InteractionUtils {
         if (player.blockActionRestricted(level, pos, gameType)) {
             return BlockBreakResult.FAILED;
         }
-        if (!PlayerUtils.canInteractWithBlockAt(pos, 1F)) {
+        if (!PlayerUtils.isWithinBlockInteractionRange(pos, 1F)) {
             return BlockBreakResult.FAILED;
         }
 
@@ -70,7 +69,7 @@ public class InteractionUtils {
                 return BlockBreakResult.COMPLETED;
             }
 //            float progress = accessor.getDestroyProgress() + blockState.getDestroyProgress(player, level, pos);
-            float progress = accessor.getDestroyProgress() + PlayerUtils.calcBlockBreakingDelta(blockState);
+            float progress = accessor.getDestroyProgress() + BlockUtils.getDestroyProgress(blockState);
             accessor.setDestroyProgress(progress);
             if (progress >= 1.0F) {
                 NetworkUtils.sendPacket((sequence) -> {
@@ -90,7 +89,7 @@ public class InteractionUtils {
                 NetworkUtils.sendPacket(new ServerboundPlayerActionPacket(Action.ABORT_DESTROY_BLOCK, accessor.getDestroyBlockPos(), direction));
                 accessor.setDestroying(false);
             }
-            float progress = PlayerUtils.calcBlockBreakingDelta(blockState);
+            float progress = BlockUtils.getDestroyProgress(blockState);
             if (progress >= 1.0F) {
                 NetworkUtils.sendPacket((sequence) -> {
                     if (!blockState.isAir() && localPrediction) {
@@ -139,38 +138,24 @@ public class InteractionUtils {
     }
 
     public static void placement(BlockPos blockPos, Direction facing, @Nullable Item... items) {
-        if (blockPos == null || facing == null)
+        if (blockPos == null || facing == null) {
             return;
-
-        if (!BlockUtils.isReplaceable(level.getBlockState(blockPos)))
+        }
+        if (!BlockUtils.isReplaceable(level.getBlockState(blockPos))) {
             return;
-
-        if (!PlayerUtils.canInteractWithBlockAt(blockPos, 0F)) {
+        }
+        if (!PlayerUtils.isWithinBlockInteractionRange(blockPos, 0F)) {
             return;
         }
         if (items != null) {
             InventoryUtils.switchToItem(items);
         }
-        // 发送修改视角数据包
-        if (facing.getAxis().isVertical()) {
-            var yaw = switch (facing) {
-                case SOUTH -> 180F;
-                case EAST -> 90F;
-                case NORTH -> 0F;
-                case WEST -> -90F;
-                default -> player.getYRot();
-            };
-            var pitch = switch (facing) {
-                case UP -> 90F;
-                case DOWN -> -90F;
-                default -> 0F;
-            };
-            PlayerLookUtils.sendLookPacket(yaw, pitch);
-        }
-        // 模拟选中位置(凭空放置)
-        var hitPos = blockPos.relative(facing.getOpposite());
-        Vec3 hitVec3d = Vec3.atCenterOf(hitPos).relative(facing, 0.5F);   // 放置面中心坐标
-        var hitResult = new BlockHitResult(hitVec3d, facing, blockPos, false);
+
+        TaskLookManager.INSTANCE.sendLookPacket(facing);
+
+        BlockPos hitPos = blockPos.relative(facing.getOpposite());
+        Vec3 hitVec3d = Vec3.atCenterOf(hitPos).relative(facing, 0.5F);
+        BlockHitResult hitResult = new BlockHitResult(hitVec3d, facing, blockPos, false);
         gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hitResult);
     }
 

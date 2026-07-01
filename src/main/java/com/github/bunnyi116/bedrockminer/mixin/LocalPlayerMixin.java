@@ -2,7 +2,6 @@ package com.github.bunnyi116.bedrockminer.mixin;
 
 import com.github.bunnyi116.bedrockminer.BedrockMiner;
 import com.github.bunnyi116.bedrockminer.task.TaskManager;
-import com.github.bunnyi116.bedrockminer.util.InteractionUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,25 +15,25 @@ import static com.github.bunnyi116.bedrockminer.BedrockMiner.level;
 
 @Mixin(value = LocalPlayer.class, priority = 1010)
 public abstract class LocalPlayerMixin {
-    @Inject(at = @At(value = "HEAD"), method = "tick", cancellable = true)
+    @Inject(at = @At(value = "HEAD"), method = "tick")
     public void tick(CallbackInfo ci) {
         updateGameVariable();
-        if (TaskManager.isWorking()) {
+        if (TaskManager.getInstance().isRunning()) {
             TaskManager.getInstance().tick();
         }
     }
 
     @Unique
     private void updateGameVariable() {
-        BedrockMiner.client = Minecraft.getInstance();
-        level = BedrockMiner.client.level;
-        player = BedrockMiner.client.player;
+        BedrockMiner.minecraft = Minecraft.getInstance();
+        level = BedrockMiner.minecraft.level;
+        player = BedrockMiner.minecraft.player;
         if (player != null) {
             BedrockMiner.playerInventory = player.getInventory();
         }
-        BedrockMiner.hitResult = BedrockMiner.client.hitResult;
-        BedrockMiner.gameMode = BedrockMiner.client.gameMode;
-        BedrockMiner.connection = BedrockMiner.client.getConnection();
+        BedrockMiner.hitResult = BedrockMiner.minecraft.hitResult;
+        BedrockMiner.gameMode = BedrockMiner.minecraft.gameMode;
+        BedrockMiner.connection = BedrockMiner.minecraft.getConnection();
         if (BedrockMiner.gameMode != null) {
             BedrockMiner.gameType = BedrockMiner.gameMode.getPlayerMode();
         }

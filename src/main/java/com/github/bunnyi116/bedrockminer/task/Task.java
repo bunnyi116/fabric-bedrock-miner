@@ -4,12 +4,7 @@ import com.github.bunnyi116.bedrockminer.BedrockMiner;
 import com.github.bunnyi116.bedrockminer.Debug;
 import com.github.bunnyi116.bedrockminer.I18n;
 import com.github.bunnyi116.bedrockminer.config.Config;
-import com.github.bunnyi116.bedrockminer.util.MessageUtils;
-import com.github.bunnyi116.bedrockminer.util.BlockUtils;
-import com.github.bunnyi116.bedrockminer.util.InteractionUtils;
-import com.github.bunnyi116.bedrockminer.util.InventoryUtils;
-import com.github.bunnyi116.bedrockminer.util.PlayerLookUtils;
-import com.github.bunnyi116.bedrockminer.util.PlayerUtils;
+import com.github.bunnyi116.bedrockminer.util.*;
 import com.google.common.collect.Queues;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -37,9 +32,6 @@ public class Task {
     public final Block block;
     public final BlockPos pos;
 
-
-
-
     private TaskState currentState;
     private TaskState lastState;
     private @Nullable TaskState nextState;
@@ -47,7 +39,6 @@ public class Task {
     public final List<TaskPlan> planItems;
     public @Nullable TaskPlan planItem;
     public final Queue<BlockPos> recycledQueue;
-
 
     public boolean executeModify;
     private int tickTotalCount;
@@ -80,7 +71,7 @@ public class Task {
 
     public boolean canInteractWithBlockAt() {
         if (this.world == BedrockMiner.level) {
-            if (PlayerUtils.canInteractWithBlockAt(pos, 1F)) {
+            if (PlayerUtils.isWithinBlockInteractionRange(pos, 1F)) {
                 if (planItem != null) {
                     return planItem.canInteractWithBlockAt();
                 }
@@ -107,13 +98,13 @@ public class Task {
     }
 
     private void setModifyLook(Direction facing) {
-        PlayerLookUtils.set(facing, this);
+        TaskLookManager.INSTANCE.set(facing, this);
         this.tickOccupied();
     }
 
     private void resetModifyLook() {
-        if (PlayerLookUtils.isModify()) {
-            PlayerLookUtils.reset();
+        if (TaskLookManager.INSTANCE.isModify()) {
+            TaskLookManager.INSTANCE.reset();
         }
     }
 
@@ -449,18 +440,18 @@ public class Task {
 
     private void recycledItems() {
         if (!recycledQueue.isEmpty()) {
-            var blockPos = recycledQueue.peek();
+            BlockPos blockPos = recycledQueue.peek();
             if (blockPos == null) {
                 recycledQueue.remove();
                 return;
             }
-            var blockState = world.getBlockState(blockPos);
+            BlockState blockState = world.getBlockState(blockPos);
             debug("任务物品正在回收: (%s) --> %s", blockPos.toShortString(), blockState.getBlock().getName().getString());
             if (blockState.getBlock().defaultDestroyTime() < 0) {
                 recycledQueue.remove();
                 return;
             }
-            var instant = PlayerUtils.canInstantlyMineBlock(blockState);
+            boolean instant = BlockUtils.canInstantlyMineBlock(blockState);
             if (!instant) {
                 this.requestPickaxe = true;
                 InventoryUtils.autoSwitch(blockState);
@@ -502,7 +493,7 @@ public class Task {
             return;
         } else {
             // 切换到工具
-            if (!PlayerUtils.canInstantlyMineBlock(world.getBlockState(planItem.piston.pos))) {
+            if (!BlockUtils.canInstantlyMineBlock(world.getBlockState(planItem.piston.pos))) {
                 InventoryUtils.autoSwitch(world.getBlockState(planItem.piston.pos));
                 this.requestPickaxe = true;
                 this.setWait(TaskState.EXECUTE, 1);
@@ -645,7 +636,7 @@ public class Task {
             BlockPos pos1 = pos.relative(direction);
             BlockPos pos2 = pos1.above();
             BlockState pistonState = world.getBlockState(pos1);
-            if (pistonState.getBlock() instanceof PistonBaseBlock && PlayerUtils.canInstantlyMineBlock(pistonState)) {
+            if (pistonState.getBlock() instanceof PistonBaseBlock && BlockUtils.canInstantlyMineBlock(pistonState)) {
                 if (!TaskManager.getInstance().getActiveBlockTasks().isEmpty()) {
                     for (Task task : TaskManager.getInstance().getActiveBlockTasks()) {
                         if (task == null) continue;
@@ -658,7 +649,7 @@ public class Task {
                 InteractionUtils.updateBlockBreakingProgress(pos1, false);
             }
             BlockState pistonUpState = world.getBlockState(pos2);
-            if (pistonUpState.getBlock() instanceof PistonBaseBlock && PlayerUtils.canInstantlyMineBlock(pistonUpState)) {
+            if (pistonUpState.getBlock() instanceof PistonBaseBlock && BlockUtils.canInstantlyMineBlock(pistonUpState)) {
                 if (!TaskManager.getInstance().getActiveBlockTasks().isEmpty()) {
                     for (Task task : TaskManager.getInstance().getActiveBlockTasks()) {
                         if (task == null) continue;

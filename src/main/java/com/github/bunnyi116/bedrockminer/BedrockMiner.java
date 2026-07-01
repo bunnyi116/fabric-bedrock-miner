@@ -22,7 +22,7 @@ public class BedrockMiner implements ModInitializer  {
     public static final boolean TEST = false;
 
     // 常用游戏变量(通过 mixin 从 MultiPlayerGameMode 更新)
-    public static Minecraft client;
+    public static Minecraft minecraft;
     public static ClientLevel level;
     public static LocalPlayer player;
     public static Inventory playerInventory;
@@ -40,7 +40,7 @@ public class BedrockMiner implements ModInitializer  {
 
     public static void initGameVariable() {
         Minecraft mc = Minecraft.getInstance();
-        BedrockMiner.client = mc;
+        BedrockMiner.minecraft = mc;
         BedrockMiner.level = mc.level;
         BedrockMiner.player = mc.player;
         if (mc.player != null) {
@@ -55,7 +55,7 @@ public class BedrockMiner implements ModInitializer  {
     }
 
     public static boolean gameVariableIsValid() {
-        return client != null
+        return minecraft != null
                 && level != null
                 && player != null
                 && connection != null
