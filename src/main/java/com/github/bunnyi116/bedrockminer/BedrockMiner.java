@@ -39,7 +39,7 @@ public class BedrockMiner implements ModInitializer  {
     }
 
     public static void initGameVariable() {
-        var mc = Minecraft.getInstance();
+        Minecraft mc = Minecraft.getInstance();
         BedrockMiner.client = mc;
         BedrockMiner.level = mc.level;
         BedrockMiner.player = mc.player;
