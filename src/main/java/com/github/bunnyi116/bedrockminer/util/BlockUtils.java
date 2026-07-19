@@ -59,7 +59,11 @@ public class BlockUtils {
             return false;
         }
         CollisionContext collisionContext = player != null
+                //#if MC > 12111
                 ? CollisionContext.placementContext(player)
+                //#else
+                //$$ ? CollisionContext.of(player)
+                //#endif
                 : CollisionContext.empty();
         return level.isUnobstructed(stateToPlace, placePos, collisionContext);
     }

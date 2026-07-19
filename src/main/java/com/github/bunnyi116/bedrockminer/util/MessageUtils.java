@@ -8,7 +8,7 @@ public class MessageUtils {
     public static void setOverlayMessage(Component message) {
         //#if MC>=260200
         minecraft.gui.hud.setOverlayMessage(message, false);
-        //$$ client.gui.setOverlayMessage(message, false);
+        //$$ minecraft.gui.setOverlayMessage(message, false);
         //#endif
     }
 
@@ -16,9 +16,9 @@ public class MessageUtils {
         //#if MC>=260200
         minecraft.gui.hud.getChat().addClientSystemMessage(message);
         //#elseif MC>=260100 && MC<260200
-        //$$ client.gui.getChat().addClientSystemMessage(message);
+        //$$ minecraft.gui.getChat().addClientSystemMessage(message);
         //#else
-        //$$ client.gui.getChat().addMessage(message);
+        //$$ minecraft.gui.getChat().addMessage(message);
         //#endif
     }
 }
