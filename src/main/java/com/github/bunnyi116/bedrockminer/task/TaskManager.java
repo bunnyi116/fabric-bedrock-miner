@@ -44,7 +44,6 @@ public class TaskManager {
     private long ticks;
 
 
-
     public void tick() {
         this.ticks++;
         if (!gameVariableIsValid()) {
@@ -109,10 +108,7 @@ public class TaskManager {
             while (iterator.hasNext()) {
                 Task currentTask = iterator.next();
                 if (currentTask == null) continue;
-                if (currentTask.world != level || !currentTask.canInteractWithBlockAt()) {
-                    MessageUtils.setOverlayMessage(Component.literal("远离当前正在处理的方块位置, 冷却时间剩余: " + (resetCountMax - currentTask.active)));
-                    continue;
-                }
+
                 if (currentTask.active >= resetCountMax) {
                     if (this.pendingBlockTasks.size() > 1 || !this.pendingRegionTasks.isEmpty() || !Config.getInstance().ranges.isEmpty()) {
                         this.cacheBlockTasks.add(currentTask);
@@ -120,8 +116,9 @@ public class TaskManager {
                         currentTask.active = 0;
                         continue;
                     }
-                } else {
-                    currentTask.active++;
+                } else if (currentTask.world != level || !currentTask.canInteractWithBlockAt()) {
+                    MessageUtils.setOverlayMessage(Component.literal("远离当前正在处理的方块位置, 冷却时间剩余: " + (resetCountMax - ++currentTask.active)));
+                    continue;
                 }
                 processing = true;
                 if (TaskLookManager.INSTANCE.getTask() != null && !activeBlockTasks.contains(TaskLookManager.INSTANCE.getTask())) {
