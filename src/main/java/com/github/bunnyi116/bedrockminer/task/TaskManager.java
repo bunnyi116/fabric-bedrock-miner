@@ -447,4 +447,23 @@ public class TaskManager {
         }
         return INSTANCE;
     }
+
+    //region 为 BiliXWhite/litematica-printer 提供兼容方法 (作者更新不及时)
+    public static void addTask(Block block, BlockPos pos, ClientLevel world) {
+        TaskManager.getInstance().addBlockTask(world, pos, block);
+    }
+
+    public static boolean isWorking() {
+        return TaskManager.getInstance().isRunning();
+    }
+
+    public static void setWorking(boolean working) {
+        TaskManager.getInstance().setRunning(working);
+    }
+
+    public static void clearTask() {
+        TaskManager.getInstance().removeAll();
+    }
+    //endregion
+
 }
