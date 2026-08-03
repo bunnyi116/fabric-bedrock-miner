@@ -13,7 +13,7 @@
     "issues": "${mod_sources}/issues"
   },
   "license": "${mod_license}",
-  "icon": "icon.png",
+  "icon": "assets/${mod_id}/icon.png",
   "environment": "client",
   "entrypoints": {
     "main": [
