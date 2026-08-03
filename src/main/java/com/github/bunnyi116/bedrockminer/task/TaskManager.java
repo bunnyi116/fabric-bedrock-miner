@@ -42,6 +42,7 @@ public class TaskManager {
 
     @Getter
     private long ticks;
+    private long lastWarningTick;
 
 
     public void tick() {
@@ -57,7 +58,8 @@ public class TaskManager {
             this.removeBlockTaskAll();
             return;
         }
-        if (!isAllowExecutionEnvironment(activeBlockTasks.isEmpty())) {
+        if (activeBlockTasks.isEmpty() && !isAllowExecutionEnvironment(true)) {
+            warnMissingResources();
             return;
         }
         // 每40TICK进行排序一次
@@ -283,29 +285,130 @@ public class TaskManager {
     }
 
     private boolean isAllowExecutionEnvironment(boolean setOverlayMessage) {
-        Component msg = null;
-        if (gameType.isCreative()) {
-            msg = FAIL_MISSING_SURVIVAL;
-        }
-        if (gameMode != null && !gameMode.getPlayerMode().isSurvival()) {
-            msg = FAIL_MISSING_SURVIVAL;
-        }
-        if (InventoryUtils.getInventoryItemCount(Items.PISTON) < 2) {
-            msg = FAIL_MISSING_PISTON;
-        }
-        if (InventoryUtils.getInventoryItemCount(Items.REDSTONE_TORCH) < 1) {
-            msg = FAIL_MISSING_REDSTONETORCH;
-        }
-        if (!InventoryUtils.canInstantlyMinePiston()) {
-            msg = FAIL_MISSING_INSTANTMINE;
-        }
-        if (msg != null) {
+        if (gameType.isCreative() || (gameMode != null && !gameMode.getPlayerMode().isSurvival())) {
             if (setOverlayMessage) {
+                MessageUtils.setOverlayMessage(FAIL_MISSING_SURVIVAL);
+            }
+            return false;
+        }
+
+        List<Component> missingList = new ArrayList<>();
+
+        int pistonCount = InventoryUtils.getInventoryItemCount(Items.PISTON);
+        if (pistonCount < 2) {
+            missingList.add(Component.literal((2 - pistonCount) + "x ").append(Component.translatable(Items.PISTON.getDescriptionId())));
+        }
+
+        int torchCount = InventoryUtils.getInventoryItemCount(Items.REDSTONE_TORCH);
+        if (torchCount < 1) {
+            missingList.add(Component.translatable(Items.REDSTONE_TORCH.getDescriptionId()));
+        }
+
+        int slimeCount = InventoryUtils.getInventoryItemCount(Items.SLIME_BLOCK);
+        if (slimeCount < 1) {
+            missingList.add(Component.translatable(Items.SLIME_BLOCK.getDescriptionId()));
+        }
+
+        boolean hasHaste2 = net.minecraft.world.effect.MobEffectUtil.hasDigSpeed(player) && net.minecraft.world.effect.MobEffectUtil.getDigSpeedAmplification(player) >= 1;
+        boolean hasPickaxe = canInstantlyMinePistonWithHaste2();
+
+        if (!hasHaste2) {
+            missingList.add(FAIL_MISSING_HASTE);
+        }
+        if (!hasPickaxe) {
+            missingList.add(FAIL_MISSING_PICKAXE);
+        }
+
+        if (!missingList.isEmpty()) {
+            if (setOverlayMessage) {
+                net.minecraft.network.chat.MutableComponent msg = Component.empty().append(FAIL_MISSING_PREFIX);
+                for (int i = 0; i < missingList.size(); i++) {
+                    msg.append(missingList.get(i));
+                    if (i < missingList.size() - 1) {
+                        msg.append(", ");
+                    }
+                }
                 MessageUtils.setOverlayMessage(msg);
             }
             return false;
         }
+
         return true;
+    }
+
+    private void checkEnvironmentAndPrintToChat() {
+        List<Component> missingList = new ArrayList<>();
+
+        int pistonCount = InventoryUtils.getInventoryItemCount(Items.PISTON);
+        if (pistonCount < 2) {
+            missingList.add(Component.literal((2 - pistonCount) + "x ").append(Component.translatable(Items.PISTON.getDescriptionId())));
+        }
+
+        int torchCount = InventoryUtils.getInventoryItemCount(Items.REDSTONE_TORCH);
+        if (torchCount < 1) {
+            missingList.add(Component.translatable(Items.REDSTONE_TORCH.getDescriptionId()));
+        }
+
+        int slimeCount = InventoryUtils.getInventoryItemCount(Items.SLIME_BLOCK);
+        if (slimeCount < 1) {
+            missingList.add(Component.translatable(Items.SLIME_BLOCK.getDescriptionId()));
+        }
+
+        boolean hasHaste2 = net.minecraft.world.effect.MobEffectUtil.hasDigSpeed(player) && net.minecraft.world.effect.MobEffectUtil.getDigSpeedAmplification(player) >= 1;
+        boolean hasPickaxe = canInstantlyMinePistonWithHaste2();
+
+        if (!hasHaste2) {
+            missingList.add(FAIL_MISSING_HASTE);
+        }
+        if (!hasPickaxe) {
+            missingList.add(FAIL_MISSING_PICKAXE);
+        }
+
+        if (!missingList.isEmpty()) {
+            net.minecraft.network.chat.MutableComponent msg = Component.empty().append(FAIL_MISSING_PREFIX);
+            for (int i = 0; i < missingList.size(); i++) {
+                msg.append(missingList.get(i));
+                if (i < missingList.size() - 1) {
+                    msg.append(", ");
+                }
+            }
+            MessageUtils.addMessage(msg);
+        }
+    }
+
+    private boolean canInstantlyMinePistonWithHaste2() {
+        boolean hasHaste = net.minecraft.world.effect.MobEffectUtil.hasDigSpeed(player);
+        int amplifier = hasHaste ? net.minecraft.world.effect.MobEffectUtil.getDigSpeedAmplification(player) : 0;
+        float hasteMultiplier = 1.0F + (amplifier + 1) * 0.2F;
+
+        for (net.minecraft.world.item.ItemStack stack : InventoryUtils.getMainStacks(playerInventory)) {
+            if (stack.isEmpty()) continue;
+            if (!stack.is(Items.DIAMOND_PICKAXE) && !stack.is(Items.NETHERITE_PICKAXE)) {
+                continue;
+            }
+            if (InventoryUtils.isItemDamageWarning(stack, 5)) {
+                continue;
+            }
+
+            float speed = BlockUtils.getDestroySpeed(net.minecraft.world.level.block.Blocks.PISTON.defaultBlockState(), stack);
+            if (hasHaste) {
+                speed /= hasteMultiplier;
+            }
+            speed *= 1.4F;
+
+            float progress = speed / 1.5F / 30.0F;
+            if (progress >= 0.7F) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void warnMissingResources() {
+        if (ticks - lastWarningTick >= 100) {
+            lastWarningTick = ticks;
+            checkEnvironmentAndPrintToChat();
+        }
     }
 
     public void addBlockTask(ClientLevel world, BlockPos pos, Block block) {
@@ -313,6 +416,7 @@ public class TaskManager {
             return;
         }
         if (!isAllowExecutionEnvironment(true)) {
+            warnMissingResources();
             return;
         }
         if (!gameType.isSurvival()) {
@@ -406,6 +510,7 @@ public class TaskManager {
             if (!minecraft.isLocalServer()) {   // 服务器开启时发送警告提示
                 MessageUtils.addMessage(WARN_MULTIPLAYER);
             }
+            checkEnvironmentAndPrintToChat();
         }
     }
 
