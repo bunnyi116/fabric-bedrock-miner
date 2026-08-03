@@ -35,6 +35,8 @@ val mixinCompatibilityLevel = "JAVA_${javaVersion.majorVersion.toInt()}"
 repositories {
     maven("https://maven.fabricmc.net")
     maven("https://jitpack.io")
+    maven("https://api.modrinth.com/maven")
+    maven("https://maven.shedaniel.me/")
 }
 
 // https://github.com/FabricMC/fabric-loader/issues/783
@@ -44,6 +46,32 @@ configurations.all {
     }
 }
 
+val modmenuVersion = when {
+    minecraftVersion.startsWith("1.19") -> "7.2.2"
+    minecraftVersion == "1.20" || minecraftVersion == "1.20.1" -> "7.2.2"
+    minecraftVersion == "1.20.2" -> "8.0.1"
+    minecraftVersion == "1.20.3" || minecraftVersion == "1.20.4" -> "9.0.0"
+    minecraftVersion == "1.20.5" || minecraftVersion == "1.20.6" -> "10.0.0"
+    minecraftVersion == "1.21.11" -> "17.0.0"
+    minecraftVersion.startsWith("1.21") -> "11.0.3"
+    minecraftVersion.startsWith("26.") -> "17.0.0"
+    else -> "11.0.3"
+}
+
+val clothConfigVersion = when {
+    minecraftVersion.startsWith("1.19") -> "8.3.115"
+    minecraftVersion == "1.20" || minecraftVersion == "1.20.1" -> "11.1.118"
+    minecraftVersion == "1.20.2" -> "12.0.109"
+    minecraftVersion == "1.20.3" || minecraftVersion == "1.20.4" -> "13.0.121"
+    minecraftVersion == "1.20.5" || minecraftVersion == "1.20.6" -> "14.0.126"
+    minecraftVersion == "1.21.11" -> "21.11.153"
+    minecraftVersion.startsWith("1.21") -> "15.0.130"
+    minecraftVersion == "26.1" -> "26.1.154"
+    minecraftVersion == "26.2" -> "26.2.155"
+    minecraftVersion.startsWith("26.") -> "26.2.155"
+    else -> "15.0.130"
+}
+
 dependencies {
     compileOnly("org.projectlombok:lombok:${properties["lombok_version"]}")
     annotationProcessor("org.projectlombok:lombok:${properties["lombok_version"]}")
@@ -51,10 +79,15 @@ dependencies {
     minecraft("com.mojang:minecraft:$minecraftVersion") // Minecraft 客户端依赖
     implementation("net.fabricmc:fabric-loader:$loaderVersion") // Fabric 加载器依赖
     implementation("net.fabricmc.fabric-api:fabric-api:$fabricApiVersion") // Fabric API 依赖
+    compileOnly("maven.modrinth:modmenu:$modmenuVersion")
+    runtimeOnly("maven.modrinth:modmenu:$modmenuVersion")
+    compileOnly("me.shedaniel.cloth:cloth-config-fabric:$clothConfigVersion")
+    runtimeOnly("me.shedaniel.cloth:cloth-config-fabric:$clothConfigVersion")
 //    runtimeOnly(project(":fabricWrapper"))
 }
 
 loom {
+    enableTransitiveAccessWideners.set(false)
     runs {
         named("client") {
             client()
@@ -63,7 +96,7 @@ loom {
             jvmArguments.add("-Dmixin.debug.countInjections=true")
             programArguments.addAll("--width", "1280")
             programArguments.addAll("--height", "720")
-            programArguments.addAll("--username", "bedrockminer")
+            programArguments.addAll("--username", "Saikomurum")
             generateRunConfig.set(true)
         }
     }

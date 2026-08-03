@@ -9,14 +9,18 @@
   ],
   "contact": {
     "homepage": "${mod_homepage}",
-    "sources": "${mod_sources}"
+    "sources": "${mod_sources}",
+    "issues": "${mod_sources}/issues"
   },
-  "license": "",
-  "icon": "assets/${mod_id}/icon.png",
+  "license": "${mod_license}",
+  "icon": "icon.png",
   "environment": "client",
   "entrypoints": {
     "main": [
       "com.github.bunnyi116.bedrockminer.BedrockMiner"
+    ],
+    "modmenu": [
+      "com.github.bunnyi116.bedrockminer.config.ModMenuIntegration"
     ]
   },
   "mixins": [
@@ -27,11 +31,14 @@
     "minecraft": "${minecraft_dependency}"
   },
   "suggests": {
-    "another-mod": "*"
+    "cloth-config": "*"
   },
   "custom": {
     "modmenu": {
-      "parent": "${mod_wrapper_id}"
+      "links": {
+        "modmenu.modrinth": "https://modrinth.com/mod/next-fabric-bedrock-miner"
+      },
+      "update_checker": true
     }
   }
 }
