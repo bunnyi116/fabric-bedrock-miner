@@ -96,7 +96,7 @@ loom {
             jvmArguments.add("-Dmixin.debug.countInjections=true")
             programArguments.addAll("--width", "1280")
             programArguments.addAll("--height", "720")
-            programArguments.addAll("--username", "Saikomurum")
+            programArguments.addAll("--username", "bedrockminer")
             generateRunConfig.set(true)
         }
     }
