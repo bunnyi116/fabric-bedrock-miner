@@ -296,17 +296,17 @@ public class TaskManager {
 
         int pistonCount = InventoryUtils.getInventoryItemCount(Items.PISTON);
         if (pistonCount < 2) {
-            missingList.add(Component.literal((2 - pistonCount) + "x ").append(Component.translatable(Items.PISTON.getDescriptionId())));
+            missingList.add(Component.literal("§c" + (2 - pistonCount) + "x §e").append(Component.translatable(Items.PISTON.getDescriptionId())));
         }
 
         int torchCount = InventoryUtils.getInventoryItemCount(Items.REDSTONE_TORCH);
         if (torchCount < 1) {
-            missingList.add(Component.translatable(Items.REDSTONE_TORCH.getDescriptionId()));
+            missingList.add(Component.literal("§c1x §e").append(Component.translatable(Items.REDSTONE_TORCH.getDescriptionId())));
         }
 
         int slimeCount = InventoryUtils.getInventoryItemCount(Items.SLIME_BLOCK);
         if (slimeCount < 1) {
-            missingList.add(Component.translatable(Items.SLIME_BLOCK.getDescriptionId()));
+            missingList.add(Component.literal("§c1x §e").append(Component.translatable(Items.SLIME_BLOCK.getDescriptionId())));
         }
 
         boolean hasHaste2 = net.minecraft.world.effect.MobEffectUtil.hasDigSpeed(player) && net.minecraft.world.effect.MobEffectUtil.getDigSpeedAmplification(player) >= 1;
@@ -325,7 +325,7 @@ public class TaskManager {
                 for (int i = 0; i < missingList.size(); i++) {
                     msg.append(missingList.get(i));
                     if (i < missingList.size() - 1) {
-                        msg.append(", ");
+                        msg.append("§7, ");
                     }
                 }
                 MessageUtils.setOverlayMessage(msg);
@@ -341,17 +341,17 @@ public class TaskManager {
 
         int pistonCount = InventoryUtils.getInventoryItemCount(Items.PISTON);
         if (pistonCount < 2) {
-            missingList.add(Component.literal((2 - pistonCount) + "x ").append(Component.translatable(Items.PISTON.getDescriptionId())));
+            missingList.add(Component.literal("§c" + (2 - pistonCount) + "x §e").append(Component.translatable(Items.PISTON.getDescriptionId())));
         }
 
         int torchCount = InventoryUtils.getInventoryItemCount(Items.REDSTONE_TORCH);
         if (torchCount < 1) {
-            missingList.add(Component.translatable(Items.REDSTONE_TORCH.getDescriptionId()));
+            missingList.add(Component.literal("§c1x §e").append(Component.translatable(Items.REDSTONE_TORCH.getDescriptionId())));
         }
 
         int slimeCount = InventoryUtils.getInventoryItemCount(Items.SLIME_BLOCK);
         if (slimeCount < 1) {
-            missingList.add(Component.translatable(Items.SLIME_BLOCK.getDescriptionId()));
+            missingList.add(Component.literal("§c1x §e").append(Component.translatable(Items.SLIME_BLOCK.getDescriptionId())));
         }
 
         boolean hasHaste2 = net.minecraft.world.effect.MobEffectUtil.hasDigSpeed(player) && net.minecraft.world.effect.MobEffectUtil.getDigSpeedAmplification(player) >= 1;
@@ -369,7 +369,7 @@ public class TaskManager {
             for (int i = 0; i < missingList.size(); i++) {
                 msg.append(missingList.get(i));
                 if (i < missingList.size() - 1) {
-                    msg.append(", ");
+                    msg.append("§7, ");
                 }
             }
             MessageUtils.addMessage(msg);
