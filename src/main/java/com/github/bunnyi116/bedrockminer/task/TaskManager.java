@@ -309,12 +309,8 @@ public class TaskManager {
             missingList.add(Component.literal("§c1x §e").append(Component.translatable(Items.SLIME_BLOCK.getDescriptionId())));
         }
 
-        boolean hasHaste2 = net.minecraft.world.effect.MobEffectUtil.hasDigSpeed(player) && net.minecraft.world.effect.MobEffectUtil.getDigSpeedAmplification(player) >= 1;
         boolean hasPickaxe = canInstantlyMinePistonWithHaste2();
 
-        if (!hasHaste2) {
-            missingList.add(FAIL_MISSING_HASTE);
-        }
         if (!hasPickaxe) {
             missingList.add(FAIL_MISSING_PICKAXE);
         }
@@ -354,12 +350,7 @@ public class TaskManager {
             missingList.add(Component.literal("§c1x §e").append(Component.translatable(Items.SLIME_BLOCK.getDescriptionId())));
         }
 
-        boolean hasHaste2 = net.minecraft.world.effect.MobEffectUtil.hasDigSpeed(player) && net.minecraft.world.effect.MobEffectUtil.getDigSpeedAmplification(player) >= 1;
         boolean hasPickaxe = canInstantlyMinePistonWithHaste2();
-
-        if (!hasHaste2) {
-            missingList.add(FAIL_MISSING_HASTE);
-        }
         if (!hasPickaxe) {
             missingList.add(FAIL_MISSING_PICKAXE);
         }

@@ -14,7 +14,6 @@
   "bedrockminer.fail.missing.slime": "§c¡Necesitas más bloques de slime!",
   "bedrockminer.fail.missing.instantmine": "§c¡No se pueden instaminar los pistones! §7Requiere: §eEficiencia Ⅴ §7+ §ePrisa Ⅱ",
   "bedrockminer.fail.missing.prefix": "§c§lRecursos faltantes: ",
-  "bedrockminer.fail.missing.haste": "§eefecto de Prisa Ⅱ",
   "bedrockminer.fail.missing.pickaxe": "§epicote con Eficiencia Ⅴ",
   "bedrockminer.command.block.whitelist.add": "§a¡Bloque §f\"#blockName#\" §aagregado a la lista blanca con éxito!",
   "bedrockminer.command.block.whitelist.remove": "§e¡Bloque §f\"#blockName#\" §eeliminado de la lista blanca con éxito!",

@@ -14,7 +14,6 @@
   "bedrockminer.fail.missing.slime": "§c黏液块不够啦！",
   "bedrockminer.fail.missing.instantmine": "§c无法秒破活塞！ §7需要：§e效率Ⅴ §7+ §e急迫Ⅱ",
   "bedrockminer.fail.missing.prefix": "§c§l缺少资源：",
-  "bedrockminer.fail.missing.haste": "§e急迫 II 效果",
   "bedrockminer.fail.missing.pickaxe": "§e效率 V 镐子",
   "bedrockminer.command.block.whitelist.add": "§a方块 §f\"#blockName#\" §a成功添加到白名单!",
   "bedrockminer.command.block.whitelist.remove": "§e方块 §f\"#blockName#\" §e成功从白名单删除!",

@@ -14,7 +14,6 @@
   "bedrockminer.fail.missing.slime": "§cInsufficient slime blocks!",
   "bedrockminer.fail.missing.instantmine": "§cCan't instantly mine piston! §7Requires: §eEfficiency Ⅴ §7+ §eHaste Ⅱ",
   "bedrockminer.fail.missing.prefix": "§c§lMissing resources: ",
-  "bedrockminer.fail.missing.haste": "§eHaste Ⅱ effect",
   "bedrockminer.fail.missing.pickaxe": "§eEfficiency Ⅴ Pickaxe",
   "bedrockminer.command.block.whitelist.add": "§aBlock §f\"#blockName#\" §asuccessfully added to whitelist!",
   "bedrockminer.command.block.whitelist.remove": "§eBlock §f\"#blockName#\" §esuccessfully removed from whitelist!",

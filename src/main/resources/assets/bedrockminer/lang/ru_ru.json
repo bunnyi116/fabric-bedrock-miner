@@ -14,7 +14,6 @@
   "bedrockminer.fail.missing.slime": "§cНедостаточно блоков слизи!",
   "bedrockminer.fail.missing.instantmine": "§cНевозможно мгновенно сломать поршень! §7Требуется: §eЭффективность Ⅴ §7+ §eСпешка Ⅱ",
   "bedrockminer.fail.missing.prefix": "§c§lНедостающие ресурсы: ",
-  "bedrockminer.fail.missing.haste": "§eэффект Спешка Ⅱ",
   "bedrockminer.fail.missing.pickaxe": "§eкирка на Эффективность Ⅴ",
   "bedrockminer.command.block.whitelist.add": "§aБлок §f\"#blockName#\" §aуспешно добавлен в белый список!",
   "bedrockminer.command.block.whitelist.remove": "§eБлок §f\"#blockName#\" §eуспешно удален из белого списка!",

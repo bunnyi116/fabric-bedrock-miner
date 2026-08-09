@@ -14,7 +14,6 @@
   "bedrockminer.fail.missing.slime": "§c史萊姆方塊不足！",
   "bedrockminer.fail.missing.instantmine": "§c無法瞬破活塞！ §7需要：§e效率V附魔 §7+ §e挖掘加速II效果",
   "bedrockminer.fail.missing.prefix": "§c§l缺少資源：",
-  "bedrockminer.fail.missing.haste": "§e挖掘加速 II 效果",
   "bedrockminer.fail.missing.pickaxe": "§e效率 V 鎬子",
   "bedrockminer.command.block.whitelist.add": "§a成功新增白名單方塊 §f\"#blockName#\"！",
   "bedrockminer.command.block.whitelist.remove": "§e成功移除白名單方塊 §f\"#blockName#\"！",
