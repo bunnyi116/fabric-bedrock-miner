@@ -43,7 +43,6 @@ public class TaskManager {
     @Getter
     private long ticks;
 
-
     public void tick() {
         this.ticks++;
         if (!gameVariableIsValid()) {
@@ -57,7 +56,7 @@ public class TaskManager {
             this.removeBlockTaskAll();
             return;
         }
-        if (!isAllowExecutionEnvironment(activeBlockTasks.isEmpty())) {
+        if (activeBlockTasks.isEmpty() && !isAllowExecutionEnvironment(true)) {
             return;
         }
         // 每40TICK进行排序一次
@@ -283,28 +282,44 @@ public class TaskManager {
     }
 
     private boolean isAllowExecutionEnvironment(boolean setOverlayMessage) {
-        Component msg = null;
-        if (gameType.isCreative()) {
-            msg = FAIL_MISSING_SURVIVAL;
-        }
-        if (gameMode != null && !gameMode.getPlayerMode().isSurvival()) {
-            msg = FAIL_MISSING_SURVIVAL;
-        }
-        if (InventoryUtils.getInventoryItemCount(Items.PISTON) < 2) {
-            msg = FAIL_MISSING_PISTON;
-        }
-        if (InventoryUtils.getInventoryItemCount(Items.REDSTONE_TORCH) < 1) {
-            msg = FAIL_MISSING_REDSTONETORCH;
-        }
-        if (!InventoryUtils.canInstantlyMinePiston()) {
-            msg = FAIL_MISSING_INSTANTMINE;
-        }
-        if (msg != null) {
+        if (gameType.isCreative() || (gameMode != null && !gameMode.getPlayerMode().isSurvival())) {
             if (setOverlayMessage) {
+                MessageUtils.setOverlayMessage(FAIL_MISSING_SURVIVAL);
+            }
+            return false;
+        }
+
+        List<Component> missingList = new ArrayList<>();
+
+        int pistonCount = InventoryUtils.getInventoryItemCount(Items.PISTON);
+        if (pistonCount < 2) {
+            missingList.add(Component.literal("§c" + (2 - pistonCount) + "x §e").append(Component.translatable(Items.PISTON.getDescriptionId())));
+        }
+
+        int torchCount = InventoryUtils.getInventoryItemCount(Items.REDSTONE_TORCH);
+        if (torchCount < 1) {
+            missingList.add(Component.literal("§c1x §e").append(Component.translatable(Items.REDSTONE_TORCH.getDescriptionId())));
+        }
+
+        boolean hasPickaxe = InventoryUtils.canInstantlyMinePiston();
+        if (!hasPickaxe) {
+            missingList.add(FAIL_MISSING_PICKAXE);
+        }
+
+        if (!missingList.isEmpty()) {
+            if (setOverlayMessage) {
+                net.minecraft.network.chat.MutableComponent msg = Component.empty().append(FAIL_MISSING_PREFIX);
+                for (int i = 0; i < missingList.size(); i++) {
+                    msg.append(missingList.get(i));
+                    if (i < missingList.size() - 1) {
+                        msg.append("§7, ");
+                    }
+                }
                 MessageUtils.setOverlayMessage(msg);
             }
             return false;
         }
+
         return true;
     }
 

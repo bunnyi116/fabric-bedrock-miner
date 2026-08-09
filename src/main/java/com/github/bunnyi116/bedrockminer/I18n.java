@@ -16,6 +16,9 @@ public class I18n {
     public static final Component FAIL_MISSING_REDSTONETORCH = Component.translatable("bedrockminer.fail.missing.redstonetorch");
     public static final Component FAIL_MISSING_SLIME = Component.translatable("bedrockminer.fail.missing.slime");
     public static final Component FAIL_MISSING_INSTANTMINE = Component.translatable("bedrockminer.fail.missing.instantmine");
+    public static final Component FAIL_MISSING_PREFIX = Component.translatable("bedrockminer.fail.missing.prefix");
+    public static final Component FAIL_MISSING_HASTE = Component.translatable("bedrockminer.fail.missing.haste");
+    public static final Component FAIL_MISSING_PICKAXE = Component.translatable("bedrockminer.fail.missing.pickaxe");
 
     public static final Component FAIL_PLACE_PISTON = Component.translatable("bedrockminer.fail.place.piston");
     public static final Component FAIL_PLACE_REDSTONETORCH = Component.translatable("bedrockminer.fail.place.redstonetorch");
@@ -27,8 +30,8 @@ public class I18n {
     public static final Component COMMAND_BLOCK_BLACKLIST_ADD = Component.translatable("bedrockminer.command.block.blacklist.add");
     public static final Component COMMAND_BLOCK_BLACKLIST_REMOVE = Component.translatable("bedrockminer.command.block.blacklist.remove");
 
-    public static final Component COMMAND_TASK_SHORT_WAIT_NORMAL = Component.translatable("bedrockminer.command.task.short_wait.normal");
-    public static final Component COMMAND_TASK_SHORT_WAIT_SHORT = Component.translatable("bedrockminer.command.task.short_wait.short");
+    public static final Component COMMAND_TASK_FAST_ON = Component.translatable("bedrockminer.command.task.fast.on");
+    public static final Component COMMAND_TASK_FAST_OFF = Component.translatable("bedrockminer.command.task.fast.off");
     public static final Component COMMAND_TASK_CLEAR = Component.translatable("bedrockminer.command.task.clear");
 
     public static final Component COMMAND_DISABLE_ON = Component.translatable("bedrockminer.command.disable.on");

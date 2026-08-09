@@ -234,7 +234,7 @@ public class Task {
                 );
             }
             this.addRecycled(planItem.redstoneTorch.pos);
-            if (Config.getInstance().shortTsk) {
+            if (Config.getInstance().fast) {
                 this.currentState = TaskState.WAIT_GAME_UPDATE;
                 this.tickOccupied();
             } else {
@@ -269,7 +269,7 @@ public class Task {
                 world.setBlock(planItem.piston.pos, blockState.setValue(PistonBaseBlock.FACING, planItem.piston.facing), Block.UPDATE_ALL);
             }
             this.addRecycled(planItem.piston.pos);
-            if (Config.getInstance().shortTsk) {
+            if (Config.getInstance().fast) {
                 this.currentState = TaskState.WAIT_GAME_UPDATE;
                 this.tickOccupied();
             } else {

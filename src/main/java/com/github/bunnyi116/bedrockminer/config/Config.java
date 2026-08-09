@@ -15,7 +15,7 @@ public class Config {
     public boolean disableEmptyHandSwitchToggle = false;
     public boolean disable = false;
     public boolean debug = false;
-    public boolean shortTsk = true;
+    public boolean fast = true;
     public boolean simpleMode = false;
     public List<Integer> floorsBlacklist = new ArrayList<>();
     public List<TaskRegion> ranges = new ArrayList<>();

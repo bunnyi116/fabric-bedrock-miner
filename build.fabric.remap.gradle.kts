@@ -1,6 +1,3 @@
-import groovy.json.JsonSlurper
-import org.gradle.kotlin.dsl.dependencies
-
 plugins {
     id("java")
     id("maven-publish")
@@ -8,34 +5,11 @@ plugins {
     id("com.replaymod.preprocess")
 }
 
-val mcVersion = project.property("mcVersion") as Int
-val modId = project.property("mod_id") as String
-val modWrapperId = project.property("mod_wrapper_id") as String
-val modName = project.property("mod_name") as String
-val modMavenGroup = project.property("mod_maven_group") as String
-val modVersion = project.property("mod_version") as String
-val modArchivesBaseName = project.property("mod_archives_base_name") as String
-val modDescription = project.property("mod_description") as String
-val modHomepage = project.property("mod_homepage") as String
-val modLicense = project.property("mod_license") as String
-val modSources = project.property("mod_sources") as String
-val loaderVersion = project.property("loader_version") as String
-val minecraftDependency = project.property("minecraft_dependency") as String
-val minecraftVersion = project.property("minecraft_version") as String
-val fabricApiVersion = project.property("fabric_api_version") as String
-
-val javaVersion = when {
-    mcVersion >= 260000 -> JavaVersion.VERSION_25   // 26+          需要 Java 25
-    mcVersion >= 12005 -> JavaVersion.VERSION_21    // 1.20.5+      需要 Java 21
-    mcVersion >= 11800 -> JavaVersion.VERSION_17    // 1.18-1.20.4  需要 Java 17
-    mcVersion >= 11700 -> JavaVersion.VERSION_16    // 1.17.x       需要 Java 16
-    else -> JavaVersion.VERSION_1_8                 // 1.16.x 及以下使用 Java 8
-}
-val mixinCompatibilityLevel = "JAVA_${javaVersion.majorVersion.toInt()}"
-
 repositories {
     maven("https://maven.fabricmc.net")
     maven("https://jitpack.io")
+    maven("https://api.modrinth.com/maven")
+    maven("https://maven.shedaniel.me/")
 }
 
 // https://github.com/FabricMC/fabric-loader/issues/783
@@ -46,15 +20,16 @@ configurations.all {
 }
 
 dependencies {
-    compileOnly("org.projectlombok:lombok:${properties["lombok_version"]}")
-    annotationProcessor("org.projectlombok:lombok:${properties["lombok_version"]}")
+    compileOnly("org.projectlombok:lombok:$lombok_version")
+    annotationProcessor("org.projectlombok:lombok:$lombok_version")
 
     minecraft("com.mojang:minecraft:$minecraftVersion") // Minecraft 客户端依赖
     mappings(loom.officialMojangMappings())
     modImplementation("net.fabricmc:fabric-loader:$loaderVersion") // Fabric 加载器依赖
     modImplementation("net.fabricmc.fabric-api:fabric-api:$fabricApiVersion") // Fabric API 依赖
 
-//    runtimeOnly(project(":fabricWrapper"))
+    modImplementation("maven.modrinth:modmenu:${modmenuVersion}")
+    modImplementation("maven.modrinth:cloth-config:${clothConfigVersion}")
 }
 
 loom {
