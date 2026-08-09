@@ -345,10 +345,10 @@ public class TaskManager {
             missingList.add(Component.literal("§c1x §e").append(Component.translatable(Items.REDSTONE_TORCH.getDescriptionId())));
         }
 
-        int slimeCount = InventoryUtils.getInventoryItemCount(Items.SLIME_BLOCK);
-        if (slimeCount < 1) {
-            missingList.add(Component.literal("§c1x §e").append(Component.translatable(Items.SLIME_BLOCK.getDescriptionId())));
-        }
+//        int slimeCount = InventoryUtils.getInventoryItemCount(Items.SLIME_BLOCK);
+//        if (slimeCount < 1) {
+//            missingList.add(Component.literal("§c1x §e").append(Component.translatable(Items.SLIME_BLOCK.getDescriptionId())));
+//        }
 
         boolean hasPickaxe = canInstantlyMinePistonWithHaste2();
         if (!hasPickaxe) {
