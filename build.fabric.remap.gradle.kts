@@ -47,31 +47,8 @@ configurations.all {
     }
 }
 
-val modmenuVersion = when {
-    minecraftVersion.startsWith("1.19") -> "7.2.2"
-    minecraftVersion == "1.20" || minecraftVersion == "1.20.1" -> "7.2.2"
-    minecraftVersion == "1.20.2" -> "8.0.1"
-    minecraftVersion == "1.20.3" || minecraftVersion == "1.20.4" -> "9.0.0"
-    minecraftVersion == "1.20.5" || minecraftVersion == "1.20.6" -> "10.0.0"
-    minecraftVersion == "1.21.11" -> "17.0.0"
-    minecraftVersion.startsWith("1.21") -> "11.0.3"
-    minecraftVersion.startsWith("26.") -> "17.0.0"
-    else -> "11.0.3"
-}
-
-val clothConfigVersion = when {
-    minecraftVersion.startsWith("1.19") -> "8.3.115"
-    minecraftVersion == "1.20" || minecraftVersion == "1.20.1" -> "11.1.118"
-    minecraftVersion == "1.20.2" -> "12.0.109"
-    minecraftVersion == "1.20.3" || minecraftVersion == "1.20.4" -> "13.0.121"
-    minecraftVersion == "1.20.5" || minecraftVersion == "1.20.6" -> "14.0.126"
-    minecraftVersion == "1.21.11" -> "21.11.153"
-    minecraftVersion.startsWith("1.21") -> "15.0.130"
-    minecraftVersion == "26.1" -> "26.1.154"
-    minecraftVersion == "26.2" -> "26.2.155"
-    minecraftVersion.startsWith("26.") -> "26.2.155"
-    else -> "15.0.130"
-}
+val modmenuVersion = project.property("modmenu")
+val clothConfigVersion =project.property("cloth-config")
 
 dependencies {
     compileOnly("org.projectlombok:lombok:${properties["lombok_version"]}")
@@ -81,12 +58,9 @@ dependencies {
     mappings(loom.officialMojangMappings())
     modImplementation("net.fabricmc:fabric-loader:$loaderVersion") // Fabric 加载器依赖
     modImplementation("net.fabricmc.fabric-api:fabric-api:$fabricApiVersion") // Fabric API 依赖
-    "modCompileOnly"("maven.modrinth:modmenu:$modmenuVersion")
-    "modLocalRuntime"("maven.modrinth:modmenu:$modmenuVersion")
-    "modCompileOnly"("me.shedaniel.cloth:cloth-config-fabric:$clothConfigVersion")
-    "modLocalRuntime"("me.shedaniel.cloth:cloth-config-fabric:$clothConfigVersion")
 
-//    runtimeOnly(project(":fabricWrapper"))
+    modImplementation("maven.modrinth:modmenu:${modmenuVersion}")
+    modImplementation("maven.modrinth:cloth-config:${clothConfigVersion}")
 }
 
 loom {
