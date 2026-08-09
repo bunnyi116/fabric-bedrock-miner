@@ -20,8 +20,8 @@
   "bedrockminer.command.block.blacklist.add": "§a方块 §f\"#blockName#\" §a成功添加到黑名单!",
   "bedrockminer.command.block.blacklist.remove": "§e方块 §f\"#blockName#\" §e成功从黑名单删除!",
   "bedrockminer.command.exception.invalidString": "§c输入的 §e\"%input%\" §c字符串错误！",
-  "bedrockminer.command.task.short_wait.normal": "§a自定义等待已设置为 §e正常速度！",
-  "bedrockminer.command.task.short_wait.short": "§6自定义等待已设置为 §e快速模式！",
+  "bedrockminer.command.task.fast.on": "§6已开启快速处理！",
+  "bedrockminer.command.task.fast.off": "§a已关闭快速处理！",
   "bedrockminer.command.task.clear": "§6成功将任务缓存清空！",
   "bedrockminer.command.disable.on": "§c模组已禁用！",
   "bedrockminer.command.disable.off": "§a模组已启用！",
@@ -30,5 +30,15 @@
   "bedrockminer.command.floor_black_list.remove": "§e层数黑名单删除成功：§f%count%",
   "bedrockminer.command.floor_black_list.warn": "§c目标方块所在高度 §e(#floor#) §c在层数黑名单中，无法破坏！",
   "bedrockminer.command.floor_black_list.show": "§6层数黑名单：§e%listFloor%",
-  "bedrockminer.handle.seek": "§c当前位置 §e%BlockPos% §c没有可以执行的放置方案"
+  "bedrockminer.handle.seek": "§c当前位置 §e%BlockPos% §c没有可以执行的放置方案",
+  "bedrockminer.config.title": "基岩挖掘机配置",
+  "bedrockminer.config.general": "常规",
+  "bedrockminer.config.disable": "禁用模组",
+  "bedrockminer.config.simple_mode": "简单模式",
+  "bedrockminer.config.fast_processing": "快速处理",
+  "bedrockminer.config.disable_empty_hand_toggle": "禁用空手切换",
+  "bedrockminer.config.debug": "调试模式",
+  "bedrockminer.config.limit_max": "最大限制",
+  "bedrockminer.config.block_whitelist": "方块白名单",
+  "bedrockminer.config.floors_blacklist": "层数黑名单"
 }

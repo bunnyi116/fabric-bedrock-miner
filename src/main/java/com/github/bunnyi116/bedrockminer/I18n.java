@@ -30,8 +30,8 @@ public class I18n {
     public static final Component COMMAND_BLOCK_BLACKLIST_ADD = Component.translatable("bedrockminer.command.block.blacklist.add");
     public static final Component COMMAND_BLOCK_BLACKLIST_REMOVE = Component.translatable("bedrockminer.command.block.blacklist.remove");
 
-    public static final Component COMMAND_TASK_SHORT_WAIT_NORMAL = Component.translatable("bedrockminer.command.task.short_wait.normal");
-    public static final Component COMMAND_TASK_SHORT_WAIT_SHORT = Component.translatable("bedrockminer.command.task.short_wait.short");
+    public static final Component COMMAND_TASK_FAST_ON = Component.translatable("bedrockminer.command.task.fast.on");
+    public static final Component COMMAND_TASK_FAST_OFF = Component.translatable("bedrockminer.command.task.fast.off");
     public static final Component COMMAND_TASK_CLEAR = Component.translatable("bedrockminer.command.task.clear");
 
     public static final Component COMMAND_DISABLE_ON = Component.translatable("bedrockminer.command.disable.on");

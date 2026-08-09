@@ -20,8 +20,8 @@
   "bedrockminer.command.block.blacklist.add": "§a¡Bloque §f\"#blockName#\" §aagregado a la lista negra con éxito!",
   "bedrockminer.command.block.blacklist.remove": "§e¡Bloque §f\"#blockName#\" §eeliminado de la lista negra con éxito!",
   "bedrockminer.command.exception.invalidString": "§cLa cadena introducida §e\"%input%\" §ces incorrecta.",
-  "bedrockminer.command.task.short_wait.normal": "§aEspera personalizada configurada a §evelocidad normal!",
-  "bedrockminer.command.task.short_wait.short": "§6Espera personalizada configurada a §emodo rápido!",
+  "bedrockminer.command.task.fast.on": "§6¡Procesamiento rápido activado!",
+  "bedrockminer.command.task.fast.off": "§a¡Procesamiento rápido desactivado!",
   "bedrockminer.command.task.clear": "§6¡Caché de tareas limpiada con éxito!",
   "bedrockminer.command.disable.on": "§c¡Ejecución del mod suspendida!",
   "bedrockminer.command.disable.off": "§a¡Ejecución del mod reanudada!",
@@ -30,5 +30,15 @@
   "bedrockminer.command.floor_black_list.remove": "§eCapa §f%count% §eeliminada de la lista negra de capas!",
   "bedrockminer.command.floor_black_list.warn": "§c¡La altura del bloque objetivo §e(#floor#) §cestá en la lista negra de capas y no se puede destruir!",
   "bedrockminer.command.floor_black_list.show": "§6Lista negra de capas: §e%listFloor%",
-  "bedrockminer.handle.seek": "§cNo hay un esquema de colocación válido para la posición §e%BlockPos%"
+  "bedrockminer.handle.seek": "§cNo hay un esquema de colocación válido para la posición §e%BlockPos%",
+  "bedrockminer.config.title": "Configuración de Bedrock Miner",
+  "bedrockminer.config.general": "General",
+  "bedrockminer.config.disable": "Desactivar mod",
+  "bedrockminer.config.simple_mode": "Modo simple",
+  "bedrockminer.config.fast_processing": "Procesamiento rápido",
+  "bedrockminer.config.disable_empty_hand_toggle": "Desactivar cambio con mano vacía",
+  "bedrockminer.config.debug": "Modo depuración",
+  "bedrockminer.config.limit_max": "Límite máximo",
+  "bedrockminer.config.block_whitelist": "Lista blanca de bloques",
+  "bedrockminer.config.floors_blacklist": "Lista negra de capas"
 }

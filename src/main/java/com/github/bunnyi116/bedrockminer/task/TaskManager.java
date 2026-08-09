@@ -42,8 +42,6 @@ public class TaskManager {
 
     @Getter
     private long ticks;
-    private long lastWarningTick;
-
 
     public void tick() {
         this.ticks++;
@@ -59,7 +57,6 @@ public class TaskManager {
             return;
         }
         if (activeBlockTasks.isEmpty() && !isAllowExecutionEnvironment(true)) {
-            warnMissingResources();
             return;
         }
         // 每40TICK进行排序一次
@@ -304,13 +301,7 @@ public class TaskManager {
             missingList.add(Component.literal("§c1x §e").append(Component.translatable(Items.REDSTONE_TORCH.getDescriptionId())));
         }
 
-        int slimeCount = InventoryUtils.getInventoryItemCount(Items.SLIME_BLOCK);
-        if (slimeCount < 1) {
-            missingList.add(Component.literal("§c1x §e").append(Component.translatable(Items.SLIME_BLOCK.getDescriptionId())));
-        }
-
-        boolean hasPickaxe = canInstantlyMinePistonWithHaste2();
-
+        boolean hasPickaxe = InventoryUtils.canInstantlyMinePiston();
         if (!hasPickaxe) {
             missingList.add(FAIL_MISSING_PICKAXE);
         }
@@ -332,82 +323,11 @@ public class TaskManager {
         return true;
     }
 
-    private void checkEnvironmentAndPrintToChat() {
-        List<Component> missingList = new ArrayList<>();
-
-        int pistonCount = InventoryUtils.getInventoryItemCount(Items.PISTON);
-        if (pistonCount < 2) {
-            missingList.add(Component.literal("§c" + (2 - pistonCount) + "x §e").append(Component.translatable(Items.PISTON.getDescriptionId())));
-        }
-
-        int torchCount = InventoryUtils.getInventoryItemCount(Items.REDSTONE_TORCH);
-        if (torchCount < 1) {
-            missingList.add(Component.literal("§c1x §e").append(Component.translatable(Items.REDSTONE_TORCH.getDescriptionId())));
-        }
-
-//        int slimeCount = InventoryUtils.getInventoryItemCount(Items.SLIME_BLOCK);
-//        if (slimeCount < 1) {
-//            missingList.add(Component.literal("§c1x §e").append(Component.translatable(Items.SLIME_BLOCK.getDescriptionId())));
-//        }
-
-        boolean hasPickaxe = canInstantlyMinePistonWithHaste2();
-        if (!hasPickaxe) {
-            missingList.add(FAIL_MISSING_PICKAXE);
-        }
-
-        if (!missingList.isEmpty()) {
-            net.minecraft.network.chat.MutableComponent msg = Component.empty().append(FAIL_MISSING_PREFIX);
-            for (int i = 0; i < missingList.size(); i++) {
-                msg.append(missingList.get(i));
-                if (i < missingList.size() - 1) {
-                    msg.append("§7, ");
-                }
-            }
-            MessageUtils.addMessage(msg);
-        }
-    }
-
-    private boolean canInstantlyMinePistonWithHaste2() {
-        boolean hasHaste = net.minecraft.world.effect.MobEffectUtil.hasDigSpeed(player);
-        int amplifier = hasHaste ? net.minecraft.world.effect.MobEffectUtil.getDigSpeedAmplification(player) : 0;
-        float hasteMultiplier = 1.0F + (amplifier + 1) * 0.2F;
-
-        for (net.minecraft.world.item.ItemStack stack : InventoryUtils.getMainStacks(playerInventory)) {
-            if (stack.isEmpty()) continue;
-            if (!stack.is(Items.DIAMOND_PICKAXE) && !stack.is(Items.NETHERITE_PICKAXE)) {
-                continue;
-            }
-            if (InventoryUtils.isItemDamageWarning(stack, 5)) {
-                continue;
-            }
-
-            float speed = BlockUtils.getDestroySpeed(net.minecraft.world.level.block.Blocks.PISTON.defaultBlockState(), stack);
-            if (hasHaste) {
-                speed /= hasteMultiplier;
-            }
-            speed *= 1.4F;
-
-            float progress = speed / 1.5F / 30.0F;
-            if (progress >= 0.7F) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void warnMissingResources() {
-        if (ticks - lastWarningTick >= 100) {
-            lastWarningTick = ticks;
-            checkEnvironmentAndPrintToChat();
-        }
-    }
-
     public void addBlockTask(ClientLevel world, BlockPos pos, Block block) {
         if (Config.getInstance().disable || !isRunning()) {
             return;
         }
         if (!isAllowExecutionEnvironment(true)) {
-            warnMissingResources();
             return;
         }
         if (!gameType.isSurvival()) {
@@ -501,7 +421,6 @@ public class TaskManager {
             if (!minecraft.isLocalServer()) {   // 服务器开启时发送警告提示
                 MessageUtils.addMessage(WARN_MULTIPLAYER);
             }
-            checkEnvironmentAndPrintToChat();
         }
     }
 

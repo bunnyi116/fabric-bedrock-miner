@@ -20,8 +20,8 @@
   "bedrockminer.command.block.blacklist.add": "§aБлок §f\"#blockName#\" §aуспешно добавлен в черный список!",
   "bedrockminer.command.block.blacklist.remove": "§eБлок §f\"#blockName#\" §eуспешно удален из черного списка!",
   "bedrockminer.command.exception.invalidString": "§cВведенная строка §e\"%input%\" §cнекорректна.",
-  "bedrockminer.command.task.short_wait.normal": "§aПользовательское время ожидания установлено на §eнормальную скорость!",
-  "bedrockminer.command.task.short_wait.short": "§6Пользовательское время ожидания установлено на §eбыстрый режим!",
+  "bedrockminer.command.task.fast.on": "§6Быстрая обработка включена!",
+  "bedrockminer.command.task.fast.off": "§aБыстрая обработка выключена!",
   "bedrockminer.command.task.clear": "§6Кэш задач успешно очищен!",
   "bedrockminer.command.disable.on": "§cРабота мода временно приостановлена!",
   "bedrockminer.command.disable.off": "§aРабота мода возобновлена!",
@@ -30,5 +30,15 @@
   "bedrockminer.command.floor_black_list.remove": "§eВысота §f%count% §eудалена из черного списка высот!",
   "bedrockminer.command.floor_black_list.warn": "§cВысота целевого блока §e(#floor#) §cнаходится в черном списке, блок не может быть разрушен!",
   "bedrockminer.command.floor_black_list.show": "§6Черный список высот: §e%listFloor%",
-  "bedrockminer.handle.seek": "§cНет доступной схемы установки для позиции §e%BlockPos%"
+  "bedrockminer.handle.seek": "§cНет доступной схемы установки для позиции §e%BlockPos%",
+  "bedrockminer.config.title": "Настройки Bedrock Miner",
+  "bedrockminer.config.general": "Общие",
+  "bedrockminer.config.disable": "Отключить мод",
+  "bedrockminer.config.simple_mode": "Простой режим",
+  "bedrockminer.config.fast_processing": "Быстрая обработка",
+  "bedrockminer.config.disable_empty_hand_toggle": "Отключить переключение пустой рукой",
+  "bedrockminer.config.debug": "Режим отладки",
+  "bedrockminer.config.limit_max": "Максимальный лимит",
+  "bedrockminer.config.block_whitelist": "Белый список блоков",
+  "bedrockminer.config.floors_blacklist": "Черный список высот"
 }

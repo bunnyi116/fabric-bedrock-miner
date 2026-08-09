@@ -49,7 +49,7 @@
 - `/bedrockMiner behavior blockWhitelist remove <block>`：移除白名单方块列表
 - `/bedrockMiner task addRegionTaskConfig <name> <pos1> <pos2>`：添加区域任务到配置文件
 - `/bedrockMiner task addRegionTask <name> <pos1> <pos2>`：添加区域任务(临时性, 重启游戏后无效)
-- `/bedrockMiner task shortWait <bool>`：启用短任务处理
+- `/bedrockMiner task fast <bool>`：启用或关闭快速处理
 - `/bedrockMiner task clear`：清理任务
 - `/bedrockMiner debug true`：开启调试模式(后台输出调试信息)
 - `/bedrockMiner debug false`：关闭调试模式

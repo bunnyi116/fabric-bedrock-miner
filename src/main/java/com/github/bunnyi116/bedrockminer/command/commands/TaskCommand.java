@@ -46,16 +46,16 @@ public class TaskCommand extends CommandBase {
                                 })
                         )
                 )
-                .then(literal("short")
+                .then(literal("fast")
                         .then(argument("bool", BoolArgumentType.bool())
                                 .executes(context -> {
                                     boolean b = BoolArgumentType.getBool(context, "bool");
                                     if (b) {
-                                        MessageUtils.addMessage(I18n.COMMAND_TASK_SHORT_WAIT_SHORT);
+                                        MessageUtils.addMessage(I18n.COMMAND_TASK_FAST_ON);
                                     } else {
-                                        MessageUtils.addMessage(I18n.COMMAND_TASK_SHORT_WAIT_NORMAL);
+                                        MessageUtils.addMessage(I18n.COMMAND_TASK_FAST_OFF);
                                     }
-                                    Config.getInstance().shortTsk = b;
+                                    Config.getInstance().fast = b;
                                     Config.getInstance().save();
                                     return Command.SINGLE_SUCCESS;
                                 })

@@ -14,51 +14,51 @@ public class ConfigScreen {
 
         ConfigBuilder builder = ConfigBuilder.create()
             .setParentScreen(parent)
-            .setTitle(Component.literal("Bedrock Miner Configuration"));
+            .setTitle(Component.translatable("bedrockminer.config.title"));
 
         builder.setSavingRunnable(config::save);
 
-        ConfigCategory general = builder.getOrCreateCategory(Component.literal("General"));
+        ConfigCategory general = builder.getOrCreateCategory(Component.translatable("bedrockminer.config.general"));
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
 
         // Basic toggles
-        general.addEntry(entryBuilder.startBooleanToggle(Component.literal("Disable Mod"), config.disable)
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("bedrockminer.config.disable"), config.disable)
             .setDefaultValue(false)
             .setSaveConsumer(newValue -> config.disable = newValue)
             .build());
 
-        general.addEntry(entryBuilder.startBooleanToggle(Component.literal("Simple Mode"), config.simpleMode)
-            .setDefaultValue(false)
-            .setSaveConsumer(newValue -> config.simpleMode = newValue)
-            .build());
+//        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("bedrockminer.config.simple_mode"), config.simpleMode)
+//            .setDefaultValue(false)
+//            .setSaveConsumer(newValue -> config.simpleMode = newValue)
+//            .build());
 
-        general.addEntry(entryBuilder.startBooleanToggle(Component.literal("Short Task Processing"), config.shortTsk)
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("bedrockminer.config.fast_processing"), config.fast)
             .setDefaultValue(true)
-            .setSaveConsumer(newValue -> config.shortTsk = newValue)
+            .setSaveConsumer(newValue -> config.fast = newValue)
             .build());
 
-        general.addEntry(entryBuilder.startBooleanToggle(Component.literal("Disable Empty Hand Toggle"), config.disableEmptyHandSwitchToggle)
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("bedrockminer.config.disable_empty_hand_toggle"), config.disableEmptyHandSwitchToggle)
             .setDefaultValue(false)
             .setSaveConsumer(newValue -> config.disableEmptyHandSwitchToggle = newValue)
             .build());
 
-        general.addEntry(entryBuilder.startBooleanToggle(Component.literal("Debug Mode"), config.debug)
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("bedrockminer.config.debug"), config.debug)
             .setDefaultValue(false)
             .setSaveConsumer(newValue -> config.debug = newValue)
             .build());
 
-        general.addEntry(entryBuilder.startIntSlider(Component.literal("Limit Max"), config.limitMax, 1, 50)
+        general.addEntry(entryBuilder.startIntSlider(Component.translatable("bedrockminer.config.limit_max"), config.limitMax, 1, 50)
             .setDefaultValue(1)
             .setSaveConsumer(newValue -> config.limitMax = newValue)
             .build());
 
         // Lists
-        general.addEntry(entryBuilder.startStrList(Component.literal("Block Whitelist"), config.blockWhitelist)
+        general.addEntry(entryBuilder.startStrList(Component.translatable("bedrockminer.config.block_whitelist"), config.blockWhitelist)
             .setDefaultValue(Config.getDefaultBlockWhitelist())
             .setSaveConsumer(newValue -> config.blockWhitelist = newValue)
             .build());
 
-        general.addEntry(entryBuilder.startIntList(Component.literal("Floors Blacklist"), config.floorsBlacklist)
+        general.addEntry(entryBuilder.startIntList(Component.translatable("bedrockminer.config.floors_blacklist"), config.floorsBlacklist)
             .setDefaultValue(new ArrayList<>())
             .setSaveConsumer(newValue -> config.floorsBlacklist = newValue)
             .build());

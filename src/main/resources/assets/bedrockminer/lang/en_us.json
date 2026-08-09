@@ -20,8 +20,8 @@
   "bedrockminer.command.block.blacklist.add": "§aBlock §f\"#blockName#\" §asuccessfully added to blacklist!",
   "bedrockminer.command.block.blacklist.remove": "§eBlock §f\"#blockName#\" §esuccessfully removed from blacklist!",
   "bedrockminer.command.exception.invalidString": "§cThe input string §e\"%input%\" §cis incorrect.",
-  "bedrockminer.command.task.short_wait.normal": "§aCustom wait has been set to §enormal speed!",
-  "bedrockminer.command.task.short_wait.short": "§6Custom wait has been set to §efast mode!",
+  "bedrockminer.command.task.fast.on": "§6Fast processing has been enabled!",
+  "bedrockminer.command.task.fast.off": "§aFast processing has been disabled!",
   "bedrockminer.command.task.clear": "§6Successfully cleared task cache!",
   "bedrockminer.command.disable.on": "§cMod execution suspended!",
   "bedrockminer.command.disable.off": "§aMod execution resumed!",
@@ -30,5 +30,15 @@
   "bedrockminer.command.floor_black_list.remove": "§eFloor §f%count% §esuccessfully removed from blacklist!",
   "bedrockminer.command.floor_black_list.warn": "§cThe height of the target block §e(#floor#) §cis on the floor blacklist and cannot be destroyed!",
   "bedrockminer.command.floor_black_list.show": "§6Floor blacklist: §e%listFloor%",
-  "bedrockminer.handle.seek": "§cNo placement scheme can be executed at the current position §e%BlockPos%"
+  "bedrockminer.handle.seek": "§cNo placement scheme can be executed at the current position §e%BlockPos%",
+  "bedrockminer.config.title": "Bedrock Miner Configuration",
+  "bedrockminer.config.general": "General",
+  "bedrockminer.config.disable": "Disable Mod",
+  "bedrockminer.config.simple_mode": "Simple Mode",
+  "bedrockminer.config.fast_processing": "Fast Processing",
+  "bedrockminer.config.disable_empty_hand_toggle": "Disable Empty Hand Toggle",
+  "bedrockminer.config.debug": "Debug Mode",
+  "bedrockminer.config.limit_max": "Limit Max",
+  "bedrockminer.config.block_whitelist": "Block Whitelist",
+  "bedrockminer.config.floors_blacklist": "Floors Blacklist"
 }
