@@ -49,7 +49,6 @@ public class TaskManager {
             return;
         }
         if (Config.getInstance().disable || !this.isRunning()) {
-            this.tick();
             return;
         }
         if (this.pendingBlockTasks.isEmpty() && this.pendingRegionTasks.isEmpty() && Config.getInstance().ranges.isEmpty()) {
